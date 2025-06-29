@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "word-count-limit": true
+  },
+  "rulesdir": ["./textlint-rules"]
+}

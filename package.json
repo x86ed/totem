@@ -1,0 +1,24 @@
+{
+  "name": "totem",
+  "version": "0.1.0",
+  "description": "a structured project managment and promping environment",
+  "main": "scripts/init.js",
+  "bin": {
+    "totem": "./scripts/init.js"
+  },
+
+  "scripts": {
+    "test": "jest",
+    "init:contributor": "node scripts/init.js --type=config"
+  },
+  "keywords": [
+    "totem",
+    "jira",
+    "architecture"
+  ],
+  "author": "hi",
+  "license": "MIT",
+  "devDependencies": {
+    "textlint": "^15.0.1"
+  }
+}
