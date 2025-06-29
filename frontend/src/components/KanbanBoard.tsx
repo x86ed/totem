@@ -1,23 +1,40 @@
 import React from 'react'
 import { useTickets } from '../context/TicketContext'
+import { Ticket } from '../types'
 import TicketCard from './TicketCard'
 
-const KanbanBoard = () => {
+interface Column {
+  id: Ticket['status']
+  title: string
+  color: string
+}
+
+const KanbanBoard: React.FC = () => {
   const { tickets, moveTicket } = useTickets()
 
-  const columns = [
+  const columns: Column[] = [
     { id: 'todo', title: 'To Do', color: '#8b4513' },
     { id: 'in-progress', title: 'In Progress', color: '#7b9a3f' },
     { id: 'review', title: 'Review', color: '#5a6e5a' },
     { id: 'done', title: 'Done', color: '#4a7c59' }
   ]
 
-  const getTicketsByStatus = (status) => {
+  const getTicketsByStatus = (status: Ticket['status']): Ticket[] => {
     return tickets.filter(ticket => ticket.status === status)
   }
 
-  const handleMoveTicket = (ticketId, newStatus) => {
+  const handleMoveTicket = (ticketId: string, newStatus: Ticket['status']): void => {
     moveTicket(ticketId, newStatus)
+  }
+
+  const getColumnIcon = (colId: Ticket['status']): string => {
+    switch (colId) {
+      case 'todo': return '📝'
+      case 'in-progress': return '🔄'
+      case 'review': return '👀'
+      case 'done': return '✅'
+      default: return '📌'
+    }
   }
 
   return (
@@ -30,12 +47,7 @@ const KanbanBoard = () => {
               <div className="column-header">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg" style={{ color: '#2d3e2e' }}>
-                    <span className="icon-spacing">{
-                      column.id === 'todo' ? '📝' :
-                      column.id === 'in-progress' ? '🔄' :
-                      column.id === 'review' ? '👀' :
-                      '✅'
-                    }</span>
+                    <span className="icon-spacing">{getColumnIcon(column.id)}</span>
                     {column.title}
                   </h3>
                   <span 
@@ -61,16 +73,6 @@ const KanbanBoard = () => {
                         {columns.map((targetColumn) => {
                           if (targetColumn.id === ticket.status) return null
                           
-                          const getColumnIcon = (colId) => {
-                            switch (colId) {
-                              case 'todo': return '📝'
-                              case 'in-progress': return '🔄'
-                              case 'review': return '👀'
-                              case 'done': return '✅'
-                              default: return '📌'
-                            }
-                          }
-                          
                           return (
                             <button
                               key={targetColumn.id}
@@ -93,6 +95,7 @@ const KanbanBoard = () => {
                 
                 {columnTickets.length === 0 && (
                   <div className="text-center py-8" style={{ color: '#5a6e5a' }}>
+                    <span className="icon-spacing">📂</span>
                     No tickets in this column
                   </div>
                 )}

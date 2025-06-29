@@ -1,7 +1,12 @@
 import React from 'react'
+import { Ticket } from '../types'
 
-const TicketCard = ({ ticket }) => {
-  const getPriorityClass = (priority) => {
+interface TicketCardProps {
+  ticket: Ticket
+}
+
+const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
+  const getPriorityClass = (priority: Ticket['priority']): string => {
     switch (priority) {
       case 'high':
         return 'priority-high-green'
@@ -11,6 +16,19 @@ const TicketCard = ({ ticket }) => {
         return 'priority-low-green'
       default:
         return 'priority-low-green'
+    }
+  }
+
+  const getPriorityIcon = (priority: Ticket['priority']): string => {
+    switch (priority) {
+      case 'high':
+        return '🔥'
+      case 'medium':
+        return '⚡'
+      case 'low':
+        return '🟢'
+      default:
+        return '🟢'
     }
   }
 
@@ -32,7 +50,7 @@ const TicketCard = ({ ticket }) => {
       <div className="ticket-meta">
         <span className={`${getPriorityClass(ticket.priority)} px-2 py-1 rounded text-xs font-medium`}>
           <span className="icon-spacing">
-            {ticket.priority === 'high' ? '🔥' : ticket.priority === 'medium' ? '⚡' : '🟢'}
+            {getPriorityIcon(ticket.priority)}
           </span>
           {ticket.priority.toUpperCase()}
         </span>

@@ -1,13 +1,21 @@
 import React, { useState } from 'react'
 import { useTickets } from '../context/TicketContext'
+import { Ticket } from '../types'
 
-const ExportView = () => {
+type ExportFormat = 'markdown-tickets' | 'markdown-roadmap' | 'json'
+
+interface ExportResult {
+  content: string
+  filename: string
+}
+
+const ExportView: React.FC = () => {
   const { tickets, milestones } = useTickets()
-  const [exportFormat, setExportFormat] = useState('markdown-tickets')
-  const [showPreview, setShowPreview] = useState(false)
-  const [previewContent, setPreviewContent] = useState('')
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('markdown-tickets')
+  const [showPreview, setShowPreview] = useState<boolean>(false)
+  const [previewContent, setPreviewContent] = useState<string>('')
 
-  const generateMarkdownTicket = (ticket) => {
+  const generateMarkdownTicket = (ticket: Ticket): string => {
     return `# Ticket: ${ticket.title}
 
 **ID:** ${ticket.id}
@@ -25,7 +33,7 @@ ${ticket.description}
 `
   }
 
-  const generateMarkdownRoadmap = () => {
+  const generateMarkdownRoadmap = (): string => {
     let content = `# Project Roadmap
 
 Generated: ${new Date().toLocaleString()}
@@ -53,7 +61,7 @@ ${milestoneTickets.map(ticket =>
     return content
   }
 
-  const generateJSONExport = () => {
+  const generateJSONExport = (): string => {
     return JSON.stringify({
       exportDate: new Date().toISOString(),
       tickets,
@@ -71,7 +79,7 @@ ${milestoneTickets.map(ticket =>
     }, null, 2)
   }
 
-  const generateExport = () => {
+  const generateExport = (): ExportResult => {
     let content = ''
     let filename = ''
     
@@ -96,13 +104,13 @@ ${milestoneTickets.map(ticket =>
     return { content, filename }
   }
 
-  const handlePreview = () => {
+  const handlePreview = (): void => {
     const { content } = generateExport()
     setPreviewContent(content)
     setShowPreview(true)
   }
 
-  const handleDownload = () => {
+  const handleDownload = (): void => {
     const { content, filename } = generateExport()
     
     const blob = new Blob([content], { 
@@ -116,28 +124,31 @@ ${milestoneTickets.map(ticket =>
     URL.revokeObjectURL(url)
   }
 
-  const handleCopyToClipboard = () => {
+  const handleCopyToClipboard = async (): Promise<void> => {
     const { content } = generateExport()
-    navigator.clipboard.writeText(content).then(() => {
+    try {
+      await navigator.clipboard.writeText(content)
       alert('Content copied to clipboard!')
-    })
+    } catch (err) {
+      console.error('Failed to copy content:', err)
+    }
   }
 
   return (
     <div className="page-container">
       <div className="max-w-4xl mx-auto">
         <div className="content-wrapper">
-          <div className="flex items-center mb-4">
-            <span className="icon-spacing text-2xl">📁</span>
-            <h2 className="section-title">Export Data</h2>
-          </div>
+          <h2 className="section-title">
+            <span className="icon-spacing">📁</span>
+            Export Data
+          </h2>
           <p className="section-subtitle">
             Export your tickets and roadmap data as markdown files for backup or version control.
           </p>
 
           <div className="form-section">
             <label className="form-label">
-              <span className="icon-spacing">📋</span>
+              <span className="icon-spacing">⚙️</span>
               Export Format
             </label>
             <div className="space-y-4">
@@ -147,12 +158,17 @@ ${milestoneTickets.map(ticket =>
                   name="exportFormat"
                   value="markdown-tickets"
                   checked={exportFormat === 'markdown-tickets'}
-                  onChange={(e) => setExportFormat(e.target.value)}
+                  onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-medium" style={{ color: '#2d3e2e' }}>📄 Export Tickets</div>
-                  <div className="text-sm" style={{ color: '#5a6e5a' }}>Export all tickets as individual markdown documents</div>
+                  <div className="font-medium" style={{ color: '#2d3e2e' }}>
+                    <span className="icon-spacing">📄</span>
+                    Export Tickets
+                  </div>
+                  <div className="text-sm" style={{ color: '#5a6e5a' }}>
+                    Export all tickets as individual markdown documents
+                  </div>
                 </div>
               </label>
               
@@ -162,12 +178,17 @@ ${milestoneTickets.map(ticket =>
                   name="exportFormat"
                   value="markdown-roadmap"
                   checked={exportFormat === 'markdown-roadmap'}
-                  onChange={(e) => setExportFormat(e.target.value)}
+                  onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-medium" style={{ color: '#2d3e2e' }}>🗺️ Export Roadmap</div>
-                  <div className="text-sm" style={{ color: '#5a6e5a' }}>Export roadmap with milestone breakdown and progress</div>
+                  <div className="font-medium" style={{ color: '#2d3e2e' }}>
+                    <span className="icon-spacing">🗺️</span>
+                    Export Roadmap
+                  </div>
+                  <div className="text-sm" style={{ color: '#5a6e5a' }}>
+                    Export roadmap with milestone breakdown and progress
+                  </div>
                 </div>
               </label>
               
@@ -177,48 +198,42 @@ ${milestoneTickets.map(ticket =>
                   name="exportFormat"
                   value="json"
                   checked={exportFormat === 'json'}
-                  onChange={(e) => setExportFormat(e.target.value)}
+                  onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
                   className="mt-1"
                 />
                 <div>
-                  <div className="font-medium" style={{ color: '#2d3e2e' }}>📦 Export All Data</div>
-                  <div className="text-sm" style={{ color: '#5a6e5a' }}>Complete project export with all data in JSON format</div>
+                  <div className="font-medium" style={{ color: '#2d3e2e' }}>
+                    <span className="icon-spacing">📦</span>
+                    Export All Data
+                  </div>
+                  <div className="text-sm" style={{ color: '#5a6e5a' }}>
+                    Complete project export with all data in JSON format
+                  </div>
                 </div>
               </label>
             </div>
           </div>
 
           <div className="button-group">
-            <button
-              onClick={handlePreview}
-              className="btn-secondary-green"
-            >
+            <button onClick={handlePreview} className="btn-secondary-green">
               <span className="icon-spacing">👁️</span>
               Preview
             </button>
-            <button
-              onClick={handleDownload}
-              className="btn-primary-green"
-            >
-              <span className="icon-spacing">�</span>
+            <button onClick={handleDownload} className="btn-primary-green">
+              <span className="icon-spacing">📁</span>
               Download
             </button>
-            <button
-              onClick={handleCopyToClipboard}
-              className="btn-secondary-green"
-            >
+            <button onClick={handleCopyToClipboard} className="btn-secondary-green">
               <span className="icon-spacing">📋</span>
               Copy to Clipboard
             </button>
           </div>
 
           <div className="export-section-green">
-            <div className="flex items-center mb-4">
+            <h3 className="text-lg font-medium mb-4" style={{ color: '#2d3e2e' }}>
               <span className="icon-spacing">📝</span>
-              <h3 className="text-lg font-medium" style={{ color: '#2d3e2e' }}>
-                Sample Ticket Markdown Format
-              </h3>
-            </div>
+              Sample Ticket Markdown Format
+            </h3>
             <div className="code-preview-green">
 {`# Ticket: Fix login validation
 
@@ -247,7 +262,10 @@ Users are experiencing issues with login validation when using special character
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="card-green max-w-4xl max-h-[80vh] w-full overflow-hidden">
               <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid #c8d5c8' }}>
-                <h3 className="text-lg font-medium" style={{ color: '#2d3e2e' }}>Export Preview</h3>
+                <h3 className="text-lg font-medium" style={{ color: '#2d3e2e' }}>
+                  <span className="icon-spacing">👁️</span>
+                  Export Preview
+                </h3>
                 <button
                   onClick={() => setShowPreview(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -257,7 +275,7 @@ Users are experiencing issues with login validation when using special character
                 </button>
               </div>
               <div className="p-4 overflow-auto max-h-[60vh]">
-                <pre className="code-preview-green p-4 text-sm font-mono whitespace-pre-wrap">
+                <pre className="code-preview-green">
                   {previewContent}
                 </pre>
               </div>

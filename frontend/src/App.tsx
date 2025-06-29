@@ -4,12 +4,13 @@ import RoadmapView from './components/RoadmapView'
 import CreateTicket from './components/CreateTicket'
 import ExportView from './components/ExportView'
 import { TicketProvider } from './context/TicketContext'
+import { TabConfig } from './types'
 import './App.css'
 
 function App() {
-  const [activeTab, setActiveTab] = useState('kanban')
+  const [activeTab, setActiveTab] = useState<string>('kanban')
 
-  const tabs = [
+  const tabs: TabConfig[] = [
     { id: 'kanban', label: 'Kanban', icon: '📋' },
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
     { id: 'create', label: 'Create Ticket', icon: '➕' },

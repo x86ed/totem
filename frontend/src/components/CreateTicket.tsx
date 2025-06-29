@@ -1,26 +1,35 @@
-import React, { useState } from 'react'
+import React, { useState, FormEvent, ChangeEvent } from 'react'
 import { useTickets } from '../context/TicketContext'
+import { Ticket } from '../types'
 
-const CreateTicket = () => {
+interface FormData {
+  title: string
+  description: string
+  priority: Ticket['priority']
+  assignee: string
+  milestone: string
+}
+
+const CreateTicket: React.FC = () => {
   const { addTicket, milestones } = useTickets()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     priority: 'medium',
     assignee: '',
     milestone: ''
   })
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [showSuccess, setShowSuccess] = useState<boolean>(false)
 
-  const generateTicketId = () => {
+  const generateTicketId = (): string => {
     const timestamp = Date.now().toString().slice(-4)
     return `TKT-${timestamp}`
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
     
-    const newTicket = {
+    const newTicket: Ticket = {
       id: generateTicketId(),
       ...formData,
       status: 'todo',
@@ -43,7 +52,7 @@ const CreateTicket = () => {
     setTimeout(() => setShowSuccess(false), 3000)
   }
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
@@ -51,7 +60,7 @@ const CreateTicket = () => {
     }))
   }
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setFormData({
       title: '',
       description: '',
@@ -65,12 +74,10 @@ const CreateTicket = () => {
     <div className="page-container">
       <div className="max-w-2xl mx-auto">
         <div className="content-wrapper">
-          <div className="flex items-center mb-6">
-            <span className="icon-spacing text-2xl">➕</span>
-            <h2 className="text-2xl font-semibold" style={{ color: '#2d3e2e' }}>
-              Create New Ticket
-            </h2>
-          </div>
+          <h2 className="section-title">
+            <span className="icon-spacing">🎫</span>
+            Create New Ticket
+          </h2>
 
           {showSuccess && (
             <div className="success-message">
@@ -106,15 +113,15 @@ const CreateTicket = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="input-green resize-y"
-                placeholder="Describe the ticket requirements or issue"
+                className="input-green"
+                placeholder="Describe the ticket requirements..."
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-section">
                 <label className="form-label">
-                  <span className="icon-spacing">🔥</span>
+                  <span className="icon-spacing">⚡</span>
                   Priority
                 </label>
                 <select
@@ -123,9 +130,9 @@ const CreateTicket = () => {
                   onChange={handleChange}
                   className="input-green"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="low">🟢 Low</option>
+                  <option value="medium">⚡ Medium</option>
+                  <option value="high">🔥 High</option>
                 </select>
               </div>
 
@@ -140,46 +147,43 @@ const CreateTicket = () => {
                   value={formData.assignee}
                   onChange={handleChange}
                   className="input-green"
-                  placeholder="Optional"
+                  placeholder="Enter assignee name"
                 />
-              </div>
-
-              <div className="form-section">
-                <label className="form-label">
-                  <span className="icon-spacing">🏁</span>
-                  Milestone
-                </label>
-                <select
-                  name="milestone"
-                  value={formData.milestone}
-                  onChange={handleChange}
-                  className="input-green"
-                >
-                  <option value="">No milestone</option>
-                  {milestones.map((milestone) => (
-                    <option key={milestone.id} value={milestone.id}>
-                      {milestone.title} (Due: {milestone.dueDate})
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 
-            <div className="button-group justify-end">
-              <button
-                type="button"
+            <div className="form-section">
+              <label className="form-label">
+                <span className="icon-spacing">🗺️</span>
+                Milestone
+              </label>
+              <select
+                name="milestone"
+                value={formData.milestone}
+                onChange={handleChange}
+                className="input-green"
+              >
+                <option value="">Select milestone...</option>
+                {milestones.map((milestone) => (
+                  <option key={milestone.id} value={milestone.id}>
+                    {milestone.title} ({milestone.dueDate})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="button-group">
+              <button type="submit" className="btn-primary-green">
+                <span className="icon-spacing">💾</span>
+                Create Ticket
+              </button>
+              <button 
+                type="button" 
                 onClick={resetForm}
                 className="btn-secondary-green"
               >
                 <span className="icon-spacing">🔄</span>
-                Reset
-              </button>
-              <button
-                type="submit"
-                className="btn-primary-green"
-              >
-                <span className="icon-spacing">✅</span>
-                Create Ticket
+                Reset Form
               </button>
             </div>
           </form>

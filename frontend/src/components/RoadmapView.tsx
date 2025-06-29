@@ -1,14 +1,15 @@
 import React from 'react'
 import { useTickets } from '../context/TicketContext'
+import { Ticket } from '../types'
 
-const RoadmapView = () => {
+const RoadmapView: React.FC = () => {
   const { tickets, milestones } = useTickets()
 
-  const getTicketsByMilestone = (milestoneId) => {
+  const getTicketsByMilestone = (milestoneId: string): Ticket[] => {
     return tickets.filter(ticket => ticket.milestone === milestoneId)
   }
 
-  const getMilestoneProgress = (milestoneId) => {
+  const getMilestoneProgress = (milestoneId: string): number => {
     const milestoneTickets = getTicketsByMilestone(milestoneId)
     if (milestoneTickets.length === 0) return 0
     
@@ -16,7 +17,7 @@ const RoadmapView = () => {
     return Math.round((completedTickets.length / milestoneTickets.length) * 100)
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -24,14 +25,39 @@ const RoadmapView = () => {
     })
   }
 
+  const getPriorityClass = (priority: Ticket['priority']): string => {
+    switch (priority) {
+      case 'high':
+        return 'priority-high-green'
+      case 'medium':
+        return 'priority-medium-green'
+      case 'low':
+        return 'priority-low-green'
+      default:
+        return 'priority-low-green'
+    }
+  }
+
+  const getStatusIcon = (status: Ticket['status']): string => {
+    switch (status) {
+      case 'done':
+        return '✅'
+      case 'in-progress':
+        return '🔄'
+      case 'review':
+        return '👀'
+      case 'todo':
+      default:
+        return '📝'
+    }
+  }
+
   return (
     <div className="page-container">
-      <div className="flex items-center mb-6">
-        <span className="icon-spacing text-2xl">🗺️</span>
-        <h2 className="section-title">
-          Project Roadmap
-        </h2>
-      </div>
+      <h2 className="section-title">
+        <span className="icon-spacing">🗺️</span>
+        Project Roadmap
+      </h2>
 
       <div className="space-y-8">
         {milestones.map((milestone) => {
@@ -43,7 +69,7 @@ const RoadmapView = () => {
               <div className="milestone-header">
                 <div>
                   <h3 className="milestone-title">
-                    <span className="icon-spacing">🏁</span>
+                    <span className="icon-spacing">🎯</span>
                     {milestone.title}
                   </h3>
                   <p className="milestone-description">
@@ -82,11 +108,7 @@ const RoadmapView = () => {
                   milestoneTickets.map((ticket) => (
                     <div 
                       key={ticket.id} 
-                      className={`flex items-center gap-4 p-3 rounded-lg ${
-                        ticket.status === 'done' ? 'milestone-ticket completed' : 
-                        ticket.status === 'in-progress' ? 'milestone-ticket in-progress' : 
-                        'milestone-ticket'
-                      }`}
+                      className="milestone-ticket"
                       style={{
                         background: ticket.status === 'done' ? '#f0f8f0' : 
                                    ticket.status === 'in-progress' ? '#f5f8f2' : '#f9fbf9',
@@ -96,34 +118,32 @@ const RoadmapView = () => {
                         }`
                       }}
                     >
-                      <input 
-                        type="checkbox" 
-                        checked={ticket.status === 'done'} 
-                        readOnly
-                        className="w-5 h-5"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <strong style={{ color: '#2d3e2e' }}>{ticket.title}</strong>
-                          <span className="text-sm" style={{ color: '#5a6e5a' }}>({ticket.id})</span>
-                          <span 
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                              ticket.priority === 'high' ? 'priority-high-green' :
-                              ticket.priority === 'medium' ? 'priority-medium-green' :
-                              'priority-low-green'
-                            }`}
-                          >
-                            {ticket.priority}
-                          </span>
-                        </div>
-                        <div className="text-sm mt-1" style={{ color: '#5a6e5a' }}>
-                          {ticket.description}
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg">{getStatusIcon(ticket.status)}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <strong style={{ color: '#2d3e2e' }}>{ticket.title}</strong>
+                            <span className="text-sm" style={{ color: '#5a6e5a' }}>({ticket.id})</span>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityClass(ticket.priority)}`}>
+                              {ticket.priority}
+                            </span>
+                          </div>
+                          <div className="text-sm" style={{ color: '#5a6e5a' }}>
+                            {ticket.description}
+                          </div>
+                          {ticket.assignee && (
+                            <div className="text-xs mt-1" style={{ color: '#7a8e7a' }}>
+                              <span className="icon-spacing">👤</span>
+                              Assigned to: {ticket.assignee}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-8" style={{ color: '#5a6e5a', fontStyle: 'italic' }}>
+                    <span className="icon-spacing">📂</span>
                     No tickets assigned to this milestone
                   </div>
                 )}

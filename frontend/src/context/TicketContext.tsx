@@ -1,9 +1,23 @@
-import React, { createContext, useContext, useReducer } from 'react'
+import { createContext, useContext, useReducer, ReactNode } from 'react'
+import { Ticket, Milestone, TicketContextType } from '../types'
 
-const TicketContext = createContext()
+const TicketContext = createContext<TicketContextType | undefined>(undefined)
+
+interface TicketState {
+  tickets: Ticket[]
+  milestones: Milestone[]
+}
+
+type TicketAction =
+  | { type: 'ADD_TICKET'; payload: Ticket }
+  | { type: 'UPDATE_TICKET'; payload: Ticket }
+  | { type: 'DELETE_TICKET'; payload: string }
+  | { type: 'MOVE_TICKET'; payload: { ticketId: string; newStatus: Ticket['status'] } }
+  | { type: 'ADD_MILESTONE'; payload: Milestone }
+  | { type: 'UPDATE_MILESTONE'; payload: Milestone }
 
 // Sample data
-const initialState = {
+const initialState: TicketState = {
   tickets: [
     {
       id: 'TKT-001',
@@ -71,7 +85,7 @@ const initialState = {
   ]
 }
 
-function ticketReducer(state, action) {
+function ticketReducer(state: TicketState, action: TicketAction): TicketState {
   switch (action.type) {
     case 'ADD_TICKET':
       return {
@@ -116,35 +130,40 @@ function ticketReducer(state, action) {
   }
 }
 
-export function TicketProvider({ children }) {
+interface TicketProviderProps {
+  children: ReactNode
+}
+
+export function TicketProvider({ children }: TicketProviderProps) {
   const [state, dispatch] = useReducer(ticketReducer, initialState)
 
-  const addTicket = (ticket) => {
+  const addTicket = (ticket: Ticket) => {
     dispatch({ type: 'ADD_TICKET', payload: ticket })
   }
 
-  const updateTicket = (ticket) => {
+  const updateTicket = (ticket: Ticket) => {
     dispatch({ type: 'UPDATE_TICKET', payload: ticket })
   }
 
-  const deleteTicket = (ticketId) => {
+  const deleteTicket = (ticketId: string) => {
     dispatch({ type: 'DELETE_TICKET', payload: ticketId })
   }
 
-  const moveTicket = (ticketId, newStatus) => {
+  const moveTicket = (ticketId: string, newStatus: Ticket['status']) => {
     dispatch({ type: 'MOVE_TICKET', payload: { ticketId, newStatus } })
   }
 
-  const addMilestone = (milestone) => {
+  const addMilestone = (milestone: Milestone) => {
     dispatch({ type: 'ADD_MILESTONE', payload: milestone })
   }
 
-  const updateMilestone = (milestone) => {
+  const updateMilestone = (milestone: Milestone) => {
     dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
   }
 
-  const value = {
-    ...state,
+  const value: TicketContextType = {
+    tickets: state.tickets,
+    milestones: state.milestones,
     addTicket,
     updateTicket,
     deleteTicket,
@@ -160,7 +179,7 @@ export function TicketProvider({ children }) {
   )
 }
 
-export function useTickets() {
+export function useTickets(): TicketContextType {
   const context = useContext(TicketContext)
   if (context === undefined) {
     throw new Error('useTickets must be used within a TicketProvider')
