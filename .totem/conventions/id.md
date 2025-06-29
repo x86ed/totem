@@ -1,8 +1,8 @@
 # id-conventions.md
-Format: `{domain}.{layer}.{component}-{feature}-{number}`
+Format: `{layer}.{component}-{feature}-{number}`
 Examples:
-- healthcare.security.auth-sso-001
-- fintech.frontend.payment-flow-042
+- security.auth-sso-001
+- frontend.payment-flow-042
 
 # Layer
 - **Frontend** - User interface components, web applications, dashboards
