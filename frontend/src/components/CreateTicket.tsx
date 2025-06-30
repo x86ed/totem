@@ -88,11 +88,12 @@ const CreateTicket: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="form-section">
-              <label className="form-label">
+              <label htmlFor="title" className="form-label">
                 <span className="icon-spacing">📝</span>
                 Title *
               </label>
               <input
+                id="title"
                 type="text"
                 name="title"
                 value={formData.title}
@@ -104,11 +105,12 @@ const CreateTicket: React.FC = () => {
             </div>
 
             <div className="form-section">
-              <label className="form-label">
+              <label htmlFor="description" className="form-label">
                 <span className="icon-spacing">📄</span>
                 Description
               </label>
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
@@ -120,11 +122,12 @@ const CreateTicket: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-section">
-                <label className="form-label">
+                <label htmlFor="priority" className="form-label">
                   <span className="icon-spacing">⚡</span>
                   Priority
                 </label>
                 <select
+                  id="priority"
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
@@ -137,11 +140,12 @@ const CreateTicket: React.FC = () => {
               </div>
 
               <div className="form-section">
-                <label className="form-label">
+                <label htmlFor="assignee" className="form-label">
                   <span className="icon-spacing">👤</span>
                   Assignee
                 </label>
                 <input
+                  id="assignee"
                   type="text"
                   name="assignee"
                   value={formData.assignee}
@@ -153,11 +157,12 @@ const CreateTicket: React.FC = () => {
             </div>
 
             <div className="form-section">
-              <label className="form-label">
+              <label htmlFor="milestone" className="form-label">
                 <span className="icon-spacing">🗺️</span>
                 Milestone
               </label>
               <select
+                id="milestone"
                 name="milestone"
                 value={formData.milestone}
                 onChange={handleChange}
