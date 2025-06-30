@@ -1,12 +1,11 @@
 {
   "name": "totem",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "AI-native, git-native, distributed project management platform - open source and self-hosted",
   "main": "dist/init.js",
   "bin": {
     "totem": "./dist/init.js"
   },
-
   "scripts": {
     "start": "npm run build:scripts && node dist/server.js",
     "build:scripts": "tsc --project tsconfig.scripts.json",
@@ -19,7 +18,7 @@
   },
   "keywords": [
     "ai-native",
-    "git-native", 
+    "git-native",
     "distributed",
     "project-management",
     "self-hosted",
