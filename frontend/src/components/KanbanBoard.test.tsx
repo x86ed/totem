@@ -249,24 +249,24 @@ describe('KanbanBoard', () => {
       const doneTicket = screen.getByTestId('ticket-TKT-004').closest('.relative')
 
       // For todo ticket, check available move options
-      expect(within(todoTicket!).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(todoTicket!).getByTitle('Move to Review')).toBeInTheDocument()
-      expect(within(todoTicket!).getByTitle('Move to Done')).toBeInTheDocument()
+      expect(within(todoTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
+      expect(within(todoTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
+      expect(within(todoTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
 
       // For in-progress ticket, check available move options  
-      expect(within(inProgressTicket!).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(inProgressTicket!).getByTitle('Move to Review')).toBeInTheDocument()
-      expect(within(inProgressTicket!).getByTitle('Move to Done')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
 
       // For review ticket, check available move options
-      expect(within(reviewTicket!).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(reviewTicket!).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(reviewTicket!).getByTitle('Move to Done')).toBeInTheDocument()
+      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
+      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
+      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
 
       // For done ticket, check available move options
-      expect(within(doneTicket!).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(doneTicket!).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(doneTicket!).getByTitle('Move to Review')).toBeInTheDocument()
+      expect(within(doneTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
+      expect(within(doneTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
+      expect(within(doneTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
     })
   })
 
@@ -401,7 +401,7 @@ describe('KanbanBoard', () => {
       
       // Find a specific move button within the todo ticket context and click it
       const todoTicket = screen.getByTestId('ticket-TKT-001').closest('.relative')
-      const moveToInProgressButton = within(todoTicket!).getByTitle('Move to In Progress')
+      const moveToInProgressButton = within(todoTicket! as HTMLElement).getByTitle('Move to In Progress')
       fireEvent.click(moveToInProgressButton)
       
       expect(mockMoveTicket).toHaveBeenCalledWith('TKT-001', 'in-progress')

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 
 // Mock the CSS import
 vi.mock('./index.css', () => ({}))

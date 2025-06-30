@@ -1,11 +1,54 @@
 import React from 'react'
 import { Ticket } from '../types'
 
+/**
+ * Props interface for the TicketCard component
+ * @interface TicketCardProps
+ */
 interface TicketCardProps {
+  /** The ticket object containing all ticket data */
   ticket: Ticket
 }
 
+/**
+ * TicketCard Component
+ * 
+ * A reusable card component for displaying individual ticket information.
+ * Used across the application in different views (Kanban board, Roadmap, etc.)
+ * 
+ * Features:
+ * - Visual representation of ticket details
+ * - Priority indicators with color coding
+ * - Assignee information
+ * - Ticket ID and title display
+ * - Truncated description with line clamping
+ * 
+ * @component
+ * @param {TicketCardProps} props - Component props
+ * @param {Ticket} props.ticket - The ticket object to display
+ * @returns {JSX.Element} The TicketCard component
+ * 
+ * @example
+ * ```tsx
+ * import TicketCard from './components/TicketCard'
+ * 
+ * function TicketList({ tickets }) {
+ *   return (
+ *     <div>
+ *       {tickets.map(ticket => (
+ *         <TicketCard key={ticket.id} ticket={ticket} />
+ *       ))}
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
+  /**
+   * Gets the appropriate CSS class for a ticket priority
+   * @param {Ticket['priority']} priority - The priority level of the ticket
+   * @returns {string} CSS class name for styling the priority badge
+   */
   const getPriorityClass = (priority: Ticket['priority']): string => {
     switch (priority) {
       case 'high':
@@ -19,6 +62,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     }
   }
 
+  /**
+   * Gets the appropriate emoji icon for a ticket priority
+   * @param {Ticket['priority']} priority - The priority level of the ticket
+   * @returns {string} Emoji icon representing the priority level
+   */
   const getPriorityIcon = (priority: Ticket['priority']): string => {
     switch (priority) {
       case 'high':
@@ -65,4 +113,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   )
 }
 
+/**
+ * Default export of the TicketCard component
+ * @default TicketCard
+ */
 export default TicketCard

@@ -2,14 +2,52 @@ import React, { useState, FormEvent, ChangeEvent } from 'react'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 
+/**
+ * Form data interface for creating a new ticket
+ * @interface FormData
+ */
 interface FormData {
+  /** The title of the ticket (required) */
   title: string
+  /** Optional description providing details about the ticket */
   description: string
+  /** Priority level of the ticket (low, medium, high) */
   priority: Ticket['priority']
+  /** Name of the person assigned to work on the ticket */
   assignee: string
+  /** ID of the milestone this ticket belongs to */
   milestone: string
 }
 
+/**
+ * CreateTicket Component
+ * 
+ * A form component for creating new tickets in the project management system.
+ * Provides fields for title, description, priority, assignee, and milestone selection.
+ * 
+ * Features:
+ * - Form validation (title is required)
+ * - Auto-generated unique ticket IDs
+ * - Success message display after ticket creation
+ * - Form reset functionality
+ * - Accessible form labels and structure
+ * 
+ * @component
+ * @returns {JSX.Element} The CreateTicket form component
+ * 
+ * @example
+ * ```tsx
+ * import CreateTicket from './components/CreateTicket'
+ * 
+ * function App() {
+ *   return (
+ *     <div>
+ *       <CreateTicket />
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 const CreateTicket: React.FC = () => {
   const { addTicket, milestones } = useTickets()
   const [formData, setFormData] = useState<FormData>({
@@ -21,11 +59,23 @@ const CreateTicket: React.FC = () => {
   })
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
 
+  /**
+   * Generates a unique ticket ID using timestamp
+   * @returns {string} A unique ticket ID in format "TKT-XXXX"
+   */
   const generateTicketId = (): string => {
     const timestamp = Date.now().toString().slice(-4)
     return `TKT-${timestamp}`
   }
 
+  /**
+   * Handles form submission for creating a new ticket
+   * - Prevents default form submission
+   * - Creates new ticket with generated ID and current date
+   * - Resets form and shows success message
+   * 
+   * @param {FormEvent<HTMLFormElement>} e - The form submit event
+   */
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
     
@@ -52,6 +102,12 @@ const CreateTicket: React.FC = () => {
     setTimeout(() => setShowSuccess(false), 3000)
   }
 
+  /**
+   * Handles changes to form input fields
+   * Updates the corresponding field in the form data state
+   * 
+   * @param {ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>} e - The input change event
+   */
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -60,6 +116,10 @@ const CreateTicket: React.FC = () => {
     }))
   }
 
+  /**
+   * Resets all form fields to their initial values
+   * Called when the reset button is clicked
+   */
   const resetForm = (): void => {
     setFormData({
       title: '',
@@ -198,4 +258,8 @@ const CreateTicket: React.FC = () => {
   )
 }
 
+/**
+ * Default export of the CreateTicket component
+ * @default CreateTicket
+ */
 export default CreateTicket

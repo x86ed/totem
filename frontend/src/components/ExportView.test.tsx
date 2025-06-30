@@ -147,10 +147,10 @@ describe('ExportView', () => {
             href: '',
             download: '',
             click: mockClick,
-          }
+          } as unknown as HTMLElement
         }
         return originalCreateElement.call(document, tagName)
-      })
+      }) as typeof document.createElement
 
       render(<ExportView />)
       

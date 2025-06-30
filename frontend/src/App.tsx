@@ -7,6 +7,17 @@ import { TicketProvider } from './context/TicketContext'
 import { TabConfig } from './types'
 import './App.css'
 
+/**
+ * Main application component that provides the overall layout and navigation
+ * 
+ * Features:
+ * - Tab-based navigation between different views (Kanban, Roadmap, Create Ticket, Export)
+ * - Responsive header with application branding
+ * - Context provider for ticket management state
+ * - Green-themed styling with custom background
+ * 
+ * @returns The main application component with navigation and content areas
+ */
 function App() {
   const [activeTab, setActiveTab] = useState<string>('kanban')
 

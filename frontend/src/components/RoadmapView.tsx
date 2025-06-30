@@ -2,13 +2,53 @@ import React from 'react'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 
+/**
+ * RoadmapView Component
+ * 
+ * A visual representation of the project roadmap organized by milestones.
+ * Displays milestones with progress tracking, due dates, and associated tickets.
+ * 
+ * Features:
+ * - Milestone progress bars with completion percentage
+ * - Due date tracking for each milestone
+ * - Visual status indicators for tickets
+ * - Priority indicators
+ * - Assignee information
+ * - Empty state handling
+ * 
+ * @component
+ * @returns {JSX.Element} The RoadmapView component with milestone timeline and tickets
+ * 
+ * @example
+ * ```tsx
+ * import RoadmapView from './components/RoadmapView'
+ * 
+ * function App() {
+ *   return (
+ *     <div>
+ *       <RoadmapView />
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 const RoadmapView: React.FC = () => {
   const { tickets, milestones } = useTickets()
 
+  /**
+   * Filters tickets by their associated milestone
+   * @param {string} milestoneId - The milestone ID to filter by
+   * @returns {Ticket[]} Array of tickets assigned to the milestone
+   */
   const getTicketsByMilestone = (milestoneId: string): Ticket[] => {
     return tickets.filter(ticket => ticket.milestone === milestoneId)
   }
 
+  /**
+   * Calculates the completion progress percentage for a milestone
+   * @param {string} milestoneId - The milestone ID to calculate progress for
+   * @returns {number} Percentage of tickets completed (0-100)
+   */
   const getMilestoneProgress = (milestoneId: string): number => {
     const milestoneTickets = getTicketsByMilestone(milestoneId)
     if (milestoneTickets.length === 0) return 0
@@ -17,6 +57,11 @@ const RoadmapView: React.FC = () => {
     return Math.round((completedTickets.length / milestoneTickets.length) * 100)
   }
 
+  /**
+   * Formats a date string into a human-readable format
+   * @param {string} dateString - ISO date string to format
+   * @returns {string} Formatted date string (e.g., "Jan 15, 2023")
+   */
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -25,6 +70,11 @@ const RoadmapView: React.FC = () => {
     })
   }
 
+  /**
+   * Gets the appropriate CSS class for a ticket priority
+   * @param {Ticket['priority']} priority - The priority level of the ticket
+   * @returns {string} CSS class name for styling the priority badge
+   */
   const getPriorityClass = (priority: Ticket['priority']): string => {
     switch (priority) {
       case 'high':
@@ -38,6 +88,11 @@ const RoadmapView: React.FC = () => {
     }
   }
 
+  /**
+   * Gets the appropriate emoji icon for a ticket status
+   * @param {Ticket['status']} status - The status of the ticket
+   * @returns {string} Emoji icon representing the status
+   */
   const getStatusIcon = (status: Ticket['status']): string => {
     switch (status) {
       case 'done':
@@ -156,4 +211,8 @@ const RoadmapView: React.FC = () => {
   )
 }
 
+/**
+ * Default export of the RoadmapView component
+ * @default RoadmapView
+ */
 export default RoadmapView

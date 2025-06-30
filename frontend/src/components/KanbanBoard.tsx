@@ -3,12 +3,50 @@ import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 import TicketCard from './TicketCard'
 
+/**
+ * Column interface representing a kanban board status column
+ * @interface Column
+ */
 interface Column {
+  /** The status ID that matches a ticket's status property */
   id: Ticket['status']
+  /** Display title for the column */
   title: string
+  /** Color hex code for the column */
   color: string
 }
 
+/**
+ * KanbanBoard Component
+ * 
+ * A flexible Kanban board implementation for the project management system.
+ * Displays tickets organized by status in columns, with drag-and-drop functionality
+ * for moving tickets between statuses.
+ * 
+ * Features:
+ * - Status columns (To Do, In Progress, Review, Done)
+ * - Visual ticket cards with detailed information
+ * - Hover controls to move tickets between statuses
+ * - Ticket count per column
+ * - Empty state indicators
+ * - Color-coded columns
+ * 
+ * @component
+ * @returns {JSX.Element} The KanbanBoard component with columns and tickets
+ * 
+ * @example
+ * ```tsx
+ * import KanbanBoard from './components/KanbanBoard'
+ * 
+ * function App() {
+ *   return (
+ *     <div>
+ *       <KanbanBoard />
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 const KanbanBoard: React.FC = () => {
   const { tickets, moveTicket } = useTickets()
 
@@ -19,14 +57,29 @@ const KanbanBoard: React.FC = () => {
     { id: 'done', title: 'Done', color: '#4a7c59' }
   ]
 
+  /**
+   * Filters tickets by their status
+   * @param {Ticket['status']} status - The status to filter by
+   * @returns {Ticket[]} Array of tickets with the matching status
+   */
   const getTicketsByStatus = (status: Ticket['status']): Ticket[] => {
     return tickets.filter(ticket => ticket.status === status)
   }
 
+  /**
+   * Moves a ticket to a different status column
+   * @param {string} ticketId - The ID of the ticket to move
+   * @param {Ticket['status']} newStatus - The destination status
+   */
   const handleMoveTicket = (ticketId: string, newStatus: Ticket['status']): void => {
     moveTicket(ticketId, newStatus)
   }
 
+  /**
+   * Gets the appropriate icon for a column based on its status ID
+   * @param {Ticket['status']} colId - The column status ID
+   * @returns {string} Emoji icon representing the column status
+   */
   const getColumnIcon = (colId: Ticket['status']): string => {
     switch (colId) {
       case 'todo': return '📝'
@@ -108,4 +161,8 @@ const KanbanBoard: React.FC = () => {
   )
 }
 
+/**
+ * Default export of the KanbanBoard component
+ * @default KanbanBoard
+ */
 export default KanbanBoard

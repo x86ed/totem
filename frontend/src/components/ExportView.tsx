@@ -2,19 +2,65 @@ import React, { useState } from 'react'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 
+/**
+ * Available export formats for project data
+ * @typedef {'markdown-tickets' | 'markdown-roadmap' | 'json'} ExportFormat
+ */
 type ExportFormat = 'markdown-tickets' | 'markdown-roadmap' | 'json'
 
+/**
+ * Result object returned by export generation functions
+ * @interface ExportResult
+ */
 interface ExportResult {
+  /** The generated content as a string */
   content: string
+  /** Suggested filename for the export */
   filename: string
 }
 
+/**
+ * ExportView Component
+ * 
+ * A component for exporting project data in various formats including:
+ * - Individual ticket markdown documents
+ * - Roadmap with milestone breakdown
+ * - Complete JSON export with all project data
+ * 
+ * Features:
+ * - Multiple export formats (Markdown tickets, Markdown roadmap, JSON)
+ * - Live preview of export content
+ * - Download functionality
+ * - Copy to clipboard
+ * - Sample format examples
+ * 
+ * @component
+ * @returns {JSX.Element} The ExportView component with export options and preview
+ * 
+ * @example
+ * ```tsx
+ * import ExportView from './components/ExportView'
+ * 
+ * function App() {
+ *   return (
+ *     <div>
+ *       <ExportView />
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 const ExportView: React.FC = () => {
   const { tickets, milestones } = useTickets()
   const [exportFormat, setExportFormat] = useState<ExportFormat>('markdown-tickets')
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [previewContent, setPreviewContent] = useState<string>('')
 
+  /**
+   * Generates markdown content for a single ticket
+   * @param {Ticket} ticket - The ticket object to convert to markdown
+   * @returns {string} Formatted markdown string for the ticket
+   */
   const generateMarkdownTicket = (ticket: Ticket): string => {
     return `# Ticket: ${ticket.title}
 
@@ -33,6 +79,10 @@ ${ticket.description}
 `
   }
 
+  /**
+   * Generates a markdown roadmap document with all milestones and their tickets
+   * @returns {string} Formatted markdown string containing the complete roadmap
+   */
   const generateMarkdownRoadmap = (): string => {
     let content = `# Project Roadmap
 
@@ -61,6 +111,10 @@ ${milestoneTickets.map(ticket =>
     return content
   }
 
+  /**
+   * Generates a complete JSON export with all project data and statistics
+   * @returns {string} JSON string containing tickets, milestones, and summary statistics
+   */
   const generateJSONExport = (): string => {
     return JSON.stringify({
       exportDate: new Date().toISOString(),
@@ -79,6 +133,10 @@ ${milestoneTickets.map(ticket =>
     }, null, 2)
   }
 
+  /**
+   * Generates export content based on the selected format
+   * @returns {ExportResult} Object containing the generated content and suggested filename
+   */
   const generateExport = (): ExportResult => {
     let content = ''
     let filename = ''
@@ -104,12 +162,20 @@ ${milestoneTickets.map(ticket =>
     return { content, filename }
   }
 
+  /**
+   * Handles the preview functionality
+   * Generates export content and displays it in a modal
+   */
   const handlePreview = (): void => {
     const { content } = generateExport()
     setPreviewContent(content)
     setShowPreview(true)
   }
 
+  /**
+   * Handles the download functionality
+   * Generates export content and triggers browser download
+   */
   const handleDownload = (): void => {
     const { content, filename } = generateExport()
     
@@ -124,6 +190,11 @@ ${milestoneTickets.map(ticket =>
     URL.revokeObjectURL(url)
   }
 
+  /**
+   * Handles copying export content to clipboard
+   * Uses the Clipboard API to copy generated content
+   * @returns {Promise<void>} Promise that resolves when copy operation completes
+   */
   const handleCopyToClipboard = async (): Promise<void> => {
     const { content } = generateExport()
     try {
@@ -287,4 +358,8 @@ Users are experiencing issues with login validation when using special character
   )
 }
 
+/**
+ * Default export of the ExportView component
+ * @default ExportView
+ */
 export default ExportView
