@@ -1,6 +1,6 @@
 {
   "name": "totem",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "a structured project managment and promping environment",
   "main": "scripts/init.js",
   "bin": {
