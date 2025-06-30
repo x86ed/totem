@@ -1,24 +1,47 @@
 {
   "name": "totem",
   "version": "0.4.0",
-  "description": "a structured project managment and promping environment",
-  "main": "scripts/init.js",
+  "description": "AI-native, git-native, distributed project management platform - open source and self-hosted",
+  "main": "dist/init.js",
   "bin": {
-    "totem": "./scripts/init.js"
+    "totem": "./dist/init.js"
   },
 
   "scripts": {
+    "start": "npm run build:scripts && node dist/server.js",
+    "build:scripts": "tsc --project tsconfig.scripts.json",
+    "dev:server": "ts-node scripts/server.ts",
     "test": "jest",
-    "init:contributor": "node scripts/init.js --type=config"
+    "init:contributor": "npm run build:scripts && node dist/init.js --type=config",
+    "build": "npm run build:scripts && cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "clean": "rm -rf dist"
   },
   "keywords": [
-    "totem",
-    "jira",
-    "architecture"
+    "ai-native",
+    "git-native", 
+    "distributed",
+    "project-management",
+    "self-hosted",
+    "open-source",
+    "markdown",
+    "kanban",
+    "tickets",
+    "roadmap",
+    "totem"
   ],
   "author": "hi",
   "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
   "devDependencies": {
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.10.6",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
     "textlint": "^15.0.1"
   }
 }
