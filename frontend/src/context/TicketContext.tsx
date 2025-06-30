@@ -1,13 +1,26 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react'
 import type { Ticket, Milestone, TicketContextType } from '../types'
 
+/**
+ * Context for managing ticket and milestone data throughout the application
+ */
 const TicketContext = createContext<TicketContextType | undefined>(undefined)
 
+/**
+ * State interface for the ticket reducer
+ * @interface TicketState
+ */
 interface TicketState {
+  /** Array of all tickets in the system */
   tickets: Ticket[]
+  /** Array of all milestones in the system */
   milestones: Milestone[]
 }
 
+/**
+ * Union type of all possible actions for the ticket reducer
+ * @typedef {Object} TicketAction
+ */
 type TicketAction =
   | { type: 'ADD_TICKET'; payload: Ticket }
   | { type: 'UPDATE_TICKET'; payload: Ticket }
@@ -85,6 +98,13 @@ const initialState: TicketState = {
   ]
 }
 
+/**
+ * Reducer function for managing ticket and milestone state
+ * 
+ * @param state - Current ticket state containing tickets and milestones arrays
+ * @param action - Action object that determines how the state should be updated
+ * @returns Updated ticket state
+ */
 export function ticketReducer(state: TicketState, action: TicketAction): TicketState {
   switch (action.type) {
     case 'ADD_TICKET':
@@ -131,32 +151,65 @@ export function ticketReducer(state: TicketState, action: TicketAction): TicketS
 }
 
 interface TicketProviderProps {
+  /** React children that will have access to the ticket context */
   children: ReactNode
 }
 
+/**
+ * Provider component that makes ticket state and actions available to all child components
+ * 
+ * @param props - Component props
+ * @param props.children - Child components that will have access to the ticket context
+ * @returns Provider component with ticket context
+ */
 export function TicketProvider({ children }: TicketProviderProps) {
   const [state, dispatch] = useReducer(ticketReducer, initialState)
 
+  /**
+   * Adds a new ticket to the system
+   * @param ticket - The ticket object to add
+   */
   const addTicket = (ticket: Ticket) => {
     dispatch({ type: 'ADD_TICKET', payload: ticket })
   }
 
+  /**
+   * Updates an existing ticket
+   * @param ticket - The ticket object with updated properties
+   */
   const updateTicket = (ticket: Ticket) => {
     dispatch({ type: 'UPDATE_TICKET', payload: ticket })
   }
 
+  /**
+   * Deletes a ticket from the system
+   * @param ticketId - The ID of the ticket to delete
+   */
   const deleteTicket = (ticketId: string) => {
     dispatch({ type: 'DELETE_TICKET', payload: ticketId })
   }
 
+  /**
+   * Moves a ticket to a different status column
+   * @param ticketId - The ID of the ticket to move
+   * @param newStatus - The target status to move the ticket to
+   */
   const moveTicket = (ticketId: string, newStatus: Ticket['status']) => {
     dispatch({ type: 'MOVE_TICKET', payload: { ticketId, newStatus } })
   }
 
+  /**
+   * Adds a new milestone to the system
+   * @param milestone - The milestone object to add
+   */
   const addMilestone = (milestone: Milestone) => {
     dispatch({ type: 'ADD_MILESTONE', payload: milestone })
   }
 
+  /**
+   * Updates an existing milestone
+   * @param milestone - The milestone object with updated properties
+   */
   const updateMilestone = (milestone: Milestone) => {
     dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
   }
@@ -179,6 +232,12 @@ export function TicketProvider({ children }: TicketProviderProps) {
   )
 }
 
+/**
+ * Custom hook to access the ticket context from any component
+ * 
+ * @returns Ticket context object containing ticket data and action methods
+ * @throws Error if used outside of a TicketProvider
+ */
 export function useTickets(): TicketContextType {
   const context = useContext(TicketContext)
   if (context === undefined) {
