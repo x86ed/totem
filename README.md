@@ -60,7 +60,39 @@ totem/
 
 ### Running the Application
 
-1. **Start the development server**:
+#### Option 1: Express Server (Default)
+
+1. **Start the production server**:
+   ```bash
+   npm start
+   ```
+
+2. **Start the development server**:
+   ```bash
+   npm run dev:server
+   ```
+
+#### Option 2: NestJS Server with Swagger/OpenAPI
+
+1. **Start the NestJS production server**:
+   ```bash
+   npm run start:nestjs
+   ```
+
+2. **Start the NestJS development server**:
+   ```bash
+   npm run dev:nestjs
+   ```
+
+3. **Access the API documentation**:
+   - Web Interface: `http://localhost:3000`
+   - API Documentation: `http://localhost:3000/api/docs`
+   - API Status: `http://localhost:3000/api/status`
+   - Health Check: `http://localhost:3000/api/health`
+
+#### Frontend Development
+
+1. **Start the frontend development server**:
    ```bash
    cd frontend
    npm run dev
@@ -194,7 +226,13 @@ Totem maintains high code quality with comprehensive testing:
 ### Running Tests
 
 ```bash
-# Run all tests
+# Test the scripts and server
+npm run test:scripts
+
+# Test with coverage
+npm run test:coverage
+
+# Test frontend components
 cd frontend && npm test
 
 # Run with coverage
@@ -202,7 +240,21 @@ npm run coverage
 
 # Run type checking
 npm run type-check
+
+# Test the NestJS API endpoints
+npm run start:nestjs
+# Then visit http://localhost:3000/api/docs to test interactively
 ```
+
+### Test Coverage
+
+The project maintains comprehensive test coverage for:
+- **Scripts**: TypeScript server and initialization scripts (27 tests)
+- **NestJS Components**: Controllers, services, and DTOs (8 tests)  
+- **Frontend**: React components and utilities
+- **API Endpoints**: RESTful API integration tests
+
+Total: **35+ tests** covering core functionality with continuous integration.
 
 ## 🔧 Configuration
 
@@ -341,3 +393,55 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with 🤖 AI assistance for the future of distributed project management**
+
+## 📖 API Documentation
+
+Totem provides a comprehensive RESTful API with full OpenAPI/Swagger documentation when using the NestJS server.
+
+### Available Endpoints
+
+- **GET /api/status** - Get server status and initialization state
+- **GET /api/health** - Get detailed server health information
+
+### Interactive API Documentation
+
+When running the NestJS server, you can access interactive API documentation at:
+```
+http://localhost:3000/api/docs
+```
+
+This provides:
+- **🔍 Interactive API Explorer**: Test endpoints directly in the browser
+- **📋 Complete Schema Documentation**: Detailed request/response schemas
+- **🎯 Example Requests**: Sample data for all endpoints
+- **🔧 Try It Out**: Execute API calls with real responses
+- **📄 OpenAPI Specification**: Download the complete API specification
+
+### API Response Examples
+
+**Status Endpoint**:
+```json
+{
+  "status": "running",
+  "initialized": true,
+  "timestamp": "2025-06-30T12:00:00.000Z",
+  "version": "0.6.1"
+}
+```
+
+**Health Endpoint**:
+```json
+{
+  "status": "healthy",
+  "uptime": 3600,
+  "memory": {
+    "rss": 50331648,
+    "heapTotal": 16777216,
+    "heapUsed": 10485760,
+    "external": 1048576,
+    "arrayBuffers": 0
+  },
+  "platform": "linux",
+  "nodeVersion": "v18.17.0"
+}
+```

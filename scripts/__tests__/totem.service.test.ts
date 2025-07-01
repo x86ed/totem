@@ -74,8 +74,8 @@ describe('TotemService', () => {
       const originalVersion = process.version;
 
       // Mock process methods
-      process.uptime = vi.fn().mockReturnValue(3600);
-      process.memoryUsage = vi.fn().mockReturnValue({
+      (process.uptime as any) = vi.fn().mockReturnValue(3600);
+      (process.memoryUsage as any) = vi.fn().mockReturnValue({
         rss: 50331648,
         heapTotal: 16777216,
         heapUsed: 10485760,
