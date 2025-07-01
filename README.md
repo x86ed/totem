@@ -85,10 +85,10 @@ totem/
    ```
 
 3. **Access the API documentation**:
-   - Web Interface: `http://localhost:3000`
-   - API Documentation: `http://localhost:3000/api/docs`
-   - API Status: `http://localhost:3000/api/status`
-   - Health Check: `http://localhost:3000/api/health`
+   - Web Interface: `http://localhost:70735`
+   - API Documentation: `http://localhost:70735/api/docs`
+   - API Status: `http://localhost:70735/api/status`
+   - Health Check: `http://localhost:70735/api/health`
 
 #### Frontend Development
 
@@ -243,7 +243,7 @@ npm run type-check
 
 # Test the NestJS API endpoints
 npm run start:nestjs
-# Then visit http://localhost:3000/api/docs to test interactively
+# Then visit http://localhost:70735/api/docs to test interactively
 ```
 
 ### Test Coverage
@@ -407,7 +407,7 @@ Totem provides a comprehensive RESTful API with full OpenAPI/Swagger documentati
 
 When running the NestJS server, you can access interactive API documentation at:
 ```
-http://localhost:3000/api/docs
+http://localhost:70735/api/docs
 ```
 
 This provides:

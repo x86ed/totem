@@ -9,7 +9,7 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 const app: Application = express();
-const PORT: number = parseInt(process.env.PORT || '3000', 10);
+const PORT: number = parseInt(process.env.PORT || '70735', 10);
 
 // Enable CORS for all routes
 app.use(cors());
