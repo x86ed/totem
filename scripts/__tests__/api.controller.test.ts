@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock package.json
-const mockPackageJson = { version: '0.7.0' };
+const mockPackageJson = { version: '0.7.1' };
 
 // Create a simplified controller class for testing without decorators
 class SimpleApiController {
