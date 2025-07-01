@@ -17,7 +17,7 @@ const mockPath = vi.mocked(path);
 let app: express.Application;
 
 // Mock the require for package.json
-const mockPackageJson = { version: '0.6.1' };
+const mockPackageJson = { version: '0.7.0' };
 
 beforeAll(async () => {
   // Mock require for package.json
@@ -55,7 +55,7 @@ describe('Server API Endpoints', () => {
       expect(response.body).toMatchObject({
         status: 'running',
         initialized: false,
-        version: '0.6.1'
+        version: mockPackageJson.version
       });
       expect(response.body.timestamp).toBeDefined();
     });

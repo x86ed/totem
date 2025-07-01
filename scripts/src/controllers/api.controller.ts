@@ -18,7 +18,7 @@ export class ApiController {
     description: 'Server status retrieved successfully',
     type: StatusResponseDto,
   })
-  getStatus(): StatusResponseDto {
+  async getStatus(): Promise<StatusResponseDto> {
     return this.totemService.getStatus();
   }
 
@@ -32,7 +32,7 @@ export class ApiController {
     description: 'Server health information retrieved successfully',
     type: HealthResponseDto,
   })
-  getHealth(): HealthResponseDto {
+  async getHealth(): Promise<HealthResponseDto> {
     return this.totemService.getHealth();
   }
 }

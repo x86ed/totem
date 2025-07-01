@@ -21,7 +21,7 @@ export class StatusResponseDto {
 
   @ApiProperty({
     description: 'Current version of Totem',
-    example: '0.6.1',
+    example: '0.7.0',
   })
   version: string;
 }

@@ -5,6 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './src/app.module';
 import { TotemService } from './src/services/totem.service';
+import * as packageJson from '../package.json';
 
 async function bootstrap() {
   console.log('🎯 Starting Totem AI-Native Project Management Platform...');
@@ -32,7 +33,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Totem API')
     .setDescription('AI-Native, Git-Native, Distributed Project Management Platform API')
-    .setVersion('0.6.1')
+    .setVersion(packageJson.version)
     .addTag('API', 'Core API endpoints for Totem project management')
     .setContact(
       'Totem Team',

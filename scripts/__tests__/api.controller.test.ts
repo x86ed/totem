@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+// Mock package.json
+const mockPackageJson = { version: '0.7.0' };
+
 // Create a simplified controller class for testing without decorators
 class SimpleApiController {
   constructor(private readonly totemService: any) {}
@@ -35,7 +38,7 @@ describe('ApiController', () => {
         status: 'running',
         initialized: true,
         timestamp: '2025-06-30T12:00:00.000Z',
-        version: '0.6.1',
+        version: mockPackageJson.version,
       };
 
       mockTotemService.getStatus.mockReturnValue(mockStatus);
