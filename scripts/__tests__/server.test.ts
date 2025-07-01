@@ -219,4 +219,89 @@ describe('Server API Endpoints', () => {
       expect(response.body.initialized).toBe(true);
     });
   });
+
+  describe('Ticket API Endpoints', () => {
+    describe('GET /api/ticket', () => {
+      it('should return all tickets', async () => {
+        const response = await request(app)
+          .get('/api/ticket')
+          .expect(200);
+
+        expect(response.body).toMatchObject({
+          message: 'Get all tickets',
+          tickets: []
+        });
+      });
+    });
+
+    describe('GET /api/ticket/:id', () => {
+      it('should return a specific ticket by ID', async () => {
+        const ticketId = '123';
+        const response = await request(app)
+          .get(`/api/ticket/${ticketId}`)
+          .expect(200);
+
+        expect(response.body).toMatchObject({
+          message: `Get ticket with ID: ${ticketId}`,
+          ticket: null
+        });
+      });
+    });
+
+    describe('POST /api/ticket', () => {
+      it('should create a new ticket', async () => {
+        const ticketData = {
+          title: 'Test Ticket',
+          description: 'This is a test ticket',
+          priority: 'high'
+        };
+
+        const response = await request(app)
+          .post('/api/ticket')
+          .send(ticketData)
+          .set('Content-Type', 'application/json')
+          .expect(201);
+
+        expect(response.body).toMatchObject({
+          message: 'Ticket created successfully',
+          ticket: ticketData
+        });
+      });
+    });
+
+    describe('PUT /api/ticket/:id', () => {
+      it('should update an existing ticket', async () => {
+        const ticketId = '123';
+        const ticketData = {
+          title: 'Updated Ticket',
+          description: 'This ticket has been updated',
+          priority: 'medium'
+        };
+
+        const response = await request(app)
+          .put(`/api/ticket/${ticketId}`)
+          .send(ticketData)
+          .set('Content-Type', 'application/json')
+          .expect(200);
+
+        expect(response.body).toMatchObject({
+          message: `Ticket ${ticketId} updated successfully`,
+          ticket: ticketData
+        });
+      });
+    });
+
+    describe('DELETE /api/ticket/:id', () => {
+      it('should delete a ticket', async () => {
+        const ticketId = '123';
+        const response = await request(app)
+          .delete(`/api/ticket/${ticketId}`)
+          .expect(200);
+
+        expect(response.body).toMatchObject({
+          message: `Ticket ${ticketId} deleted successfully`
+        });
+      });
+    });
+  });
 });

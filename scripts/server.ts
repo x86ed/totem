@@ -85,6 +85,46 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
+// Ticket endpoints
+app.get('/api/ticket', (req: Request, res: Response) => {
+  res.json({
+    message: 'Get all tickets',
+    tickets: []
+  });
+});
+
+app.get('/api/ticket/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  res.json({
+    message: `Get ticket with ID: ${id}`,
+    ticket: null
+  });
+});
+
+app.post('/api/ticket', (req: Request, res: Response) => {
+  const ticketData = req.body;
+  res.status(201).json({
+    message: 'Ticket created successfully',
+    ticket: ticketData
+  });
+});
+
+app.put('/api/ticket/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const ticketData = req.body;
+  res.json({
+    message: `Ticket ${id} updated successfully`,
+    ticket: ticketData
+  });
+});
+
+app.delete('/api/ticket/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  res.json({
+    message: `Ticket ${id} deleted successfully`
+  });
+});
+
 // Serve static files from frontend/dist
 const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
