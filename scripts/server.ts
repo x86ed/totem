@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// Load environment variables first
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response, Application } from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -10,10 +14,21 @@ import ticketRoutes from './routes/ticket';
 
 const execAsync = promisify(exec);
 const app: Application = express();
-const PORT: number = parseInt(process.env.PORT || '70735', 10);
 
-// Enable CORS for all routes
-app.use(cors());
+// Environment configuration
+const PORT: number = parseInt(process.env.PORT || '7073', 10);
+const HOST: string = process.env.HOST || 'localhost';
+const NODE_ENV: string = process.env.NODE_ENV || 'development';
+const API_PREFIX: string = process.env.API_PREFIX || 'api';
+const CORS_ORIGIN: string = process.env.CORS_ORIGIN || '*';
+const TICKETS_DIR: string = process.env.TICKETS_DIR || '.totem/tickets';
+const ENABLE_SWAGGER: boolean = process.env.ENABLE_SWAGGER === 'true';
+
+// Enable CORS with configuration from environment
+app.use(cors({
+  origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN.split(','),
+  credentials: true
+}));
 
 // Parse JSON bodies
 app.use(express.json());
@@ -67,16 +82,23 @@ async function buildFrontend(): Promise<void> {
 }
 
 // API Routes
-app.get('/api/status', (req: Request, res: Response) => {
+app.get(`/${API_PREFIX}/status`, (req: Request, res: Response) => {
   res.json({
     status: 'running',
     initialized: isTotemInitialized(),
     timestamp: new Date().toISOString(),
-    version: require('../package.json').version
+    version: require('../package.json').version,
+    environment: NODE_ENV,
+    config: {
+      port: PORT,
+      host: HOST,
+      ticketsDir: TICKETS_DIR,
+      swaggerEnabled: ENABLE_SWAGGER
+    }
   });
 });
 
-app.get('/api/health', (req: Request, res: Response) => {
+app.get(`/${API_PREFIX}/health`, (req: Request, res: Response) => {
   res.json({ 
     status: 'healthy',
     uptime: process.uptime(),
@@ -87,7 +109,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // Use ticket routes
-app.use('/api/ticket', ticketRoutes);
+app.use(`/${API_PREFIX}/ticket`, ticketRoutes);
 
 // Serve static files from frontend/dist
 const frontendPath = path.join(__dirname, '../frontend/dist');
@@ -96,7 +118,7 @@ app.use(express.static(frontendPath));
 // Handle client-side routing (SPA)
 app.get('*', (req: Request, res: Response): void => {
   // Don't serve index.html for API routes
-  if (req.path.startsWith('/api/')) {
+  if (req.path.startsWith(`/${API_PREFIX}/`)) {
     res.status(404).json({ error: 'API endpoint not found' });
     return;
   }

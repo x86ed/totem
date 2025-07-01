@@ -4,7 +4,6 @@ status: open
 priority: high
 complexity: medium
 persona: security-sasha
-effort_days: 5
 blocks: [patient-dashboard-003]
 blocked_by: [ad-integration-001]
 ```
@@ -14,7 +13,7 @@ blocked_by: [ad-integration-001]
 HIPAA-compliant SAML/OAuth integration with Active Directory. 15min session timeout, audit logging required.
 
 ## Acceptance Criteria
-- [ ] Corporate credential login
+- [x] Corporate credential login
 - [ ] Failed attempts logged and monitored
 - [ ] Token expiration enforced (15min)
 - [ ] 95% test coverage

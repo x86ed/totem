@@ -1,0 +1,41 @@
+{
+  "id": "healthcare.security.auth-sso-001",
+  "status": "open",
+  "priority": "high",
+  "complexity": "medium",
+  "persona": "security-sasha",
+  "collabotator": "guy@example.com",
+  "model": "Chat-GPT 4o",
+  "blocks": ["patient-dashboard-003"],
+  "blocked_by": ["ad-integration-001"],
+  "title": "Implement Single Sign-On (SSO) for Healthcare Application",
+  "description": "Implement Single Sign-On (SSO) to enhance security and user experience in the healthcare application",
+  "acceptance_criteria": [
+    {
+      "criteria": "SSO is implemented using OAuth 2.0 and OpenID Connect standards",
+      "complete": false
+    },
+    {
+      "criteria": "Users can log in using their organizational credentials",
+      "complete": false
+    },
+    {
+      "criteria": "User sessions are securely managed and can be revoked",
+      "complete": false
+    },
+    {
+      "criteria": "Documentation is provided for administrators on how to manage SSO settings",
+      "complete": false
+    }
+  ],
+  "tags": ["security", "sso", "oauth2", "openid-connect"],
+  "notes": "Ensure compliance with HIPAA regulations. Implement logging for all authentication attempts.",
+  "risks": [
+    "Potential integration issues with existing authentication systems",
+    "User training required for new login process"
+  ],
+  "resources": [
+    "OAuth 2.0 and OpenID Connect documentation",
+    "SSO implementation guides"
+  ]
+}

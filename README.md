@@ -58,6 +58,58 @@ totem/
    npm install
    ```
 
+4. **Configure environment variables** (optional):
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your preferred settings
+   nano .env
+   ```
+
+### Environment Configuration
+
+Totem uses environment variables for configuration. A `.env` file will be created automatically with sensible defaults, but you can customize it:
+
+```bash
+# Server Configuration
+PORT=7073
+NODE_ENV=development
+HOST=localhost
+
+# API Configuration
+API_PREFIX=api
+ENABLE_SWAGGER=true
+
+# CORS Configuration
+CORS_ORIGIN=*
+
+# File System Paths
+TICKETS_DIR=.totem/tickets
+CONFIG_DIR=.totem
+FRONTEND_DIST=frontend/dist
+
+# Logging
+LOG_LEVEL=info
+DEBUG=false
+```
+
+#### Available Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `7073` | Server port |
+| `NODE_ENV` | `development` | Environment mode |
+| `HOST` | `localhost` | Server host |
+| `API_PREFIX` | `api` | API route prefix |
+| `ENABLE_SWAGGER` | `true` | Enable Swagger documentation |
+| `CORS_ORIGIN` | `*` | CORS allowed origins |
+| `TICKETS_DIR` | `.totem/tickets` | Tickets directory path |
+| `CONFIG_DIR` | `.totem` | Configuration directory |
+| `FRONTEND_DIST` | `frontend/dist` | Frontend build directory |
+| `LOG_LEVEL` | `info` | Logging level |
+| `DEBUG` | `false` | Enable debug mode |
+
 ### Running the Application
 
 #### Option 1: Express Server (Default)
@@ -85,10 +137,10 @@ totem/
    ```
 
 3. **Access the API documentation**:
-   - Web Interface: `http://localhost:70735`
-   - API Documentation: `http://localhost:70735/api/docs`
-   - API Status: `http://localhost:70735/api/status`
-   - Health Check: `http://localhost:70735/api/health`
+   - Web Interface: `http://localhost:7073`
+   - API Documentation: `http://localhost:7073/api/docs`
+   - API Status: `http://localhost:7073/api/status`
+   - Health Check: `http://localhost:7073/api/health`
 
 #### Frontend Development
 
@@ -243,7 +295,7 @@ npm run type-check
 
 # Test the NestJS API endpoints
 npm run start:nestjs
-# Then visit http://localhost:70735/api/docs to test interactively
+# Then visit http://localhost:7073/api/docs to test interactively
 ```
 
 ### Test Coverage
@@ -402,12 +454,17 @@ Totem provides a comprehensive RESTful API with full OpenAPI/Swagger documentati
 
 - **GET /api/status** - Get server status and initialization state
 - **GET /api/health** - Get detailed server health information
+- **GET /api/ticket** - Get all tickets from markdown files
+- **GET /api/ticket/:id** - Get a specific ticket by ID
+- **POST /api/ticket** - Create a new ticket
+- **PUT /api/ticket/:id** - Update an existing ticket
+- **DELETE /api/ticket/:id** - Delete a ticket
 
 ### Interactive API Documentation
 
 When running the NestJS server, you can access interactive API documentation at:
 ```
-http://localhost:70735/api/docs
+http://localhost:7073/api/docs
 ```
 
 This provides:
@@ -418,6 +475,85 @@ This provides:
 - **📄 OpenAPI Specification**: Download the complete API specification
 
 ### API Response Examples
+
+#### Ticket Endpoints
+
+**GET /api/ticket** - Get all tickets:
+
+**Success Response (200)**:
+```json
+{
+  "message": "Get all tickets",
+  "tickets": [
+    {
+      "id": "healthcare.security.auth-sso-001",
+      "status": "open",
+      "priority": "high",
+      "complexity": "medium",
+      "persona": "security-sasha",
+      "collabotator": null,
+      "model": null,
+      "effort_days": null,
+      "blocks": ["patient-dashboard-003"],
+      "blocked_by": ["ad-integration-001"],
+      "title": "SSO Authentication for Patient Portal",
+      "description": "HIPAA-compliant SAML/OAuth integration with Active Directory.",
+      "acceptance_criteria": [
+        {
+          "criteria": "Corporate credential login",
+          "complete": true
+        },
+        {
+          "criteria": "Failed attempts logged and monitored",
+          "complete": false
+        }
+      ],
+      "tags": ["security-sasha", "high", "medium"],
+      "notes": "HIPAA-compliant SAML/OAuth integration with Active Directory.",
+      "risks": ["Patient data exposure (high)", "AD maintenance downtime (medium)"],
+      "resources": ["Use SecurityAuthProvider in /src/auth/", "Follow existing token patterns"]
+    }
+  ]
+}
+```
+
+**No Tickets Found (404)**:
+```json
+{
+  "message": "No tickets found",
+  "error": "No markdown ticket files exist in the tickets directory",
+  "tickets": []
+}
+```
+
+**Directory Not Found (404)**:
+```json
+{
+  "message": "Tickets directory not found",
+  "error": "No tickets directory exists",
+  "tickets": []
+}
+```
+
+**No Valid Tickets (404)**:
+```json
+{
+  "message": "No valid tickets found",
+  "error": "No ticket files could be parsed successfully",
+  "tickets": []
+}
+```
+
+**Server Error (500)**:
+```json
+{
+  "message": "Error reading tickets",
+  "error": "Permission denied",
+  "tickets": []
+}
+```
+
+#### Status and Health Endpoints
 
 **Status Endpoint**:
 ```json

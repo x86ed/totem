@@ -9,6 +9,8 @@
   "scripts": {
     "start": "npm run build:scripts && node dist/server.js",
     "start:nestjs": "npm run build:scripts && node dist/server-nestjs.js",
+    "start:prod": "NODE_ENV=production npm run build:scripts && node dist/server.js",
+    "start:nestjs:prod": "NODE_ENV=production npm run build:scripts && node dist/server-nestjs.js",
     "build:scripts": "tsc --project tsconfig.scripts.json",
     "dev:server": "ts-node scripts/server.ts",
     "dev:nestjs": "ts-node scripts/server-nestjs.ts",
@@ -19,7 +21,9 @@
     "init:contributor": "npm run build:scripts && node dist/init.js --type=config",
     "build": "npm run build:scripts && cd frontend && npm run build",
     "dev": "cd frontend && npm run dev",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "env:setup": "cp .env.example .env && echo 'Environment file created. Edit .env to customize settings.'",
+    "env:check": "node -e \"require('dotenv').config(); console.log('Environment variables loaded successfully'); console.log('PORT:', process.env.PORT); console.log('NODE_ENV:', process.env.NODE_ENV);\""
   },
   "keywords": [
     "ai-native",
@@ -43,27 +47,32 @@
     "@nestjs/serve-static": "^5.0.3",
     "@nestjs/swagger": "^11.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",
     "@nestjs/testing": "^11.1.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "@types/supertest": "^2.0.16",
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^3.2.4",
+    "jest": "^30.0.3",
     "jsdom": "^23.0.1",
     "supertest": "^6.3.3",
     "textlint": "^15.0.1",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
