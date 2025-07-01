@@ -125,7 +125,7 @@ describe('Init Script Tests', () => {
       
       mockRl.question = mockQuestion;
 
-      mockRl.question('Test question (default): ', (answer) => {
+      mockRl.question('Test question (default): ', (answer: string) => {
         expect(answer).toBe('test answer');
       });
 
@@ -139,7 +139,7 @@ describe('Init Script Tests', () => {
       
       mockRl.question = mockQuestion;
 
-      mockRl.question('Question (default value): ', (answer) => {
+      mockRl.question('Question (default value): ', (answer: string) => {
         expect(answer).toBe('');
       });
     });

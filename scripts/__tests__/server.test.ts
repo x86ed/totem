@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import fs from 'fs';
@@ -17,11 +17,11 @@ const mockPath = vi.mocked(path);
 let app: express.Application;
 
 // Mock the require for package.json
-const mockPackageJson = { version: '0.6.0' };
+const mockPackageJson = { version: '0.6.1' };
 
 beforeAll(async () => {
   // Mock require for package.json
-  vi.doMock('../package.json', () => mockPackageJson, { virtual: true });
+  vi.doMock('../package.json', () => mockPackageJson);
   
   // Mock path.join to return a valid directory path
   mockPath.join.mockImplementation((...args) => '/mock/frontend/dist');
@@ -55,7 +55,7 @@ describe('Server API Endpoints', () => {
       expect(response.body).toMatchObject({
         status: 'running',
         initialized: false,
-        version: '0.6.0'
+        version: '0.6.1'
       });
       expect(response.body.timestamp).toBeDefined();
     });
