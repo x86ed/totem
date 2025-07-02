@@ -200,6 +200,7 @@ router.get('/:id', (req: Request, res: Response) => {
       message: `Get ticket with ID: ${id}`,
       ticket
     });
+    return;
     
   } catch (error) {
     console.error(`Error retrieving ticket ${id}:`, error);
@@ -208,6 +209,7 @@ router.get('/:id', (req: Request, res: Response) => {
       error: error instanceof Error ? error.message : 'Unknown error',
       ticket: null
     });
+    return;
   }
 });
 
