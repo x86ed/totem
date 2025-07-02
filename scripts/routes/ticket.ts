@@ -107,7 +107,21 @@ router.get('/', (req: Request, res: Response) => {
     }
     
     // Read all markdown files from the tickets directory
-    const files = readdirSync(ticketsDir).filter(file => file.endsWith('.md'));
+    let files: string[];
+    try {
+      const dirContents = readdirSync(ticketsDir);
+      if (!dirContents) {
+        throw new Error('Directory contents is undefined');
+      }
+      files = dirContents.filter(file => file.endsWith('.md'));
+    } catch (dirError) {
+      console.error('Error reading tickets directory:', dirError);
+      return res.status(500).json({
+        message: 'Error reading tickets directory',
+        error: dirError instanceof Error ? dirError.message : 'Unknown error reading directory',
+        tickets: []
+      });
+    }
     
     // Return 404 if no markdown files exist
     if (files.length === 0) {
@@ -163,7 +177,21 @@ router.get('/:id', (req: Request, res: Response) => {
     }
     
     // Find the markdown file with the matching ID
-    const files = readdirSync(ticketsDir).filter(file => file.endsWith('.md'));
+    let files: string[];
+    try {
+      const dirContents = readdirSync(ticketsDir);
+      if (!dirContents) {
+        throw new Error('Directory contents is undefined');
+      }
+      files = dirContents.filter(file => file.endsWith('.md'));
+    } catch (dirError) {
+      console.error('Error reading tickets directory:', dirError);
+      return res.status(500).json({
+        message: 'Error reading tickets directory',
+        error: dirError instanceof Error ? dirError.message : 'Unknown error reading directory',
+        ticket: null
+      });
+    }
     const matchingFile = files.find(file => file.includes(id) || file.startsWith(id));
     
     if (!matchingFile) {

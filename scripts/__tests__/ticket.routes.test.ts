@@ -171,27 +171,27 @@ describe('Ticket Routes - Integration Tests', () => {
       const ticketId = 456;
       const response = await request(app)
         .get(`/api/ticket/${ticketId}`)
-        .expect([404, 200]);
+        .expect(404);
 
-      expect(response.body.message).toBe(`Get ticket with ID: ${ticketId}`);
+      expect(response.body.message).toBe(`Ticket with ID ${ticketId} not found`);
     });
 
     it('should handle UUID format IDs', async () => {
       const ticketId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
       const response = await request(app)
         .get(`/api/ticket/${ticketId}`)
-        .expect([404, 200]);
+        .expect(404);
 
-      expect(response.body.message).toBe(`Get ticket with ID: ${ticketId}`);
+      expect(response.body.message).toBe(`Ticket with ID ${ticketId} not found`);
     });
 
     it('should handle special characters in ID', async () => {
       const ticketId = 'ticket-123_special!';
       const response = await request(app)
         .get(`/api/ticket/${encodeURIComponent(ticketId)}`)
-        .expect([404, 200]);
+        .expect(404);
 
-      expect(response.body.message).toBe(`Get ticket with ID: ${ticketId}`);
+      expect(response.body.message).toBe(`Ticket with ID ${ticketId} not found`);
     });
   });
 
@@ -463,9 +463,9 @@ describe('Ticket Routes - Integration Tests', () => {
 
       const response = await request(app)
         .get(`/api/ticket/${longId}`)
-        .expect(200);
+        .expect(404);
 
-      expect(response.body.message).toBe(`Get ticket with ID: ${longId}`);
+      expect(response.body.message).toBe(`Ticket with ID ${longId} not found`);
     });
 
     it('should handle empty string ID', async () => {

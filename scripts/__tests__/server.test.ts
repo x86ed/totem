@@ -17,7 +17,7 @@ const mockPath = vi.mocked(path);
 let app: express.Application;
 
 // Mock the require for package.json
-const mockPackageJson = { version: '0.8.3' };
+const mockPackageJson = { version: '0.8.4' };
 
 beforeAll(async () => {
   // Mock require for package.json
@@ -41,9 +41,22 @@ describe('Server API Endpoints', () => {
     vi.clearAllMocks();
     // Reset default mocks
     mockFs.existsSync.mockImplementation((path) => {
-      return path.toString().includes('frontend/dist');
+      const pathStr = path.toString();
+      return pathStr.includes('frontend/dist') || pathStr.includes('.totem/tickets');
     });
-    mockPath.join.mockImplementation((...args) => '/mock/frontend/dist');
+    mockPath.join.mockImplementation((...args) => {
+      if (args.some(arg => arg && arg.toString().includes('tickets'))) {
+        return '/mock/.totem/tickets';
+      }
+      return '/mock/frontend/dist';
+    });
+    // Mock readdirSync to return empty array for tickets directory
+    mockFs.readdirSync.mockImplementation((path) => {
+      if (path.toString().includes('tickets')) {
+        return [];
+      }
+      return [];
+    });
   });
 
   describe('GET /api/status', () => {
@@ -225,10 +238,11 @@ describe('Server API Endpoints', () => {
       it('should return all tickets', async () => {
         const response = await request(app)
           .get('/api/ticket')
-          .expect(200);
+          .expect(404);
 
         expect(response.body).toMatchObject({
-          message: 'Get all tickets',
+          message: 'No tickets found',
+          error: 'No markdown ticket files exist in the tickets directory',
           tickets: []
         });
       });
@@ -239,10 +253,11 @@ describe('Server API Endpoints', () => {
         const ticketId = '123';
         const response = await request(app)
           .get(`/api/ticket/${ticketId}`)
-          .expect(200);
+          .expect(404);
 
         expect(response.body).toMatchObject({
-          message: `Get ticket with ID: ${ticketId}`,
+          message: `Ticket with ID ${ticketId} not found`,
+          error: 'No markdown file found with matching ID',
           ticket: null
         });
       });
