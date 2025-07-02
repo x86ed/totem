@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2021",
     "module": "CommonJS",
-    "lib": ["ES2020"],
+    "lib": ["ES2021"],
     "outDir": "./dist",
     "rootDir": "./scripts",
     "strict": true,
@@ -19,7 +19,8 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "useDefineForClassFields": false
   },
   "include": [
     "scripts/**/*"

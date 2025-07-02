@@ -3,6 +3,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ApiController } from './controllers/api.controller';
 import { TicketController } from './controllers/ticket.controller';
+import { SimpleController } from './controllers/simple.controller';
 import { TotemService } from './services/totem.service';
 
 @Module({
@@ -12,7 +13,7 @@ import { TotemService } from './services/totem.service';
       exclude: ['/api*'],
     }),
   ],
-  controllers: [ApiController, TicketController],
+  controllers: [ApiController, TicketController, SimpleController],
   providers: [TotemService],
 })
 export class AppModule {}
