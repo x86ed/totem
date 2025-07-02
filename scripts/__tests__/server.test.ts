@@ -17,7 +17,7 @@ const mockPath = vi.mocked(path);
 let app: express.Application;
 
 // Mock the require for package.json
-const mockPackageJson = { version: '0.8.2' };
+const mockPackageJson = { version: '0.8.3' };
 
 beforeAll(async () => {
   // Mock require for package.json
