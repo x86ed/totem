@@ -6,6 +6,29 @@ import { readFileSync, existsSync, readdirSync, writeFileSync, unlinkSync } from
 import { join } from 'path';
 import { parse, stringify } from 'yaml';
 
+/**
+ * Controller for managing ticket operations including CRUD operations
+ * on markdown-based ticket files with YAML frontmatter.
+ * 
+ * Provides endpoints for:
+ * - Retrieving all tickets
+ * - Getting a specific ticket by ID
+ * - Creating new tickets
+ * - Updating existing tickets
+ * - Deleting tickets
+ * 
+ * All tickets are stored as markdown files with YAML frontmatter in the
+ * configured tickets directory (default: .totem/tickets).
+ * 
+ * @example
+ * ```typescript
+ * // Usage in NestJS module
+ * @Module({
+ *   controllers: [TicketController],
+ * })
+ * export class AppModule {}
+ * ```
+ */
 @ApiTags('tickets')
 @Controller('api/ticket')
 export class TicketController {
@@ -172,6 +195,27 @@ export class TicketController {
   @ApiResponse({ status: 404, description: 'No tickets found or tickets directory not found', type: ErrorResponseDto })
   @ApiResponse({ status: 500, description: 'Internal server error', type: ErrorResponseDto })
   @Get()
+  /**
+   * Retrieves all tickets from the tickets directory.
+   * 
+   * Scans the configured tickets directory for markdown files,
+   * parses each file to extract ticket data, and returns a list
+   * of all valid tickets.
+   * 
+   * @returns {Promise<TicketsListResponseDto>} A promise that resolves to an object containing:
+   *   - message: Success message
+   *   - tickets: Array of parsed ticket objects
+   * 
+   * @throws {HttpException} 404 - When tickets directory doesn't exist or no tickets found
+   * @throws {HttpException} 500 - When an internal server error occurs
+   * 
+   * @example
+   * ```typescript
+   * // GET /api/ticket
+   * const response = await ticketController.getAllTickets();
+   * console.log(response.tickets.length); // Number of tickets found
+   * ```
+   */
   public getAllTickets(): Promise<TicketsListResponseDto> {
     return this.handleGetAllTickets();
   }
@@ -227,6 +271,29 @@ export class TicketController {
   @ApiResponse({ status: 404, description: 'Ticket not found or tickets directory not found', type: ErrorResponseDto })
   @ApiResponse({ status: 500, description: 'Internal server error', type: ErrorResponseDto })
   @Get(':id')
+  /**
+   * Retrieves a specific ticket by its unique identifier.
+   * 
+   * Searches for a markdown file matching the provided ticket ID,
+   * parses the file content, and returns the ticket data if found.
+   * The ID must match exactly with the ticket's ID field in the YAML frontmatter.
+   * 
+   * @param {string} id - The unique identifier of the ticket to retrieve
+   * @returns {Promise<TicketResponseDto>} A promise that resolves to an object containing:
+   *   - message: Success message with the ticket ID
+   *   - ticket: The parsed ticket object
+   * 
+   * @throws {HttpException} 404 - When ticket with specified ID is not found
+   * @throws {HttpException} 404 - When tickets directory doesn't exist
+   * @throws {HttpException} 500 - When ticket file cannot be parsed or other internal errors
+   * 
+   * @example
+   * ```typescript
+   * // GET /api/ticket/user-authentication-001
+   * const response = await ticketController.getTicketById('user-authentication-001');
+   * console.log(response.ticket.title); // Ticket title
+   * ```
+   */
   async getTicketById(@Param('id') id: string): Promise<TicketResponseDto> {
     try {
       const ticketsDir = join(__dirname, '../../../', this.TICKETS_DIR);
@@ -285,6 +352,44 @@ export class TicketController {
   @ApiResponse({ status: 400, description: 'Invalid ticket data or validation errors', type: ErrorResponseDto })
   @ApiResponse({ status: 500, description: 'Internal server error', type: ErrorResponseDto })
   @Post()
+  /**
+   * Creates a new ticket with the provided data.
+   * 
+   * Validates the input data, generates a unique ID (if not provided),
+   * creates a markdown file with YAML frontmatter, and saves it to
+   * the tickets directory. The ticket ID is auto-incremented based
+   * on existing tickets with similar base names.
+   * 
+   * @param {CreateTicketDto} ticketData - The ticket data to create including:
+   *   - title: Required title of the ticket
+   *   - description: Required description of the ticket
+   *   - priority: Optional priority level (low, medium, high, critical)
+   *   - complexity: Optional complexity level (low, medium, high)
+   *   - acceptance_criteria: Optional array of acceptance criteria
+   *   - Other optional fields as defined in CreateTicketDto
+   * 
+   * @returns {Promise<TicketResponseDto>} A promise that resolves to an object containing:
+   *   - message: Success message
+   *   - ticket: The created ticket object with generated ID
+   *   - filename: The name of the created markdown file
+   * 
+   * @throws {HttpException} 400 - When validation fails or required fields are missing
+   * @throws {HttpException} 409 - When a ticket file with the same name already exists
+   * @throws {HttpException} 500 - When file creation fails or other internal errors
+   * 
+   * @example
+   * ```typescript
+   * // POST /api/ticket
+   * const newTicket = {
+   *   title: "User Authentication System",
+   *   description: "Implement JWT-based authentication",
+   *   priority: "high",
+   *   complexity: "medium"
+   * };
+   * const response = await ticketController.createTicket(newTicket);
+   * console.log(response.ticket.id); // Generated ID like "user-authentication-system-001"
+   * ```
+   */
   async createTicket(@Body() ticketData: CreateTicketDto): Promise<TicketResponseDto> {
     try {
       if (!ticketData.title || !ticketData.description) {
@@ -371,6 +476,43 @@ export class TicketController {
   @ApiResponse({ status: 404, description: 'Ticket not found', type: ErrorResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid ticket data', type: ErrorResponseDto })
   @Put(':id')
+  /**
+   * Updates an existing ticket with new data.
+   * 
+   * Finds the ticket by ID, validates the update data, merges it with
+   * existing ticket data, and overwrites the markdown file. The ticket ID
+   * cannot be changed during updates.
+   * 
+   * @param {string} id - The unique identifier of the ticket to update
+   * @param {UpdateTicketDto} ticketData - The updated ticket data including:
+   *   - title: Optional updated title
+   *   - description: Optional updated description
+   *   - status: Optional updated status (open, in_progress, closed, blocked)
+   *   - priority: Optional updated priority level
+   *   - acceptance_criteria: Optional updated acceptance criteria
+   *   - Other optional fields as defined in UpdateTicketDto
+   * 
+   * @returns {Promise<TicketResponseDto>} A promise that resolves to an object containing:
+   *   - message: Success message with the ticket ID
+   *   - ticket: The updated ticket object
+   *   - filename: The name of the updated markdown file
+   * 
+   * @throws {HttpException} 404 - When ticket with specified ID is not found
+   * @throws {HttpException} 404 - When tickets directory doesn't exist
+   * @throws {HttpException} 400 - When validation fails or ticket data is invalid
+   * @throws {HttpException} 500 - When file update fails or other internal errors
+   * 
+   * @example
+   * ```typescript
+   * // PUT /api/ticket/user-authentication-001
+   * const updates = {
+   *   status: "in_progress",
+   *   priority: "critical"
+   * };
+   * const response = await ticketController.updateTicket('user-authentication-001', updates);
+   * console.log(response.ticket.status); // "in_progress"
+   * ```
+   */
   async updateTicket(@Param('id') id: string, @Body() ticketData: UpdateTicketDto): Promise<TicketResponseDto> {
     try {
       if (!ticketData.title || !ticketData.description) {
@@ -482,6 +624,32 @@ export class TicketController {
   @ApiResponse({ status: 404, description: 'Ticket not found or tickets directory not found', type: ErrorResponseDto })
   @ApiResponse({ status: 500, description: 'Internal server error', type: ErrorResponseDto })
   @Delete(':id')
+  /**
+   * Permanently deletes a ticket by its unique identifier.
+   * 
+   * Finds the ticket by ID, verifies it exists, and removes the
+   * corresponding markdown file from the filesystem. This operation
+   * cannot be undone.
+   * 
+   * @param {string} id - The unique identifier of the ticket to delete
+   * @returns {Promise<Partial<TicketResponseDto>>} A promise that resolves to an object containing:
+   *   - message: Success message with the ticket ID
+   *   - ticket: The deleted ticket object (for reference)
+   *   - filename: The name of the deleted markdown file
+   * 
+   * @throws {HttpException} 404 - When ticket with specified ID is not found
+   * @throws {HttpException} 404 - When tickets directory doesn't exist
+   * @throws {HttpException} 500 - When file deletion fails or other internal errors
+   * 
+   * @example
+   * ```typescript
+   * // DELETE /api/ticket/user-authentication-001
+   * const response = await ticketController.deleteTicket('user-authentication-001');
+   * console.log(response.message); // "Ticket user-authentication-001 deleted successfully"
+   * ```
+   * 
+   * @warning This operation permanently deletes the ticket file and cannot be undone.
+   */
   async deleteTicket(@Param('id') id: string): Promise<Partial<TicketResponseDto>> {
     try {
       if (process.env.NODE_ENV === 'test') {
