@@ -3,11 +3,19 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TotemService } from '../services/totem.service';
 import { StatusResponseDto, HealthResponseDto } from '../dto/status.dto';
 
+/**
+ * API Controller that provides general server information endpoints.
+ * Handles status and health check requests for the Totem server.
+ */
 @ApiTags('API')
 @Controller('api')
 export class ApiController {
   constructor(private readonly totemService: TotemService) {}
 
+  /**
+   * Retrieves the current status of the Totem server.
+   * @returns Promise containing server status information including initialization state and version
+   */
   @Get('status')
   @ApiOperation({
     summary: 'Get server status',
@@ -22,6 +30,10 @@ export class ApiController {
     return this.totemService.getStatus();
   }
 
+  /**
+   * Retrieves detailed health information about the server.
+   * @returns Promise containing health data including uptime, memory usage, and system information
+   */
   @Get('health')
   @ApiOperation({
     summary: 'Get server health',

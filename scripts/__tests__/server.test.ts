@@ -4,6 +4,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import packageJson from '../../package.json'; // Ensure type declarations exist for JSON imports
 
 // Mock dependencies
 vi.mock('fs');
@@ -17,7 +18,7 @@ const mockPath = vi.mocked(path);
 let app: express.Application;
 
 // Mock the require for package.json
-const mockPackageJson = { version: '0.8.6' };
+const mockPackageJson = { version: packageJson.version };
 
 beforeAll(async () => {
   // Mock require for package.json

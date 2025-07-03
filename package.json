@@ -23,7 +23,8 @@
     "dev": "cd frontend && npm run dev",
     "clean": "rm -rf dist",
     "env:setup": "cp .env.example .env && echo 'Environment file created. Edit .env to customize settings.'",
-    "env:check": "node -e \"require('dotenv').config(); console.log('Environment variables loaded successfully'); console.log('PORT:', process.env.PORT); console.log('NODE_ENV:', process.env.NODE_ENV);\""
+    "env:check": "node -e \"require('dotenv').config(); console.log('Environment variables loaded successfully'); console.log('PORT:', process.env.PORT); console.log('NODE_ENV:', process.env.NODE_ENV);\"",
+    "bump": "node scripts/bump-version.js"
   },
   "keywords": [
     "ai-native",
