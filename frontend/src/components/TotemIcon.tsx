@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface PaletteSection {
   colors: string[];
@@ -20,31 +20,59 @@ interface PaletteEditorProps {
 }
 
 function PaletteEditor({ onPaletteChange, initialPalettes = null }: PaletteEditorProps) {
+//   const neutralPalettes: Palettes = {
+//     section0: {
+//       colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
+//       background: '#FFF3E0',
+//       border: '#C73E1D'
+//     },
+//     section1: {
+//       colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
+//       background: '#E0F7FA',
+//       border: '#0D7377'
+//     },
+//     section2: {
+//       colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
+//       background: '#F3E5F5',
+//       border: '#6C5CE7'
+//     },
+//     section3: {
+//       colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
+//       background: '#E8F5E8',
+//       border: '#00B894'
+//     },
+//     section4: {
+//       colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
+//       background: '#FFF3E0',
+//       border: '#E17055'
+//     }
+//   };
+
   const defaultPalettes: Palettes = {
     section0: {
-      colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
-      background: '#FFF3E0',
-      border: '#C73E1D'
+      colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
+      background: '#F5F3F0',
+      border: '#6B5B47'
     },
     section1: {
-      colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
-      background: '#E0F7FA',
-      border: '#0D7377'
+      colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
+      background: '#F0F0F0',
+      border: '#666666'
     },
     section2: {
-      colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
-      background: '#F3E5F5',
-      border: '#6C5CE7'
+      colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
+      background: '#F2F0F3',
+      border: '#5A4A5E'
     },
     section3: {
-      colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
-      background: '#E8F5E8',
-      border: '#00B894'
+      colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
+      background: '#F0F3F0',
+      border: '#576057'
     },
     section4: {
-      colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
-      background: '#FFF3E0',
-      border: '#E17055'
+      colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
+      background: '#F3F2F0',
+      border: '#736B5A'
     }
   };
 
@@ -293,31 +321,59 @@ function TotemIcon({
   );
 
   // Default harmonic color palettes grouped by section
+  // const neutralPalettes: Palettes = {
+  //   section0: {
+  //     colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
+  //     background: '#FFF3E0',
+  //     border: '#C73E1D'
+  //   },
+  //   section1: {
+  //     colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
+  //     background: '#E0F7FA',
+  //     border: '#0D7377'
+  //   },
+  //   section2: {
+  //     colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
+  //     background: '#F3E5F5',
+  //     border: '#6C5CE7'
+  //   },
+  //   section3: {
+  //     colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
+  //     background: '#E8F5E8',
+  //     border: '#00B894'
+  //   },
+  //   section4: {
+  //     colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
+  //     background: '#FFF3E0',
+  //     border: '#E17055'
+  //   }
+  // };
+
   const defaultPalettes: Palettes = {
     section0: {
-      colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
-      background: '#FFF3E0',
-      border: '#C73E1D'
+      colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
+      background: '#F5F3F0',
+      border: '#6B5B47'
     },
     section1: {
-      colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
-      background: '#E0F7FA',
-      border: '#0D7377'
+      colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
+      background: '#F0F0F0',
+      border: '#666666'
     },
     section2: {
-      colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
-      background: '#F3E5F5',
-      border: '#6C5CE7'
+      colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
+      background: '#F2F0F3',
+      border: '#5A4A5E'
     },
     section3: {
-      colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
-      background: '#E8F5E8',
-      border: '#00B894'
+      colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
+      background: '#F0F3F0',
+      border: '#576057'
     },
     section4: {
-      colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
-      background: '#FFF3E0',
-      border: '#E17055'
+      colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
+      background: '#F3F2F0',
+      border: '#736B5A'
     }
   };
 
