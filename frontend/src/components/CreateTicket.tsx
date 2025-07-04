@@ -1,6 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react'
 import { useTickets } from '../context/TicketContext'
-import { Ticket } from '../types'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -114,6 +113,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   ticketId = null, 
   onNavigate 
 }) => {
+  // Note: useTickets() hook is called to ensure TicketProvider context is available
   useTickets()
   
   const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
