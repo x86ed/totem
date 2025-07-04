@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import KanbanBoard from './components/KanbanBoard'
 import RoadmapView from './components/RoadmapView'
+import BacklogView from './components/BacklogView'
 import CreateTicket from './components/CreateTicket'
 import ExportView from './components/ExportView'
 import { TicketProvider } from './context/TicketContext'
@@ -11,7 +12,7 @@ import './App.css'
  * Main application component that provides the overall layout and navigation
  * 
  * Features:
- * - Tab-based navigation between different views (Kanban, Roadmap, Ticket, Export)
+ * - Tab-based navigation between different views (Kanban, Roadmap, Backlog, Ticket, Export)
  * - Deep linking support for individual tickets and ticket modes
  * - Responsive header with application branding
  * - Context provider for ticket management state
@@ -20,6 +21,7 @@ import './App.css'
  * URL Structure:
  * - /kanban - Kanban board view
  * - /roadmap - Roadmap view
+ * - /backlog - Backlog data table view
  * - /ticket - Create new ticket
  * - /ticket/create - Create new ticket (explicit)
  * - /ticket/edit/:id - Edit existing ticket
@@ -88,6 +90,7 @@ function App() {
   const tabs: TabConfig[] = [
     { id: 'kanban', label: 'Kanban', icon: '📋' },
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
+    { id: 'backlog', label: 'Backlog', icon: '📊' },
     { id: 'ticket', label: 'Ticket', icon: '🎟️' },
     { id: 'export', label: 'Export', icon: '📁' }
   ]
@@ -128,6 +131,7 @@ function App() {
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           {activeTab === 'kanban' && <KanbanBoard />}
           {activeTab === 'roadmap' && <RoadmapView />}
+          {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
           {activeTab === 'ticket' && (
             <CreateTicket 
               mode={ticketMode}
