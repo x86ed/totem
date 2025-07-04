@@ -163,8 +163,15 @@ async function startServer() {
       console.log('🚀 Totem Server Started Successfully!');
       console.log('');
       console.log(`📋 Web Interface: http://localhost:${PORT}`);
-      console.log(`🔧 API Status:    http://localhost:${PORT}/api/status`);
-      console.log(`❤️  Health Check:  http://localhost:${PORT}/api/health`);
+      console.log('');
+      console.log('🔧 API Endpoints:');
+      console.log(`   GET    http://localhost:${PORT}/api/status       - Server status`);
+      console.log(`   GET    http://localhost:${PORT}/api/health       - Health check`);
+      console.log(`   GET    http://localhost:${PORT}/api/ticket       - List all tickets`);
+      console.log(`   GET    http://localhost:${PORT}/api/ticket/:id   - Get ticket by ID`);
+      console.log(`   POST   http://localhost:${PORT}/api/ticket       - Create new ticket`);
+      console.log(`   PUT    http://localhost:${PORT}/api/ticket/:id   - Update ticket`);
+      console.log(`   DELETE http://localhost:${PORT}/api/ticket/:id   - Delete ticket`);
       console.log('');
       console.log('🎯 AI-Native | 📡 Git-Native | 🌐 Distributed | 🔓 Open Source | 🏠 Self-Hosted');
       console.log('');
