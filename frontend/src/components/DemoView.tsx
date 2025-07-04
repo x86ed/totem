@@ -196,16 +196,42 @@ const DemoView: React.FC = () => {
           <div className="export-section-green">
             <h3 className="text-lg font-medium mb-4" style={{ color: '#2d3e2e' }}>
               <span className="icon-spacing">🖼️</span>
-              Generated Icon
+              Generated Icons
             </h3>
-            <div className="flex justify-center">
-              <TotemIcon
-                seed={userSeed || null}
-                size={iconSize}
-                palettes={customPalettes}
-                onPngGenerated={handlePngGenerated}
-                showControls={true}
-              />
+            <div className="space-y-8">
+              {/* Standard Resolution */}
+              <div className="text-center">
+                <h4 className="text-md font-medium mb-3" style={{ color: '#4a5d4a' }}>
+                  Standard Resolution (12×32)
+                </h4>
+                <div className="flex justify-center">
+                  <TotemIcon
+                    seed={userSeed || null}
+                    size={iconSize}
+                    palettes={customPalettes}
+                    onPngGenerated={handlePngGenerated}
+                    showControls={true}
+                    highRes={false}
+                  />
+                </div>
+              </div>
+
+              {/* High Resolution */}
+              <div className="text-center">
+                <h4 className="text-md font-medium mb-3" style={{ color: '#4a5d4a' }}>
+                  High Resolution (24×64) - 2x Detail
+                </h4>
+                <div className="flex justify-center">
+                  <TotemIcon
+                    seed={userSeed || null}
+                    size={iconSize}
+                    palettes={customPalettes}
+                    onPngGenerated={handlePngGenerated}
+                    showControls={true}
+                    highRes={true}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

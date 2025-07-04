@@ -21,12 +21,13 @@ const mockPalettes: Palettes = {
 
 // Mock the TotemIcon component since it uses canvas which isn't available in jsdom
 vi.mock('./TotemIcon', () => ({
-  TotemIcon: ({ seed, size, palettes, onPngGenerated, showControls }: TotemIconProps) => (
+  TotemIcon: ({ seed, size, palettes, onPngGenerated, showControls, highRes }: TotemIconProps) => (
     <div data-testid="totem-icon">
       <div data-testid="icon-seed">{seed || 'random'}</div>
       <div data-testid="icon-size">{size}</div>
       <div data-testid="icon-palettes">{palettes ? 'custom' : 'default'}</div>
       <div data-testid="icon-controls">{showControls ? 'shown' : 'hidden'}</div>
+      <div data-testid="icon-high-res">{highRes ? 'high-res' : 'standard'}</div>
       <button onClick={() => onPngGenerated?.('mock-png-data-url')}>
         Generate PNG
       </button>
@@ -73,15 +74,46 @@ describe('DemoView', () => {
       expect(screen.getByText('4px')).toBeInTheDocument()
     })
 
-    it('renders the TotemIcon component with default props', () => {
+    it('renders both standard and high-res TotemIcons with default props', () => {
       render(<DemoView />)
       
-      const totemIcon = screen.getByTestId('totem-icon')
-      expect(totemIcon).toBeInTheDocument()
-      expect(screen.getByTestId('icon-seed')).toHaveTextContent('user@example.com')
-      expect(screen.getByTestId('icon-size')).toHaveTextContent('4')
-      expect(screen.getByTestId('icon-palettes')).toHaveTextContent('default')
-      expect(screen.getByTestId('icon-controls')).toHaveTextContent('shown')
+      const totemIcons = screen.getAllByTestId('totem-icon')
+      expect(totemIcons).toHaveLength(2)
+      
+      // Check that we have both standard and high-res icons
+      const highResElements = screen.getAllByTestId('icon-high-res')
+      expect(highResElements).toHaveLength(2)
+      
+      const standardIcon = highResElements.find(el => el.textContent === 'standard')
+      const highResIcon = highResElements.find(el => el.textContent === 'high-res')
+      
+      expect(standardIcon).toBeInTheDocument()
+      expect(highResIcon).toBeInTheDocument()
+      
+      // Check common properties
+      const iconSeeds = screen.getAllByTestId('icon-seed')
+      iconSeeds.forEach(seed => {
+        expect(seed).toHaveTextContent('user@example.com')
+      })
+      
+      const iconSizes = screen.getAllByTestId('icon-size')
+      iconSizes.forEach(size => {
+        expect(size).toHaveTextContent('4')
+      })
+      
+      const iconPalettes = screen.getAllByTestId('icon-palettes')
+      iconPalettes.forEach(palette => {
+        expect(palette).toHaveTextContent('default')
+      })
+      
+      const iconControls = screen.getAllByTestId('icon-controls')
+      iconControls.forEach(control => {
+        expect(control).toHaveTextContent('shown')
+      })
+      
+      // Verify section headings
+      expect(screen.getByText('Standard Resolution (12×32)')).toBeInTheDocument()
+      expect(screen.getByText('High Resolution (24×64) - 2x Detail')).toBeInTheDocument()
     })
   })
 
@@ -96,7 +128,12 @@ describe('DemoView', () => {
       await user.type(seedInput, 'test@example.com')
       
       expect(seedInput).toHaveValue('test@example.com')
-      expect(screen.getByTestId('icon-seed')).toHaveTextContent('test@example.com')
+      
+      // Both icons should show the updated seed
+      const iconSeeds = screen.getAllByTestId('icon-seed')
+      iconSeeds.forEach(seed => {
+        expect(seed).toHaveTextContent('test@example.com')
+      })
     })
 
     it('generates random seed when random button is clicked', async () => {
@@ -123,7 +160,12 @@ describe('DemoView', () => {
       await user.clear(seedInput)
       
       expect(seedInput).toHaveValue('')
-      expect(screen.getByTestId('icon-seed')).toHaveTextContent('random')
+      
+      // Both icons should show 'random' for empty seed
+      const iconSeeds = screen.getAllByTestId('icon-seed')
+      iconSeeds.forEach(seed => {
+        expect(seed).toHaveTextContent('random')
+      })
     })
   })
 
@@ -137,7 +179,12 @@ describe('DemoView', () => {
       
       expect(sizeSlider).toHaveValue('6')
       expect(screen.getByText('6px')).toBeInTheDocument()
-      expect(screen.getByTestId('icon-size')).toHaveTextContent('6')
+      
+      // Both icons should show the updated size
+      const iconSizes = screen.getAllByTestId('icon-size')
+      iconSizes.forEach(size => {
+        expect(size).toHaveTextContent('6')
+      })
     })
 
     it('respects slider min and max values', () => {
@@ -194,7 +241,11 @@ describe('DemoView', () => {
       const changePaletteButton = screen.getByRole('button', { name: 'Change Palette' })
       await user.click(changePaletteButton)
       
-      expect(screen.getByTestId('icon-palettes')).toHaveTextContent('custom')
+      // Both icons should show custom palettes
+      const iconPalettes = screen.getAllByTestId('icon-palettes')
+      iconPalettes.forEach(palette => {
+        expect(palette).toHaveTextContent('custom')
+      })
     })
   })
 
@@ -222,7 +273,12 @@ describe('DemoView', () => {
       expect(seedInput).toHaveValue('user@example.com')
       expect(sizeSlider).toHaveValue('4')
       expect(screen.queryByTestId('palette-editor')).not.toBeInTheDocument()
-      expect(screen.getByTestId('icon-palettes')).toHaveTextContent('default')
+      
+      // Both icons should have default palettes
+      const iconPalettes = screen.getAllByTestId('icon-palettes')
+      iconPalettes.forEach(palette => {
+        expect(palette).toHaveTextContent('default')
+      })
     })
   })
 
@@ -231,12 +287,15 @@ describe('DemoView', () => {
       const user = userEvent.setup()
       render(<DemoView />)
       
-      const generateButton = screen.getByRole('button', { name: 'Generate PNG' })
-      await user.click(generateButton)
+      // Since we have two TotemIcons with PNG generation, click the first one
+      const generateButtons = screen.getAllByRole('button', { name: 'Generate PNG' })
+      expect(generateButtons).toHaveLength(2)
+      
+      await user.click(generateButtons[0])
       
       // Since we're mocking the callback, we just verify the mock was called
       // In a real scenario, this would test that the PNG URL is stored
-      expect(generateButton).toBeInTheDocument()
+      expect(generateButtons[0]).toBeInTheDocument()
     })
   })
 
@@ -294,4 +353,5 @@ describe('DemoView', () => {
       expect(container.querySelector('.content-wrapper')).toBeInTheDocument()
     })
   })
+
 })
