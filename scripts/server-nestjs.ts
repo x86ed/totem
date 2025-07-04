@@ -9,7 +9,11 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './src/app.module';
 import { TotemService } from './src/services/totem.service';
-import * as packageJson from '../package.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read package.json
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 
 async function bootstrap() {
   console.log('🎯 Starting Totem AI-Native Project Management Platform...');

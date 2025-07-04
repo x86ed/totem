@@ -71,7 +71,7 @@ describe('App', () => {
 
       expect(screen.getByRole('button', { name: /📋.*Kanban/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /🗺️.*Roadmap/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /➕.*Create Ticket/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /🎟️.*Ticket/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /📁.*Export/i })).toBeInTheDocument()
     })
 
@@ -124,11 +124,11 @@ describe('App', () => {
       expect(screen.queryByTestId('export-view')).not.toBeInTheDocument()
     })
 
-    it('should switch to Create Ticket view when Create Ticket tab is clicked', () => {
+    it('should switch to Ticket view when Ticket tab is clicked', () => {
       render(<App />)
-      const createTicketTab = screen.getByRole('button', { name: /➕.*Create Ticket/i })
+      const ticketTab = screen.getByRole('button', { name: /🎟️.*Ticket/i })
 
-      fireEvent.click(createTicketTab)
+      fireEvent.click(ticketTab)
 
       expect(screen.getByTestId('create-ticket')).toBeInTheDocument()
       expect(screen.queryByTestId('kanban-board')).not.toBeInTheDocument()
@@ -172,9 +172,9 @@ describe('App', () => {
       expect(roadmapTab).toHaveTextContent('🗺️')
       expect(roadmapTab).toHaveTextContent('Roadmap')
 
-      const createTab = screen.getByRole('button', { name: /➕.*Create Ticket/i })
-      expect(createTab).toHaveTextContent('➕')
-      expect(createTab).toHaveTextContent('Create Ticket')
+      const createTab = screen.getByRole('button', { name: /🎟️.*Ticket/i })
+      expect(createTab).toHaveTextContent('🎟️')
+      expect(createTab).toHaveTextContent('Ticket')
 
       const exportTab = screen.getByRole('button', { name: /📁.*Export/i })
       expect(exportTab).toHaveTextContent('📁')
@@ -193,7 +193,7 @@ describe('App', () => {
     it('should have proper icon spacing in tabs', () => {
       render(<App />)
 
-      const iconElements = screen.getAllByText(/[📋🗺️➕📁]/)
+      const iconElements = screen.getAllByText(/[📋🗺️🎟️📁]/)
       iconElements.forEach(icon => {
         expect(icon).toHaveClass('icon-spacing')
       })
@@ -225,7 +225,7 @@ describe('App', () => {
       render(<App />)
       const kanbanTab = screen.getByRole('button', { name: /📋.*Kanban/i })
       const roadmapTab = screen.getByRole('button', { name: /🗺️.*Roadmap/i })
-      const createTab = screen.getByRole('button', { name: /➕.*Create Ticket/i })
+      const createTab = screen.getByRole('button', { name: /🎟️.*Ticket/i })
 
       fireEvent.click(roadmapTab)
       fireEvent.click(createTab)
@@ -261,7 +261,7 @@ describe('App', () => {
       const tabs = [
         { button: /📋.*Kanban/i, testId: 'kanban-board' },
         { button: /🗺️.*Roadmap/i, testId: 'roadmap-view' },
-        { button: /➕.*Create Ticket/i, testId: 'create-ticket' },
+        { button: /🎟️.*Ticket/i, testId: 'create-ticket' },
         { button: /📁.*Export/i, testId: 'export-view' }
       ]
 
