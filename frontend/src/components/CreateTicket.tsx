@@ -114,7 +114,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   ticketId = null, 
   onNavigate 
 }) => {
-  const { addTicket, milestones } = useTickets()
+  useTickets()
   
   const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
   const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
