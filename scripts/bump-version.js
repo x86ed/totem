@@ -17,7 +17,13 @@ function bumpPatchVersion(version) {
   return `${parts[0]}.${parts[1]}.${patch}`;
 }
 
-function updatePackageJson(filePath) {
+function bumpMinorVersion(version) {
+  const parts = version.split('.');
+  const minor = parseInt(parts[1]) + 1;
+  return `${parts[0]}.${minor}.0`;
+}
+
+function updatePackageJson(filePath, bumpType = 'patch') {
   if (!fs.existsSync(filePath)) {
     console.log(`Skipping ${filePath} - file does not exist`);
     return null;
@@ -25,7 +31,7 @@ function updatePackageJson(filePath) {
   
   const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   const oldVersion = packageJson.version;
-  const newVersion = bumpPatchVersion(oldVersion);
+  const newVersion = bumpType === 'minor' ? bumpMinorVersion(oldVersion) : bumpPatchVersion(oldVersion);
   
   packageJson.version = newVersion;
   fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2) + '\n');
@@ -35,12 +41,20 @@ function updatePackageJson(filePath) {
 }
 
 try {
-  console.log('Bumping patch version in package.json files...');
+  // Get bump type from command line argument
+  const bumpType = process.argv[2] || 'patch';
+  
+  if (!['patch', 'minor', 'major'].includes(bumpType)) {
+    console.error('Invalid bump type. Use: patch, minor, or major');
+    process.exit(1);
+  }
+  
+  console.log(`Bumping ${bumpType} version in package.json files...`);
   
   // Update all package.json files
   let newVersion = null;
   for (const packagePath of packagePaths) {
-    const version = updatePackageJson(packagePath);
+    const version = updatePackageJson(packagePath, bumpType);
     if (version && !newVersion) {
       newVersion = version;
     }

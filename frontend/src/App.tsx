@@ -3,7 +3,7 @@ import KanbanBoard from './components/KanbanBoard'
 import RoadmapView from './components/RoadmapView'
 import BacklogView from './components/BacklogView'
 import CreateTicket from './components/CreateTicket'
-import ExportView from './components/ExportView'
+import DemoView from './components/DemoView'
 import { TicketProvider } from './context/TicketContext'
 import { TabConfig } from './types'
 import './App.css'
@@ -92,7 +92,7 @@ function App() {
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
     { id: 'backlog', label: 'Backlog', icon: '📊' },
     { id: 'ticket', label: 'Ticket', icon: '🎟️' },
-    { id: 'export', label: 'Export', icon: '📁' }
+    { id: 'export', label: 'Demo', icon: '🎨' }
   ]
 
   return (
@@ -139,7 +139,7 @@ function App() {
               onNavigate={navigateToTicket}
             />
           )}
-          {activeTab === 'export' && <ExportView />}
+          {activeTab === 'export' && <DemoView />}
         </main>
       </div>
     </TicketProvider>
