@@ -102,10 +102,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </span>
           {ticket.priority.toUpperCase()}
         </span>
-        {ticket.assignee && (
+        {ticket.collaborator && (
           <span className="assignee-green px-2 py-1 rounded text-xs">
             <span className="icon-spacing">👤</span>
-            {ticket.assignee}
+            {ticket.collaborator}
           </span>
         )}
       </div>

@@ -13,9 +13,11 @@ describe('TicketCard', () => {
     description: 'This is a test ticket description.',
     status: 'todo',
     priority: 'medium',
-    assignee: 'john.doe',
-    milestone: 'v1.0',
-    created: '2024-01-01T00:00:00.000Z'
+    complexity: 'medium',
+    persona: 'user',
+    collaborator: 'john.doe',
+    createdDate: '2024-01-01',
+    updatedDate: '2024-01-01'
   }
 
   describe('Basic rendering', () => {
@@ -30,13 +32,13 @@ describe('TicketCard', () => {
       expect(screen.getByText('john.doe')).toBeInTheDocument()
     })
 
-    it('renders without optional assignee', () => {
-      const ticketWithoutAssignee: Ticket = {
+    it('renders without optional collaborator', () => {
+      const ticketWithoutCollaborator: Ticket = {
         ...baseTicket,
-        assignee: undefined
+        collaborator: undefined
       }
       
-      render(<TicketCard ticket={ticketWithoutAssignee} />)
+      render(<TicketCard ticket={ticketWithoutCollaborator} />)
       
       expect(screen.getByText('TKT-001')).toBeInTheDocument()
       expect(screen.queryByText('👤')).not.toBeInTheDocument()
@@ -86,24 +88,24 @@ describe('TicketCard', () => {
     })
   })
 
-  describe('Assignee handling', () => {
-    it('displays assignee with correct icon and styling', () => {
+  describe('Collaborator handling', () => {
+    it('displays collaborator with correct icon and styling', () => {
       render(<TicketCard ticket={baseTicket} />)
       
       expect(screen.getByText('👤')).toBeInTheDocument()
       expect(screen.getByText('john.doe')).toBeInTheDocument()
       
-      const assigneeElement = screen.getByText('john.doe').closest('span')
-      expect(assigneeElement).toHaveClass('assignee-green')
+      const collaboratorElement = screen.getByText('john.doe').closest('span')
+      expect(collaboratorElement).toHaveClass('assignee-green')
     })
 
-    it('handles empty assignee string', () => {
-      const ticketWithEmptyAssignee: Ticket = {
+    it('handles empty collaborator string', () => {
+      const ticketWithEmptyCollaborator: Ticket = {
         ...baseTicket,
-        assignee: ''
+        collaborator: ''
       }
       
-      render(<TicketCard ticket={ticketWithEmptyAssignee} />)
+      render(<TicketCard ticket={ticketWithEmptyCollaborator} />)
       
       expect(screen.queryByText('👤')).not.toBeInTheDocument()
     })
@@ -154,7 +156,8 @@ describe('TicketCard', () => {
         description: 'Min desc',
         status: 'todo',
         priority: 'low',
-        created: '2024-01-01T00:00:00.000Z'
+        createdDate: '2024-01-01',
+        updatedDate: '2024-01-01'
       }
       
       render(<TicketCard ticket={minimalTicket} />)
@@ -171,7 +174,7 @@ describe('TicketCard', () => {
         id: 'TKT-SPECIAL',
         title: 'Title with émojis 🎉',
         description: 'Description with spéciál characters',
-        assignee: 'user@domain.com'
+        collaborator: 'user@domain.com'
       }
       
       render(<TicketCard ticket={specialTicket} />)
@@ -183,7 +186,7 @@ describe('TicketCard', () => {
     })
 
     it('handles all priority types correctly', () => {
-      const priorities: Array<Ticket['priority']> = ['low', 'medium', 'high']
+      const priorities: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high']
       const expectedIcons = { low: '🟢', medium: '⚡', high: '🔥' }
       const expectedClasses = { 
         low: 'priority-low-green',

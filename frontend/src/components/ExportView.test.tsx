@@ -20,21 +20,25 @@ describe('ExportView', () => {
       id: 'TKT-001',
       title: 'Test Ticket 1',
       description: 'Description for test ticket 1',
-      status: 'todo',
+      status: 'open',
       priority: 'high',
-      assignee: 'john.doe',
-      milestone: 'milestone-1',
-      created: '2024-01-01T00:00:00.000Z'
+      complexity: 'medium',
+      persona: 'user',
+      collaborator: 'john.doe',
+      createdDate: '2024-01-01',
+      updatedDate: '2024-01-01'
     },
     {
       id: 'TKT-002',
       title: 'Test Ticket 2',
       description: 'Description for test ticket 2',
-      status: 'done',
+      status: 'closed',
       priority: 'medium',
-      assignee: undefined,
-      milestone: 'milestone-1',
-      created: '2024-01-02T00:00:00.000Z'
+      complexity: 'low',
+      persona: 'admin',
+      collaborator: undefined,
+      createdDate: '2024-01-02',
+      updatedDate: '2024-01-02'
     }
   ]
 
@@ -53,12 +57,15 @@ describe('ExportView', () => {
     mockUseTickets.mockReturnValue({
       tickets: mockTickets,
       milestones: mockMilestones,
+      loading: false,
+      error: null,
       addTicket: vi.fn(),
       updateTicket: vi.fn(),
       deleteTicket: vi.fn(),
       moveTicket: vi.fn(),
       addMilestone: vi.fn(),
       updateMilestone: vi.fn(),
+      deleteMilestone: vi.fn(),
     })
   })
 
@@ -227,8 +234,8 @@ describe('ExportView', () => {
       const previewButton = screen.getByRole('button', { name: /Preview/ })
       fireEvent.click(previewButton)
       
-      expect(screen.getByText(/# Project Roadmap/)).toBeInTheDocument()
-      expect(screen.getByText(/## Milestone 1/)).toBeInTheDocument()
+      expect(screen.getByText(/# Project Overview/)).toBeInTheDocument()
+      expect(screen.getByText(/Generated:/)).toBeInTheDocument()
     })
 
     it('shows preview content for JSON format', () => {
@@ -250,8 +257,8 @@ describe('ExportView', () => {
       const previewButton = screen.getByRole('button', { name: /Preview/ })
       fireEvent.click(previewButton)
       
-      // Should show "Unassigned" for ticket with undefined assignee
-      expect(screen.getByText(/\*\*Assignee:\*\* Unassigned/)).toBeInTheDocument()
+      // Should show "None" for ticket with undefined collaborator
+      expect(screen.getByText(/\*\*Collaborator:\*\* None/)).toBeInTheDocument()
     })
   })
 
@@ -260,12 +267,15 @@ describe('ExportView', () => {
       mockUseTickets.mockReturnValue({
         tickets: [],
         milestones: mockMilestones,
+        loading: false,
+        error: null,
         addTicket: vi.fn(),
         updateTicket: vi.fn(),
         deleteTicket: vi.fn(),
         moveTicket: vi.fn(),
         addMilestone: vi.fn(),
         updateMilestone: vi.fn(),
+        deleteMilestone: vi.fn(),
       })
       
       render(<ExportView />)
@@ -281,12 +291,15 @@ describe('ExportView', () => {
       mockUseTickets.mockReturnValue({
         tickets: mockTickets,
         milestones: [],
+        loading: false,
+        error: null,
         addTicket: vi.fn(),
         updateTicket: vi.fn(),
         deleteTicket: vi.fn(),
         moveTicket: vi.fn(),
         addMilestone: vi.fn(),
         updateMilestone: vi.fn(),
+        deleteMilestone: vi.fn(),
       })
       
       render(<ExportView />)
@@ -297,7 +310,7 @@ describe('ExportView', () => {
       const previewButton = screen.getByRole('button', { name: /Preview/ })
       fireEvent.click(previewButton)
       
-      expect(screen.getByText(/# Project Roadmap/)).toBeInTheDocument()
+      expect(screen.getByText(/# Project Overview/)).toBeInTheDocument()
     })
 
     it('handles clipboard error gracefully', async () => {

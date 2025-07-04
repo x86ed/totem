@@ -51,7 +51,7 @@ interface ExportResult {
  * ```
  */
 const ExportView: React.FC = () => {
-  const { tickets, milestones } = useTickets()
+  const { tickets } = useTickets()
   const [exportFormat, setExportFormat] = useState<ExportFormat>('markdown-tickets')
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [previewContent, setPreviewContent] = useState<string>('')
@@ -67,43 +67,50 @@ const ExportView: React.FC = () => {
 **ID:** ${ticket.id}
 **Status:** ${ticket.status}
 **Priority:** ${ticket.priority}
-**Assignee:** ${ticket.assignee || 'Unassigned'}
-**Milestone:** ${ticket.milestone || 'None'}
-**Created:** ${ticket.created}
+**Complexity:** ${ticket.complexity || 'None'}
+**Persona:** ${ticket.persona || 'None'}
+**Collaborator:** ${ticket.collaborator || 'None'}
 
 ## Description
 
 ${ticket.description}
+
+${ticket.acceptance_criteria ? `## Acceptance Criteria
+
+${ticket.acceptance_criteria}` : ''}
 
 ---
 `
   }
 
   /**
-   * Generates a markdown roadmap document with all milestones and their tickets
-   * @returns {string} Formatted markdown string containing the complete roadmap
+   * Generates a markdown roadmap document with all tickets organized by status
+   * @returns {string} Formatted markdown string containing the complete project overview
    */
   const generateMarkdownRoadmap = (): string => {
-    let content = `# Project Roadmap
+    let content = `# Project Overview
 
 Generated: ${new Date().toLocaleString()}
 
 `
     
-    milestones.forEach(milestone => {
-      const milestoneTickets = tickets.filter(ticket => ticket.milestone === milestone.id)
+    const statusGroups = {
+      'open': 'Open Tickets',
+      'in_progress': 'In Progress',
+      'blocked': 'Blocked',
+      'planning': 'Planning',
+      'closed': 'Closed'
+    } as const
+    
+    Object.entries(statusGroups).forEach(([status, title]) => {
+      const statusTickets = tickets.filter(ticket => ticket.status === status)
       
-      content += `## ${milestone.title}
-
-**Due Date:** ${milestone.dueDate}
-**Status:** ${milestone.status}
-
-${milestone.description}
+      content += `## ${title}
 
 ### Tickets:
-${milestoneTickets.map(ticket => 
-    `- [${ticket.status === 'done' ? 'x' : ' '}] ${ticket.title} (${ticket.id})`
-).join('\n') || '- No tickets assigned'}
+${statusTickets.map(ticket => 
+    `- [${ticket.status === 'closed' ? 'x' : ' '}] ${ticket.title} (${ticket.id})`
+).join('\n') || '- No tickets in this status'}
 
 `
     })
@@ -113,22 +120,21 @@ ${milestoneTickets.map(ticket =>
 
   /**
    * Generates a complete JSON export with all project data and statistics
-   * @returns {string} JSON string containing tickets, milestones, and summary statistics
+   * @returns {string} JSON string containing tickets and summary statistics
    */
   const generateJSONExport = (): string => {
     return JSON.stringify({
       exportDate: new Date().toISOString(),
       tickets,
-      milestones,
       summary: {
         totalTickets: tickets.length,
         ticketsByStatus: {
-          todo: tickets.filter(t => t.status === 'todo').length,
-          'in-progress': tickets.filter(t => t.status === 'in-progress').length,
-          review: tickets.filter(t => t.status === 'review').length,
-          done: tickets.filter(t => t.status === 'done').length
-        },
-        totalMilestones: milestones.length
+          open: tickets.filter(t => t.status === 'open').length,
+          in_progress: tickets.filter(t => t.status === 'in_progress').length,
+          blocked: tickets.filter(t => t.status === 'blocked').length,
+          planning: tickets.filter(t => t.status === 'planning').length,
+          closed: tickets.filter(t => t.status === 'closed').length
+        }
       }
     }, null, 2)
   }

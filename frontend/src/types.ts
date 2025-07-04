@@ -8,22 +8,32 @@
  * @interface Ticket
  */
 export interface Ticket {
-  /** Unique identifier for the ticket (e.g., "TKT-001") */
+  /** Unique identifier for the ticket (e.g., "healthcare.security.auth-sso-001") */
   id: string;
   /** Brief, descriptive title of the ticket */
   title: string;
   /** Detailed description of what needs to be done or the issue to be resolved */
   description: string;
   /** Current workflow status of the ticket */
-  status: 'todo' | 'in-progress' | 'review' | 'done';
+  status: 'open' | 'in-progress' | 'planning' | 'completed';
   /** Priority level indicating urgency and importance */
   priority: 'low' | 'medium' | 'high';
-  /** Optional username or identifier of the person assigned to work on this ticket */
-  assignee?: string;
-  /** Optional milestone identifier that this ticket contributes to */
-  milestone?: string;
-  /** ISO date string when the ticket was created */
-  created: string;
+  /** Complexity level of the ticket */
+  complexity?: 'low' | 'medium' | 'high';
+  /** Target persona for this ticket */
+  persona?: string;
+  /** List of ticket IDs that this ticket blocks */
+  blocks: string[];
+  /** List of ticket IDs that block this ticket */
+  blocked_by: string[];
+}
+
+/**
+ * Represents an acceptance criterion for a ticket
+ */
+export interface AcceptanceCriterion {
+  criteria: string;
+  complete: boolean;
 }
 
 /**
@@ -62,18 +72,18 @@ export interface TicketContextType {
   tickets: Ticket[];
   /** Array of all milestones in the system */
   milestones: Milestone[];
-  /** Function to add a new ticket to the system */
-  addTicket: (ticket: Ticket) => void;
+  /** Loading state for async operations */
+  loading: boolean;
+  /** Error message if any operations failed */
+  error: string | null;
+  /** Function to refresh tickets from the API */
+  refreshTickets: () => Promise<void>;
+  /** Function to create a new ticket */
+  createTicket: (ticket: Partial<Ticket>) => Promise<void>;
   /** Function to update an existing ticket */
-  updateTicket: (ticket: Ticket) => void;
+  updateTicket: (ticket: Ticket) => Promise<void>;
   /** Function to remove a ticket from the system by its ID */
-  deleteTicket: (ticketId: string) => void;
-  /** Function to move a ticket to a different status column */
-  moveTicket: (ticketId: string, newStatus: Ticket['status']) => void;
-  /** Function to add a new milestone to the system */
-  addMilestone: (milestone: Milestone) => void;
-  /** Function to update an existing milestone */
-  updateMilestone: (milestone: Milestone) => void;
+  deleteTicket: (ticketId: string) => Promise<void>;
 }
 
 /**

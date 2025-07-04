@@ -24,7 +24,7 @@ interface Column {
  * for moving tickets between statuses.
  * 
  * Features:
- * - Status columns (To Do, In Progress, Review, Done)
+ * - Status columns (Open, Planning, In Progress, Completed)
  * - Visual ticket cards with detailed information
  * - Hover controls to move tickets between statuses
  * - Ticket count per column
@@ -48,13 +48,13 @@ interface Column {
  * ```
  */
 const KanbanBoard: React.FC = () => {
-  const { tickets, moveTicket } = useTickets()
+  const { tickets, updateTicket } = useTickets()
 
   const columns: Column[] = [
-    { id: 'todo', title: 'To Do', color: '#8b4513' },
-    { id: 'in-progress', title: 'In Progress', color: '#7b9a3f' },
-    { id: 'review', title: 'Review', color: '#5a6e5a' },
-    { id: 'done', title: 'Done', color: '#4a7c59' }
+    { id: 'open', title: 'Open', color: '#8b4513' },
+    { id: 'planning', title: 'Planning', color: '#7b9a3f' },
+    { id: 'in-progress', title: 'In Progress', color: '#5a6e5a' },
+    { id: 'completed', title: 'Completed', color: '#4a7c59' }
   ]
 
   /**
@@ -71,8 +71,11 @@ const KanbanBoard: React.FC = () => {
    * @param {string} ticketId - The ID of the ticket to move
    * @param {Ticket['status']} newStatus - The destination status
    */
-  const handleMoveTicket = (ticketId: string, newStatus: Ticket['status']): void => {
-    moveTicket(ticketId, newStatus)
+  const handleMoveTicket = async (ticketId: string, newStatus: Ticket['status']): Promise<void> => {
+    const ticketToUpdate = tickets.find(ticket => ticket.id === ticketId)
+    if (ticketToUpdate) {
+      await updateTicket({ ...ticketToUpdate, status: newStatus })
+    }
   }
 
   /**
@@ -82,10 +85,10 @@ const KanbanBoard: React.FC = () => {
    */
   const getColumnIcon = (colId: Ticket['status']): string => {
     switch (colId) {
-      case 'todo': return '📝'
+      case 'open': return '📝'
+      case 'planning': return '🎯'
       case 'in-progress': return '🔄'
-      case 'review': return '👀'
-      case 'done': return '✅'
+      case 'completed': return '✅'
       default: return '📌'
     }
   }

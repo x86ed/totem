@@ -292,7 +292,7 @@ describe('App', () => {
       render(<App />)
 
       const buttons = screen.getAllByRole('button')
-      expect(buttons).toHaveLength(4)
+      expect(buttons).toHaveLength(5)
       
       buttons.forEach(button => {
         expect(button).toBeVisible()

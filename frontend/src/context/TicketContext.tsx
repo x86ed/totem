@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
 import type { Ticket, Milestone, TicketContextType } from '../types'
 
 /**
@@ -15,6 +15,10 @@ interface TicketState {
   tickets: Ticket[]
   /** Array of all milestones in the system */
   milestones: Milestone[]
+  /** Loading state for async operations */
+  loading: boolean
+  /** Error message if any operations failed */
+  error: string | null
 }
 
 /**
@@ -22,57 +26,18 @@ interface TicketState {
  * @typedef {Object} TicketAction
  */
 type TicketAction =
+  | { type: 'SET_TICKETS'; payload: Ticket[] }
   | { type: 'ADD_TICKET'; payload: Ticket }
   | { type: 'UPDATE_TICKET'; payload: Ticket }
   | { type: 'DELETE_TICKET'; payload: string }
-  | { type: 'MOVE_TICKET'; payload: { ticketId: string; newStatus: Ticket['status'] } }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'ADD_MILESTONE'; payload: Milestone }
   | { type: 'UPDATE_MILESTONE'; payload: Milestone }
 
-// Sample data
+// Initial state with empty data - will be populated from API
 const initialState: TicketState = {
-  tickets: [
-    {
-      id: 'TKT-001',
-      title: 'Fix user authentication bug',
-      description: 'Users are experiencing issues with login validation. The system should properly validate credentials and show appropriate error messages.',
-      status: 'todo',
-      priority: 'high',
-      assignee: 'john.doe',
-      milestone: 'v1.0',
-      created: '2025-06-26'
-    },
-    {
-      id: 'TKT-002',
-      title: 'Implement dark mode',
-      description: 'Add dark mode toggle to improve user experience during low-light conditions.',
-      status: 'in-progress',
-      priority: 'medium',
-      assignee: 'jane.smith',
-      milestone: 'v1.1',
-      created: '2025-06-25'
-    },
-    {
-      id: 'TKT-003',
-      title: 'Add export functionality',
-      description: 'Allow users to export their data in multiple formats including JSON and CSV.',
-      status: 'review',
-      priority: 'low',
-      assignee: 'bob.wilson',
-      milestone: 'v1.0',
-      created: '2025-06-24'
-    },
-    {
-      id: 'TKT-004',
-      title: 'Database optimization',
-      description: 'Optimize database queries to improve application performance.',
-      status: 'done',
-      priority: 'high',
-      assignee: 'alice.brown',
-      milestone: 'v0.9',
-      created: '2025-06-20'
-    }
-  ],
+  tickets: [],
   milestones: [
     {
       id: 'v0.9',
@@ -95,7 +60,9 @@ const initialState: TicketState = {
       dueDate: '2025-08-01',
       status: 'planning'
     }
-  ]
+  ],
+  loading: false,
+  error: null
 }
 
 /**
@@ -107,6 +74,13 @@ const initialState: TicketState = {
  */
 export function ticketReducer(state: TicketState, action: TicketAction): TicketState {
   switch (action.type) {
+    case 'SET_TICKETS':
+      return {
+        ...state,
+        tickets: action.payload,
+        loading: false,
+        error: null
+      }
     case 'ADD_TICKET':
       return {
         ...state,
@@ -124,14 +98,16 @@ export function ticketReducer(state: TicketState, action: TicketAction): TicketS
         ...state,
         tickets: state.tickets.filter(ticket => ticket.id !== action.payload)
       }
-    case 'MOVE_TICKET':
+    case 'SET_LOADING':
       return {
         ...state,
-        tickets: state.tickets.map(ticket =>
-          ticket.id === action.payload.ticketId
-            ? { ...ticket, status: action.payload.newStatus }
-            : ticket
-        )
+        loading: action.payload
+      }
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        loading: false
       }
     case 'ADD_MILESTONE':
       return {
@@ -165,64 +141,127 @@ interface TicketProviderProps {
 export function TicketProvider({ children }: TicketProviderProps) {
   const [state, dispatch] = useReducer(ticketReducer, initialState)
 
+  // Load tickets when the provider mounts
+  useEffect(() => {
+    refreshTickets()
+  }, [])
+
   /**
-   * Adds a new ticket to the system
-   * @param ticket - The ticket object to add
+   * Refreshes tickets from the API
    */
-  const addTicket = (ticket: Ticket) => {
-    dispatch({ type: 'ADD_TICKET', payload: ticket })
+  const refreshTickets = async (): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await fetch('/api/ticket')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tickets: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      const tickets = data.tickets || []
+      
+      dispatch({ type: 'SET_TICKETS', payload: tickets })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh tickets' })
+    }
+  }
+
+  /**
+   * Creates a new ticket
+   * @param ticket - The ticket object to create
+   */
+  const createTicket = async (ticket: Partial<Ticket>): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      // Generate a new ticket with default values
+      const newTicket: Ticket = {
+        id: ticket.id || `TKT-${Date.now()}`,
+        title: ticket.title || '',
+        description: ticket.description || '',
+        status: ticket.status || 'open',
+        priority: ticket.priority || 'medium',
+        complexity: ticket.complexity || undefined,
+        persona: ticket.persona || undefined,
+        blocks: ticket.blocks || [],
+        blocked_by: ticket.blocked_by || []
+      }
+      
+      dispatch({ type: 'ADD_TICKET', payload: newTicket })
+      dispatch({ type: 'SET_LOADING', payload: false })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to create ticket' })
+    }
   }
 
   /**
    * Updates an existing ticket
    * @param ticket - The ticket object with updated properties
    */
-  const updateTicket = (ticket: Ticket) => {
-    dispatch({ type: 'UPDATE_TICKET', payload: ticket })
+  const updateTicket = async (ticket: Ticket): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      dispatch({ type: 'UPDATE_TICKET', payload: ticket })
+      dispatch({ type: 'SET_LOADING', payload: false })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update ticket' })
+    }
   }
 
   /**
    * Deletes a ticket from the system
    * @param ticketId - The ID of the ticket to delete
    */
-  const deleteTicket = (ticketId: string) => {
-    dispatch({ type: 'DELETE_TICKET', payload: ticketId })
-  }
-
-  /**
-   * Moves a ticket to a different status column
-   * @param ticketId - The ID of the ticket to move
-   * @param newStatus - The target status to move the ticket to
-   */
-  const moveTicket = (ticketId: string, newStatus: Ticket['status']) => {
-    dispatch({ type: 'MOVE_TICKET', payload: { ticketId, newStatus } })
+  const deleteTicket = async (ticketId: string): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      dispatch({ type: 'DELETE_TICKET', payload: ticketId })
+      dispatch({ type: 'SET_LOADING', payload: false })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to delete ticket' })
+    }
   }
 
   /**
    * Adds a new milestone to the system
    * @param milestone - The milestone object to add
    */
-  const addMilestone = (milestone: Milestone) => {
-    dispatch({ type: 'ADD_MILESTONE', payload: milestone })
+  const addMilestone = async (milestone: Milestone): Promise<void> => {
+    try {
+      dispatch({ type: 'ADD_MILESTONE', payload: milestone })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to add milestone' })
+    }
   }
 
   /**
    * Updates an existing milestone
    * @param milestone - The milestone object with updated properties
    */
-  const updateMilestone = (milestone: Milestone) => {
-    dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
+  const updateMilestone = async (milestone: Milestone): Promise<void> => {
+    try {
+      dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update milestone' })
+    }
   }
 
   const value: TicketContextType = {
     tickets: state.tickets,
     milestones: state.milestones,
-    addTicket,
+    loading: state.loading,
+    error: state.error,
+    refreshTickets,
+    createTicket,
     updateTicket,
-    deleteTicket,
-    moveTicket,
-    addMilestone,
-    updateMilestone
+    deleteTicket
   }
 
   return (

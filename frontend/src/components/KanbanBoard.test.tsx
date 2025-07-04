@@ -27,60 +27,64 @@ const mockUseTickets = vi.mocked(useTickets)
 describe('KanbanBoard', () => {
   const mockTickets: Ticket[] = [
     {
-      id: 'TKT-001',
-      title: 'Todo Task',
-      description: 'A task in todo status',
-      status: 'todo',
+      id: 'healthcare.patient-data.survey-001',
+      title: 'Patient Data Survey Integration',
+      description: 'Integrate patient survey data collection system',
+      status: 'open',
       priority: 'high',
-      assignee: 'john.doe',
-      milestone: 'v1.0',
-      created: '2024-01-01T00:00:00.000Z'
+      complexity: 'medium',
+      persona: 'Healthcare Provider',
+      blocks: [],
+      blocked_by: []
     },
     {
-      id: 'TKT-002',
-      title: 'In Progress Task',
-      description: 'A task in progress',
+      id: 'healthcare.security.auth-sso-001',
+      title: 'Single Sign-On Authentication',
+      description: 'Implement SSO for healthcare staff authentication',
       status: 'in-progress',
       priority: 'medium',
-      assignee: 'jane.smith',
-      milestone: 'v1.0',
-      created: '2024-01-02T00:00:00.000Z'
+      complexity: 'high',
+      persona: 'IT Administrator',
+      blocks: [],
+      blocked_by: []
     },
     {
-      id: 'TKT-003',
-      title: 'Review Task',
-      description: 'A task in review',
-      status: 'review',
+      id: 'healthcare.compliance.audit-trail-001',
+      title: 'HIPAA Audit Trail Implementation',
+      description: 'Create comprehensive audit trail for HIPAA compliance',
+      status: 'planning',
       priority: 'low',
-      assignee: 'bob.wilson',
-      milestone: 'v1.1',
-      created: '2024-01-03T00:00:00.000Z'
+      complexity: 'low',
+      persona: 'Compliance Officer',
+      blocks: [],
+      blocked_by: []
     },
     {
-      id: 'TKT-004',
-      title: 'Done Task',
-      description: 'A completed task',
-      status: 'done',
+      id: 'healthcare.analytics.reporting-001',
+      title: 'Healthcare Analytics Dashboard',
+      description: 'Build analytics dashboard for healthcare metrics',
+      status: 'completed',
       priority: 'high',
-      assignee: 'alice.brown',
-      milestone: 'v1.0',
-      created: '2024-01-04T00:00:00.000Z'
+      complexity: 'high',
+      persona: 'Data Analyst',
+      blocks: [],
+      blocked_by: []
     }
   ]
 
-  const mockMoveTicket = vi.fn()
+  const mockUpdateTicket = vi.fn()
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseTickets.mockReturnValue({
       tickets: mockTickets,
       milestones: [],
-      addTicket: vi.fn(),
-      updateTicket: vi.fn(),
-      deleteTicket: vi.fn(),
-      moveTicket: mockMoveTicket,
-      addMilestone: vi.fn(),
-      updateMilestone: vi.fn()
+      loading: false,
+      error: null,
+      refreshTickets: vi.fn(),
+      createTicket: vi.fn(),
+      updateTicket: mockUpdateTicket,
+      deleteTicket: vi.fn()
     })
   })
 
@@ -88,20 +92,20 @@ describe('KanbanBoard', () => {
     it('renders the kanban board with all columns', () => {
       render(<KanbanBoard />)
       
-      expect(screen.getByText('To Do')).toBeInTheDocument()
+      expect(screen.getByText('Open')).toBeInTheDocument()
+      expect(screen.getByText('Planning')).toBeInTheDocument()
       expect(screen.getByText('In Progress')).toBeInTheDocument()
-      expect(screen.getByText('Review')).toBeInTheDocument()
-      expect(screen.getByText('Done')).toBeInTheDocument()
+      expect(screen.getByText('Completed')).toBeInTheDocument()
     })
 
     it('renders correct column icons', () => {
       render(<KanbanBoard />)
       
       // Check for icons in column headers specifically using more specific selectors
-      expect(screen.getByText('To Do').closest('h3')).toHaveTextContent('📝')
+      expect(screen.getByText('Open').closest('h3')).toHaveTextContent('📝')
+      expect(screen.getByText('Planning').closest('h3')).toHaveTextContent('🎯')
       expect(screen.getByText('In Progress').closest('h3')).toHaveTextContent('🔄')
-      expect(screen.getByText('Review').closest('h3')).toHaveTextContent('👀')
-      expect(screen.getByText('Done').closest('h3')).toHaveTextContent('✅')
+      expect(screen.getByText('Completed').closest('h3')).toHaveTextContent('✅')
     })
 
     it('displays correct ticket counts in each column', () => {
@@ -115,10 +119,10 @@ describe('KanbanBoard', () => {
     it('renders tickets in correct columns', () => {
       render(<KanbanBoard />)
       
-      expect(screen.getByTestId('ticket-TKT-001')).toBeInTheDocument() // todo
-      expect(screen.getByTestId('ticket-TKT-002')).toBeInTheDocument() // in-progress
-      expect(screen.getByTestId('ticket-TKT-003')).toBeInTheDocument() // review
-      expect(screen.getByTestId('ticket-TKT-004')).toBeInTheDocument() // done
+      expect(screen.getByTestId('ticket-healthcare.patient-data.survey-001')).toBeInTheDocument() // open
+      expect(screen.getByTestId('ticket-healthcare.security.auth-sso-001')).toBeInTheDocument() // in-progress
+      expect(screen.getByTestId('ticket-healthcare.compliance.audit-trail-001')).toBeInTheDocument() // planning
+      expect(screen.getByTestId('ticket-healthcare.analytics.reporting-001')).toBeInTheDocument() // completed
     })
   })
 
@@ -126,81 +130,88 @@ describe('KanbanBoard', () => {
     it('displays tickets in their respective status columns', () => {
       render(<KanbanBoard />)
       
-      expect(screen.getByText('Todo Task')).toBeInTheDocument()
-      expect(screen.getByText('In Progress Task')).toBeInTheDocument()
-      expect(screen.getByText('Review Task')).toBeInTheDocument()
-      expect(screen.getByText('Done Task')).toBeInTheDocument()
+      expect(screen.getByText('Patient Data Survey Integration')).toBeInTheDocument()
+      expect(screen.getByText('Single Sign-On Authentication')).toBeInTheDocument()
+      expect(screen.getByText('HIPAA Audit Trail Implementation')).toBeInTheDocument()
+      expect(screen.getByText('Healthcare Analytics Dashboard')).toBeInTheDocument()
     })
 
     it('handles multiple tickets in the same column', () => {
       const multipleTickets: Ticket[] = [
         ...mockTickets,
         {
-          id: 'TKT-005',
-          title: 'Another Todo Task',
-          description: 'Another task in todo',
-          status: 'todo',
+          id: 'healthcare.patient-data.survey-002',
+          title: 'Another Patient Survey Task',
+          description: 'Another task for patient data collection',
+          status: 'open',
           priority: 'low',
-          assignee: 'charlie.brown',
-          milestone: 'v1.0',
-          created: '2024-01-05T00:00:00.000Z'
+          complexity: 'low',
+          persona: 'Healthcare Provider',
+          blocks: [],
+          blocked_by: []
         }
       ]
 
       mockUseTickets.mockReturnValue({
         tickets: multipleTickets,
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
       
-      // Todo column should now have 2 tickets
-      expect(screen.getByText('Todo Task')).toBeInTheDocument()
-      expect(screen.getByText('Another Todo Task')).toBeInTheDocument()
+      // Open column should now have 2 tickets
+      expect(screen.getByText('Patient Data Survey Integration')).toBeInTheDocument()
+      expect(screen.getByText('Another Patient Survey Task')).toBeInTheDocument()
     })
 
     it('updates ticket counts correctly with multiple tickets', () => {
       const multipleTickets: Ticket[] = [
         ...mockTickets,
         {
-          id: 'TKT-005',
-          title: 'Another Todo Task',
-          description: 'Another task in todo',
-          status: 'todo',
+          id: 'healthcare.patient-data.survey-002',
+          title: 'Another Patient Survey Task',
+          description: 'Another task for patient data collection',
+          status: 'open',
           priority: 'low',
-          created: '2024-01-05T00:00:00.000Z'
+          complexity: 'low',
+          persona: 'Healthcare Provider',
+          blocks: [],
+          blocked_by: []
         },
         {
-          id: 'TKT-006',
-          title: 'Third Todo Task',
-          description: 'Third task in todo',
-          status: 'todo',
+          id: 'healthcare.patient-data.survey-003',
+          title: 'Third Patient Survey Task',
+          description: 'Third task for patient data collection',
+          status: 'open',
           priority: 'medium',
-          created: '2024-01-06T00:00:00.000Z'
+          complexity: 'medium',
+          persona: 'Healthcare Provider',
+          blocks: [],
+          blocked_by: []
         }
       ]
 
       mockUseTickets.mockReturnValue({
         tickets: multipleTickets,
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
       
-      // Todo column should show "3", others should show "1"
-      expect(screen.getByText('3')).toBeInTheDocument() // todo column
+      // Open column should show "3", others should show "1"
+      expect(screen.getByText('3')).toBeInTheDocument() // open column
       const singleCountBadges = screen.getAllByText('1')
       expect(singleCountBadges).toHaveLength(3) // other columns
     })
@@ -215,7 +226,7 @@ describe('KanbanBoard', () => {
       expect(moveButtons.length).toBeGreaterThan(0)
     })
 
-    it('calls moveTicket when move button is clicked', () => {
+    it('calls updateTicket when move button is clicked', () => {
       render(<KanbanBoard />)
       
       // Find a move button (there should be multiple for different target columns)
@@ -224,13 +235,13 @@ describe('KanbanBoard', () => {
       
       fireEvent.click(firstMoveButton)
       
-      expect(mockMoveTicket).toHaveBeenCalledTimes(1)
+      expect(mockUpdateTicket).toHaveBeenCalledTimes(1)
     })
 
     it('does not render move button for current status', () => {
       render(<KanbanBoard />)
       
-      // For a ticket in 'todo' status, there should be 3 move buttons (not 4)
+      // For a ticket in 'open' status, there should be 3 move buttons (not 4)
       // because it shouldn't have a button to move to its current status
       const allButtons = screen.getAllByRole('button')
       
@@ -243,30 +254,30 @@ describe('KanbanBoard', () => {
       render(<KanbanBoard />)
       
       // Check for buttons with title attributes within specific ticket context
-      const todoTicket = screen.getByTestId('ticket-TKT-001').closest('.relative')
-      const inProgressTicket = screen.getByTestId('ticket-TKT-002').closest('.relative')
-      const reviewTicket = screen.getByTestId('ticket-TKT-003').closest('.relative')
-      const doneTicket = screen.getByTestId('ticket-TKT-004').closest('.relative')
+      const openTicket = screen.getByTestId('ticket-healthcare.patient-data.survey-001').closest('.relative')
+      const inProgressTicket = screen.getByTestId('ticket-healthcare.security.auth-sso-001').closest('.relative')
+      const planningTicket = screen.getByTestId('ticket-healthcare.compliance.audit-trail-001').closest('.relative')
+      const completedTicket = screen.getByTestId('ticket-healthcare.analytics.reporting-001').closest('.relative')
 
-      // For todo ticket, check available move options
-      expect(within(todoTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(todoTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
-      expect(within(todoTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
+      // For open ticket, check available move options
+      expect(within(openTicket! as HTMLElement).getByTitle('Move to Planning')).toBeInTheDocument()
+      expect(within(openTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
+      expect(within(openTicket! as HTMLElement).getByTitle('Move to Completed')).toBeInTheDocument()
 
       // For in-progress ticket, check available move options  
-      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
-      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Open')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Planning')).toBeInTheDocument()
+      expect(within(inProgressTicket! as HTMLElement).getByTitle('Move to Completed')).toBeInTheDocument()
 
-      // For review ticket, check available move options
-      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(reviewTicket! as HTMLElement).getByTitle('Move to Done')).toBeInTheDocument()
+      // For planning ticket, check available move options
+      expect(within(planningTicket! as HTMLElement).getByTitle('Move to Open')).toBeInTheDocument()
+      expect(within(planningTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
+      expect(within(planningTicket! as HTMLElement).getByTitle('Move to Completed')).toBeInTheDocument()
 
-      // For done ticket, check available move options
-      expect(within(doneTicket! as HTMLElement).getByTitle('Move to To Do')).toBeInTheDocument()
-      expect(within(doneTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
-      expect(within(doneTicket! as HTMLElement).getByTitle('Move to Review')).toBeInTheDocument()
+      // For completed ticket, check available move options
+      expect(within(completedTicket! as HTMLElement).getByTitle('Move to Open')).toBeInTheDocument()
+      expect(within(completedTicket! as HTMLElement).getByTitle('Move to Planning')).toBeInTheDocument()
+      expect(within(completedTicket! as HTMLElement).getByTitle('Move to In Progress')).toBeInTheDocument()
     })
   })
 
@@ -274,24 +285,27 @@ describe('KanbanBoard', () => {
     it('shows empty state message when column has no tickets', () => {
       const limitedTickets: Ticket[] = [
         {
-          id: 'TKT-001',
-          title: 'Only Todo Task',
-          description: 'Only task in todo',
-          status: 'todo',
+          id: 'healthcare.patient-data.survey-001',
+          title: 'Only Open Task',
+          description: 'Only task in open status',
+          status: 'open',
           priority: 'high',
-          created: '2024-01-01T00:00:00.000Z'
+          complexity: 'medium',
+          persona: 'Healthcare Provider',
+          blocks: [],
+          blocked_by: []
         }
       ]
 
       mockUseTickets.mockReturnValue({
         tickets: limitedTickets,
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
@@ -304,29 +318,32 @@ describe('KanbanBoard', () => {
     it('shows correct count of 0 for empty columns', () => {
       const singleTicket: Ticket[] = [
         {
-          id: 'TKT-001',
-          title: 'Only Todo Task',
-          description: 'Only task in todo',
-          status: 'todo',
+          id: 'healthcare.patient-data.survey-001',
+          title: 'Only Open Task',
+          description: 'Only task in open status',
+          status: 'open',
           priority: 'high',
-          created: '2024-01-01T00:00:00.000Z'
+          complexity: 'medium',
+          persona: 'Healthcare Provider',
+          blocks: [],
+          blocked_by: []
         }
       ]
 
       mockUseTickets.mockReturnValue({
         tickets: singleTicket,
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
       
-      expect(screen.getByText('1')).toBeInTheDocument() // todo column
+      expect(screen.getByText('1')).toBeInTheDocument() // open column
       const zeroCountBadges = screen.getAllByText('0')
       expect(zeroCountBadges).toHaveLength(3) // other columns
     })
@@ -335,12 +352,12 @@ describe('KanbanBoard', () => {
       mockUseTickets.mockReturnValue({
         tickets: [],
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
@@ -399,41 +416,52 @@ describe('KanbanBoard', () => {
     it('handles move ticket function calls with correct parameters', () => {
       render(<KanbanBoard />)
       
-      // Find a specific move button within the todo ticket context and click it
-      const todoTicket = screen.getByTestId('ticket-TKT-001').closest('.relative')
-      const moveToInProgressButton = within(todoTicket! as HTMLElement).getByTitle('Move to In Progress')
+      // Find a specific move button within the open ticket context and click it
+      const openTicket = screen.getByTestId('ticket-healthcare.patient-data.survey-001').closest('.relative')
+      const moveToInProgressButton = within(openTicket! as HTMLElement).getByTitle('Move to In Progress')
       fireEvent.click(moveToInProgressButton)
       
-      expect(mockMoveTicket).toHaveBeenCalledWith('TKT-001', 'in-progress')
+      expect(mockUpdateTicket).toHaveBeenCalledWith({
+        id: 'healthcare.patient-data.survey-001',
+        title: 'Patient Data Survey Integration',
+        description: 'Integrate patient survey data collection system',
+        status: 'in-progress',
+        priority: 'high',
+        complexity: 'medium',
+        persona: 'Healthcare Provider',
+        blocks: [],
+        blocked_by: []
+      })
     })
 
     it('handles tickets with missing optional fields', () => {
       const minimalTickets: Ticket[] = [
         {
-          id: 'TKT-MINIMAL',
+          id: 'healthcare.minimal.task-001',
           title: 'Minimal Ticket',
           description: 'Minimal description',
-          status: 'todo',
+          status: 'open',
           priority: 'medium',
-          created: '2024-01-01T00:00:00.000Z'
+          blocks: [],
+          blocked_by: []
         }
       ]
 
       mockUseTickets.mockReturnValue({
         tickets: minimalTickets,
         milestones: [],
-        addTicket: vi.fn(),
-        updateTicket: vi.fn(),
-        deleteTicket: vi.fn(),
-        moveTicket: mockMoveTicket,
-        addMilestone: vi.fn(),
-        updateMilestone: vi.fn()
+        loading: false,
+        error: null,
+        refreshTickets: vi.fn(),
+        createTicket: vi.fn(),
+        updateTicket: mockUpdateTicket,
+        deleteTicket: vi.fn()
       })
 
       render(<KanbanBoard />)
       
       expect(screen.getByText('Minimal Ticket')).toBeInTheDocument()
-      expect(screen.getByTestId('ticket-TKT-MINIMAL')).toBeInTheDocument()
+      expect(screen.getByTestId('ticket-healthcare.minimal.task-001')).toBeInTheDocument()
     })
   })
 })
