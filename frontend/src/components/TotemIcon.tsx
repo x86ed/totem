@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface PaletteSection {
   colors: string[];
@@ -14,67 +14,69 @@ interface Palettes {
   section4: PaletteSection;
 }
 
+// Shared default palettes used throughout the component
+const defaultPalettes: Palettes = {
+  section0: {
+      colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
+      background: '#FFF3E0',
+      border: '#C73E1D'
+    },
+    section1: {
+      colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
+      background: '#E0F7FA',
+      border: '#0D7377'
+    },
+    section2: {
+      colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
+      background: '#F3E5F5',
+      border: '#6C5CE7'
+    },
+    section3: {
+      colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
+      background: '#E8F5E8',
+      border: '#00B894'
+    },
+    section4: {
+      colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
+      background: '#FFF3E0',
+      border: '#E17055'
+    }
+};
+
 interface PaletteEditorProps {
   onPaletteChange: (palettes: Palettes) => void;
   initialPalettes?: Palettes | null;
 }
 
 function PaletteEditor({ onPaletteChange, initialPalettes = null }: PaletteEditorProps) {
+
 //   const neutralPalettes: Palettes = {
 //     section0: {
-//       colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
-//       background: '#FFF3E0',
-//       border: '#C73E1D'
+//       colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
+//       background: '#F5F3F0',
+//       border: '#6B5B47'
 //     },
 //     section1: {
-//       colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
-//       background: '#E0F7FA',
-//       border: '#0D7377'
+//       colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
+//       background: '#F0F0F0',
+//       border: '#666666'
 //     },
 //     section2: {
-//       colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
-//       background: '#F3E5F5',
-//       border: '#6C5CE7'
+//       colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
+//       background: '#F2F0F3',
+//       border: '#5A4A5E'
 //     },
 //     section3: {
-//       colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
-//       background: '#E8F5E8',
-//       border: '#00B894'
+//       colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
+//       background: '#F0F3F0',
+//       border: '#576057'
 //     },
 //     section4: {
-//       colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
-//       background: '#FFF3E0',
-//       border: '#E17055'
+//       colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
+//       background: '#F3F2F0',
+//       border: '#736B5A'
 //     }
 //   };
-
-  const defaultPalettes: Palettes = {
-    section0: {
-      colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
-      background: '#F5F3F0',
-      border: '#6B5B47'
-    },
-    section1: {
-      colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
-      background: '#F0F0F0',
-      border: '#666666'
-    },
-    section2: {
-      colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
-      background: '#F2F0F3',
-      border: '#5A4A5E'
-    },
-    section3: {
-      colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
-      background: '#F0F3F0',
-      border: '#576057'
-    },
-    section4: {
-      colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
-      background: '#F3F2F0',
-      border: '#736B5A'
-    }
-  };
 
   const [palettes, setPalettes] = useState<Palettes>(initialPalettes || defaultPalettes);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -282,6 +284,7 @@ interface TotemIconProps {
   palettes?: Palettes | null;
   size?: number;
   showControls?: boolean;
+  highRes?: boolean;
 }
 
 function TotemIcon({ 
@@ -289,7 +292,8 @@ function TotemIcon({
   onPngGenerated = null, 
   palettes = null,
   size = 5,
-  showControls = true
+  showControls = true,
+  highRes = false
 }: TotemIconProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pngUrl, setPngUrl] = useState<string>('');
@@ -320,99 +324,42 @@ function TotemIcon({
     seed ? createSeededRandom(simpleHash(seed)) : Math.random
   );
 
-  // Default harmonic color palettes grouped by section
-  // const neutralPalettes: Palettes = {
-  //   section0: {
-  //     colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
-  //     background: '#FFF3E0',
-  //     border: '#C73E1D'
-  //   },
-  //   section1: {
-  //     colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
-  //     background: '#E0F7FA',
-  //     border: '#0D7377'
-  //   },
-  //   section2: {
-  //     colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
-  //     background: '#F3E5F5',
-  //     border: '#6C5CE7'
-  //   },
-  //   section3: {
-  //     colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
-  //     background: '#E8F5E8',
-  //     border: '#00B894'
-  //   },
-  //   section4: {
-  //     colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
-  //     background: '#FFF3E0',
-  //     border: '#E17055'
-  //   }
-  // };
-
-  const defaultPalettes: Palettes = {
-    section0: {
-      colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
-      background: '#F5F3F0',
-      border: '#6B5B47'
-    },
-    section1: {
-      colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
-      background: '#F0F0F0',
-      border: '#666666'
-    },
-    section2: {
-      colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
-      background: '#F2F0F3',
-      border: '#5A4A5E'
-    },
-    section3: {
-      colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
-      background: '#F0F3F0',
-      border: '#576057'
-    },
-    section4: {
-      colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
-      background: '#F3F2F0',
-      border: '#736B5A'
-    }
-  };
-
   // Use provided palettes or default ones
   const activePalettes = palettes || defaultPalettes;
 
   // Extract arrays for backward compatibility
-  const harmonicPalettes = [
+  const harmonicPalettes = useMemo(() => [
     activePalettes.section0?.colors || defaultPalettes.section0.colors,
     activePalettes.section1?.colors || defaultPalettes.section1.colors,
     activePalettes.section2?.colors || defaultPalettes.section2.colors,
     activePalettes.section3?.colors || defaultPalettes.section3.colors,
     activePalettes.section4?.colors || defaultPalettes.section4.colors
-  ];
+  ], [activePalettes]);
 
-  const sectionBackgrounds = [
+  const sectionBackgrounds = useMemo(() => [
     activePalettes.section0?.background || defaultPalettes.section0.background,
     activePalettes.section1?.background || defaultPalettes.section1.background,
     activePalettes.section2?.background || defaultPalettes.section2.background,
     activePalettes.section3?.background || defaultPalettes.section3.background,
     activePalettes.section4?.background || defaultPalettes.section4.background
-  ];
+  ], [activePalettes]);
 
-  const sectionBorderColors = [
+  const sectionBorderColors = useMemo(() => [
     activePalettes.section0?.border || defaultPalettes.section0.border,
     activePalettes.section1?.border || defaultPalettes.section1.border,
     activePalettes.section2?.border || defaultPalettes.section2.border,
     activePalettes.section3?.border || defaultPalettes.section3.border,
     activePalettes.section4?.border || defaultPalettes.section4.border
-  ];
+  ], [activePalettes]);
 
   const config = {
-    cols: 12,
-    rows: 32,
-    cellSize: size,
+    cols: highRes ? 24 : 12,
+    rows: highRes ? 64 : 32,
+    cellSize: size, // Keep cellSize the same for consistent canvas size
     sections: 5
   };
 
-  const floodfill = (c: Cell, cells: Cell[]): Cell[] => {
+  const floodfill = useCallback((c: Cell, cells: Cell[]): Cell[] => {
     let q: Cell[] = [];
     if (!c.m) {
       c.m = true;
@@ -433,7 +380,7 @@ function TotemIcon({
       });
     }
     return group;
-  };
+  }, []);
 
   const getNeighbors = (x: number, y: number, section: number, cells: Cell[]): Cell[] => {
     return cells.filter(_c => {
@@ -447,7 +394,7 @@ function TotemIcon({
     });
   };
 
-  const getGroups = (cells: Cell[], rng: () => number): Cell[][] => {
+  const getGroups = useCallback((cells: Cell[], rng: () => number): Cell[][] => {
     cells.forEach(c => c.m = false);
 
     let groups: Cell[][] = [];
@@ -469,9 +416,9 @@ function TotemIcon({
     });
 
     return groups;
-  };
+  }, [harmonicPalettes, floodfill]);
 
-  const generateCells = (rng: () => number = randomGenerator): Cell[] => {
+  const generateCells = useCallback((rng: () => number = randomGenerator): Cell[] => {
     let newCells: Cell[] = [];
     let n = config.cols / 2;
     let sectionHeight = config.rows / config.sections;
@@ -514,9 +461,9 @@ function TotemIcon({
 
     getGroups(newCells, rng);
     return newCells;
-  };
+  }, [config.cols, config.rows, config.sections, config.cellSize, randomGenerator, getGroups]);
 
-  const drawTotemIcon = (cells: Cell[]) => {
+  const drawTotemIcon = useCallback((cells: Cell[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -576,7 +523,7 @@ function TotemIcon({
         onPngGenerated(dataURL);
       }
     }, 10);
-  };
+  }, [config.cols, config.rows, config.sections, config.cellSize, sectionBackgrounds, sectionBorderColors, onPngGenerated]);
 
   const handleGenerate = () => {
     if (!seed) {
@@ -616,14 +563,14 @@ function TotemIcon({
   useEffect(() => {
     const newCells = generateCells();
     setCells(newCells);
-  }, [randomGenerator]);
+  }, [randomGenerator, generateCells]);
 
   // Draw when cells or palettes change
   useEffect(() => {
     if (cells.length > 0) {
       drawTotemIcon(cells);
     }
-  }, [cells, palettes]);
+  }, [cells, palettes, drawTotemIcon]);
 
   return (
     <div className="flex flex-col items-center">
@@ -640,6 +587,9 @@ function TotemIcon({
             )}
             {palettes && (
               <p className="text-xs mt-1 text-gray-500">Using custom palettes</p>
+            )}
+            {highRes && (
+              <p className="text-xs mt-1 text-blue-600 font-semibold">High Resolution Mode (2x detail)</p>
             )}
           </div>
           
@@ -696,6 +646,7 @@ export default function TotemIconGenerator({ showPaletteEditor = true }: TotemIc
   const [currentPalettes, setCurrentPalettes] = useState<Palettes | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [testSeed, setTestSeed] = useState('john@example.com');
+  const [highRes, setHighRes] = useState(false);
 
   return (
     <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
@@ -712,6 +663,17 @@ export default function TotemIconGenerator({ showPaletteEditor = true }: TotemIc
             }`}
           >
             {showEditor ? 'Hide' : 'Show'} Palette Editor
+          </button>
+          
+          <button
+            onClick={() => setHighRes(!highRes)}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              highRes 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            {highRes ? 'Standard' : 'High-Res'} Mode
           </button>
         </div>
       )}
@@ -741,6 +703,7 @@ export default function TotemIconGenerator({ showPaletteEditor = true }: TotemIc
       <TotemIcon 
         seed={testSeed || null}
         palettes={currentPalettes}
+        highRes={highRes}
         onPngGenerated={(dataUrl) => console.log('PNG Generated:', dataUrl)}
       />
     </div>
