@@ -2,10 +2,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import DemoView from './DemoView.tsx'
+import type { TotemIconProps, Palettes } from './TotemIcon'
+
+// Define the props interface for PaletteEditor based on its usage
+interface MockPaletteEditorProps {
+  onPaletteChange: (palettes: Palettes) => void;
+  initialPalettes?: Palettes | null;
+}
+
+// Mock palette data that matches the Palettes interface
+const mockPalettes: Palettes = {
+  section0: { colors: ['#FF0000'], background: '#FFF', border: '#000' },
+  section1: { colors: ['#00FF00'], background: '#FFF', border: '#000' },
+  section2: { colors: ['#0000FF'], background: '#FFF', border: '#000' },
+  section3: { colors: ['#FFFF00'], background: '#FFF', border: '#000' },
+  section4: { colors: ['#FF00FF'], background: '#FFF', border: '#000' }
+}
 
 // Mock the TotemIcon component since it uses canvas which isn't available in jsdom
 vi.mock('./TotemIcon', () => ({
-  TotemIcon: ({ seed, size, palettes, onPngGenerated, showControls }: any) => (
+  TotemIcon: ({ seed, size, palettes, onPngGenerated, showControls }: TotemIconProps) => (
     <div data-testid="totem-icon">
       <div data-testid="icon-seed">{seed || 'random'}</div>
       <div data-testid="icon-size">{size}</div>
@@ -16,10 +32,10 @@ vi.mock('./TotemIcon', () => ({
       </button>
     </div>
   ),
-  PaletteEditor: ({ onPaletteChange, initialPalettes }: any) => (
+  PaletteEditor: ({ onPaletteChange, initialPalettes }: MockPaletteEditorProps) => (
     <div data-testid="palette-editor">
       <button 
-        onClick={() => onPaletteChange({ section0: { colors: ['#FF0000'], background: '#FFF', border: '#000' } })}
+        onClick={() => onPaletteChange(mockPalettes)}
       >
         Change Palette
       </button>
