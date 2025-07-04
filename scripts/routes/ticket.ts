@@ -178,20 +178,12 @@ function parseTicketMarkdown(filePath: string): any {
       id: yamlData.id,
       status: yamlData.status || 'open',
       priority: yamlData.priority || 'medium',
-      complexity: yamlData.complexity || 'medium',
-      persona: yamlData.persona || null,
-      collabotator: yamlData.collabotator || null,
-      model: yamlData.model || null,
-      effort_days: yamlData.effort_days || null,
+      complexity: yamlData.complexity || undefined,
+      persona: yamlData.persona || undefined,
       blocks: yamlData.blocks || [],
       blocked_by: yamlData.blocked_by || [],
       title,
-      description,
-      acceptance_criteria,
-      tags,
-      notes: description,
-      risks,
-      resources
+      description
     };
   } catch (error) {
     console.error(`Error parsing ticket file ${filePath}:`, error);

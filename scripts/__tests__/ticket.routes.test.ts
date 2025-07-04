@@ -47,28 +47,15 @@ describe('Ticket Routes - Integration Tests', () => {
           const ticket = response.body.tickets[0];
           expect(ticket).toHaveProperty('id');
           expect(ticket).toHaveProperty('title');
+          expect(ticket).toHaveProperty('description');
           expect(ticket).toHaveProperty('status');
           expect(ticket).toHaveProperty('priority');
           expect(ticket).toHaveProperty('complexity');
-          expect(ticket).toHaveProperty('acceptance_criteria');
-          expect(ticket).toHaveProperty('tags');
-          expect(ticket).toHaveProperty('risks');
-          expect(ticket).toHaveProperty('resources');
+          expect(ticket).toHaveProperty('persona');
           
-          // Test acceptance criteria structure
-          expect(Array.isArray(ticket.acceptance_criteria)).toBe(true);
-          if (ticket.acceptance_criteria.length > 0) {
-            expect(ticket.acceptance_criteria[0]).toHaveProperty('criteria');
-            expect(ticket.acceptance_criteria[0]).toHaveProperty('complete');
-            expect(typeof ticket.acceptance_criteria[0].complete).toBe('boolean');
-          }
-          
-          // Test arrays
-          expect(Array.isArray(ticket.tags)).toBe(true);
-          expect(Array.isArray(ticket.risks)).toBe(true);
-          expect(Array.isArray(ticket.resources)).toBe(true);
-          expect(Array.isArray(ticket.blocks)).toBe(true);
-          expect(Array.isArray(ticket.blocked_by)).toBe(true);
+          // Test optional arrays
+          expect(Array.isArray(ticket.blocks || [])).toBe(true);
+          expect(Array.isArray(ticket.blocked_by || [])).toBe(true);
         }
       } else if (response.status === 404) {
         expect(response.body.message).toMatch(/no tickets found|directory not found|no valid tickets/i);
@@ -138,11 +125,9 @@ describe('Ticket Routes - Integration Tests', () => {
           expect(ticket).toHaveProperty('status');
           expect(ticket).toHaveProperty('priority');
           expect(ticket).toHaveProperty('complexity');
-          expect(ticket).toHaveProperty('acceptance_criteria');
-          expect(Array.isArray(ticket.acceptance_criteria)).toBe(true);
-          expect(Array.isArray(ticket.tags)).toBe(true);
-          expect(Array.isArray(ticket.risks)).toBe(true);
-          expect(Array.isArray(ticket.resources)).toBe(true);
+          expect(ticket).toHaveProperty('persona');
+          expect(Array.isArray(ticket.blocks || [])).toBe(true);
+          expect(Array.isArray(ticket.blocked_by || [])).toBe(true);
         }
       } else {
         // 404 response should have proper error structure
