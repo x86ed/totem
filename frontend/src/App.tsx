@@ -2,7 +2,7 @@ import { useState } from 'react'
 import KanbanBoard from './components/KanbanBoard'
 import RoadmapView from './components/RoadmapView'
 import CreateTicket from './components/CreateTicket'
-import ExportView from './components/ExportView'
+import DemoView from './components/DemoView'
 import { TicketProvider } from './context/TicketContext'
 import { TabConfig } from './types'
 import './App.css'
@@ -25,7 +25,7 @@ function App() {
     { id: 'kanban', label: 'Kanban', icon: '📋' },
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
     { id: 'create', label: 'Create Ticket', icon: '➕' },
-    { id: 'export', label: 'Export', icon: '📁' }
+    { id: 'export', label: 'Demo', icon: '🎨' }
   ]
 
   return (
@@ -60,7 +60,7 @@ function App() {
           {activeTab === 'kanban' && <KanbanBoard />}
           {activeTab === 'roadmap' && <RoadmapView />}
           {activeTab === 'create' && <CreateTicket />}
-          {activeTab === 'export' && <ExportView />}
+          {activeTab === 'export' && <DemoView />}
         </main>
       </div>
     </TicketProvider>

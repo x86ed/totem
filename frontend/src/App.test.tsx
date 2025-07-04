@@ -17,8 +17,8 @@ vi.mock('./components/CreateTicket', () => ({
   default: () => <div data-testid="create-ticket">Mocked Create Ticket</div>
 }))
 
-vi.mock('./components/ExportView', () => ({
-  default: () => <div data-testid="export-view">Mocked Export View</div>
+vi.mock('./components/DemoView', () => ({
+  default: () => <div data-testid="demo-view">Mocked Demo View</div>
 }))
 
 // Mock the TicketProvider context
@@ -72,7 +72,7 @@ describe('App', () => {
       expect(screen.getByRole('button', { name: /📋.*Kanban/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /🗺️.*Roadmap/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /➕.*Create Ticket/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /📁.*Export/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /🎨.*Demo/i })).toBeInTheDocument()
     })
 
     it('should apply correct CSS classes and styling', () => {
@@ -99,7 +99,7 @@ describe('App', () => {
       expect(screen.getByTestId('kanban-board')).toBeInTheDocument()
       expect(screen.queryByTestId('roadmap-view')).not.toBeInTheDocument()
       expect(screen.queryByTestId('create-ticket')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('export-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('demo-view')).not.toBeInTheDocument()
     })
 
     it('should show active tab styling on current tab', () => {
@@ -121,7 +121,7 @@ describe('App', () => {
       expect(screen.getByTestId('roadmap-view')).toBeInTheDocument()
       expect(screen.queryByTestId('kanban-board')).not.toBeInTheDocument()
       expect(screen.queryByTestId('create-ticket')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('export-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('demo-view')).not.toBeInTheDocument()
     })
 
     it('should switch to Create Ticket view when Create Ticket tab is clicked', () => {
@@ -133,16 +133,16 @@ describe('App', () => {
       expect(screen.getByTestId('create-ticket')).toBeInTheDocument()
       expect(screen.queryByTestId('kanban-board')).not.toBeInTheDocument()
       expect(screen.queryByTestId('roadmap-view')).not.toBeInTheDocument()
-      expect(screen.queryByTestId('export-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('demo-view')).not.toBeInTheDocument()
     })
 
-    it('should switch to Export view when Export tab is clicked', () => {
+    it('should switch to Demo view when Demo tab is clicked', () => {
       render(<App />)
-      const exportTab = screen.getByRole('button', { name: /📁.*Export/i })
+      const demoTab = screen.getByRole('button', { name: /🎨.*Demo/i })
 
-      fireEvent.click(exportTab)
+      fireEvent.click(demoTab)
 
-      expect(screen.getByTestId('export-view')).toBeInTheDocument()
+      expect(screen.getByTestId('demo-view')).toBeInTheDocument()
       expect(screen.queryByTestId('kanban-board')).not.toBeInTheDocument()
       expect(screen.queryByTestId('roadmap-view')).not.toBeInTheDocument()
       expect(screen.queryByTestId('create-ticket')).not.toBeInTheDocument()
@@ -176,9 +176,9 @@ describe('App', () => {
       expect(createTab).toHaveTextContent('➕')
       expect(createTab).toHaveTextContent('Create Ticket')
 
-      const exportTab = screen.getByRole('button', { name: /📁.*Export/i })
-      expect(exportTab).toHaveTextContent('📁')
-      expect(exportTab).toHaveTextContent('Export')
+      const demoTab = screen.getByRole('button', { name: /🎨.*Demo/i })
+      expect(demoTab).toHaveTextContent('🎨')
+      expect(demoTab).toHaveTextContent('Demo')
     })
 
     it('should apply correct CSS classes to tab buttons', () => {
@@ -262,7 +262,7 @@ describe('App', () => {
         { button: /📋.*Kanban/i, testId: 'kanban-board' },
         { button: /🗺️.*Roadmap/i, testId: 'roadmap-view' },
         { button: /➕.*Create Ticket/i, testId: 'create-ticket' },
-        { button: /📁.*Export/i, testId: 'export-view' }
+        { button: /🎨.*Demo/i, testId: 'demo-view' }
       ]
 
       tabs.forEach(({ button, testId }) => {
