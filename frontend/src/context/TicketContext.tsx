@@ -186,6 +186,11 @@ export function TicketProvider({ children }: TicketProviderProps) {
         priority: ticket.priority || 'medium',
         complexity: ticket.complexity || undefined,
         persona: ticket.persona || undefined,
+        collaborator: ticket.collaborator || undefined,
+        assignee: ticket.assignee || undefined,
+        acceptance_criteria: ticket.acceptance_criteria || undefined,
+        milestone: ticket.milestone || undefined,
+        created: ticket.created || new Date().toISOString(),
         blocks: ticket.blocks || [],
         blocked_by: ticket.blocked_by || []
       }
@@ -233,24 +238,32 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * Adds a new milestone to the system
    * @param milestone - The milestone object to add
    */
-  const addMilestone = async (milestone: Milestone): Promise<void> => {
-    try {
-      dispatch({ type: 'ADD_MILESTONE', payload: milestone })
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to add milestone' })
-    }
-  }
+  // const addMilestone = async (milestone: Milestone): Promise<void> => {
+  //   try {
+  //     dispatch({ type: 'ADD_MILESTONE', payload: milestone })
+  //   } catch (error) {
+  //     dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to add milestone' })
+  //   }
+  // }
 
   /**
    * Updates an existing milestone
    * @param milestone - The milestone object with updated properties
    */
-  const updateMilestone = async (milestone: Milestone): Promise<void> => {
-    try {
-      dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update milestone' })
-    }
+  // const updateMilestone = async (milestone: Milestone): Promise<void> => {
+  //   try {
+  //     dispatch({ type: 'UPDATE_MILESTONE', payload: milestone })
+  //   } catch (error) {
+  //     dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update milestone' })
+  //   }
+  // }
+
+  /**
+   * Adds a new ticket to the system (alias for createTicket)
+   * @param ticket - Partial ticket data to add
+   */
+  const addTicket = async (ticket: Partial<Ticket>): Promise<void> => {
+    await createTicket(ticket)
   }
 
   const value: TicketContextType = {
@@ -259,6 +272,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
     loading: state.loading,
     error: state.error,
     refreshTickets,
+    addTicket,
     createTicket,
     updateTicket,
     deleteTicket

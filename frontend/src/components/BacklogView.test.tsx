@@ -126,12 +126,13 @@ describe('BacklogView', () => {
 
   describe('Navigation', () => {
     it('navigates to edit view when a row is clicked', () => {
-      renderBacklogView()
+      const mockOnNavigateToTicket = vi.fn()
+      render(<BacklogView onNavigateToTicket={mockOnNavigateToTicket} />)
       
       const firstRow = screen.getAllByRole('row')[1] // Skip header row
       fireEvent.click(firstRow)
       
-      expect(mockNavigate).toHaveBeenCalledWith('/edit/healthcare.frontend.patient-dashboard-003')
+      expect(mockOnNavigateToTicket).toHaveBeenCalledWith('edit', 'healthcare.frontend.patient-dashboard-003')
     })
   })
 

@@ -531,7 +531,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have status 'open'
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.status) {
               expect(ticket.status.toLowerCase()).toBe('open');
             }
@@ -547,7 +547,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have priority 'high'
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.priority) {
               expect(ticket.priority.toLowerCase()).toBe('high');
             }
@@ -563,7 +563,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have complexity 'medium'
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.complexity) {
               expect(ticket.complexity.toLowerCase()).toBe('medium');
             }
@@ -579,7 +579,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have 'test' in their ID
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.id) {
               expect(ticket.id.toLowerCase()).toContain('test');
             }
@@ -595,7 +595,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have persona containing 'security'
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.persona) {
               expect(ticket.persona.toLowerCase()).toContain('security');
             }
@@ -611,7 +611,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should have contributor containing 'john'
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.collabotator) {
               expect(ticket.collabotator.toLowerCase()).toContain('john');
             }
@@ -627,7 +627,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // All returned tickets should match both filters
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.status) {
               expect(ticket.status.toLowerCase()).toBe('open');
             }
@@ -680,7 +680,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // Priority order: critical > high > medium > low
-          const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+          const priorityOrder: { [key: string]: number } = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
           
           for (let i = 0; i < response.body.tickets.length - 1; i++) {
             const currentPriority = response.body.tickets[i].priority?.toLowerCase() || 'low';
@@ -700,7 +700,7 @@ describe('Ticket Routes - Integration Tests', () => {
         
         if (response.status === 200) {
           // Complexity order: high > medium > low
-          const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+          const complexityOrder: { [key: string]: number } = { 'high': 3, 'medium': 2, 'low': 1 };
           
           for (let i = 0; i < response.body.tickets.length - 1; i++) {
             const currentComplexity = response.body.tickets[i].complexity?.toLowerCase() || 'low';
@@ -740,14 +740,14 @@ describe('Ticket Routes - Integration Tests', () => {
           expect(response.body.tickets.length).toBeLessThanOrEqual(3);
           
           // All tickets should match the filter
-          response.body.tickets.forEach(ticket => {
+          response.body.tickets.forEach((ticket: any) => {
             if (ticket.status) {
               expect(ticket.status.toLowerCase()).toBe('open');
             }
           });
           
           // Should be sorted by priority (descending)
-          const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+          const priorityOrder: { [key: string]: number } = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
           for (let i = 0; i < response.body.tickets.length - 1; i++) {
             const currentPriority = response.body.tickets[i].priority?.toLowerCase() || 'low';
             const nextPriority = response.body.tickets[i + 1].priority?.toLowerCase() || 'low';

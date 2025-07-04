@@ -15,13 +15,23 @@ export interface Ticket {
   /** Detailed description of what needs to be done or the issue to be resolved */
   description: string;
   /** Current workflow status of the ticket */
-  status: 'open' | 'in-progress' | 'planning' | 'completed';
+  status: 'open' | 'in-progress' | 'planning' | 'completed' | 'todo' | 'done' | 'closed' | 'blocked' | 'review' | 'in_progress';
   /** Priority level indicating urgency and importance */
   priority: 'low' | 'medium' | 'high';
   /** Complexity level of the ticket */
   complexity?: 'low' | 'medium' | 'high';
   /** Target persona for this ticket */
   persona?: string;
+  /** Collaborator assigned to the ticket */
+  collaborator?: string;
+  /** Assignee of the ticket */
+  assignee?: string;
+  /** Acceptance criteria for the ticket */
+  acceptance_criteria?: string;
+  /** Milestone associated with the ticket */
+  milestone?: string;
+  /** Creation date of the ticket */
+  created?: string;
   /** List of ticket IDs that this ticket blocks */
   blocks: string[];
   /** List of ticket IDs that block this ticket */
@@ -78,12 +88,16 @@ export interface TicketContextType {
   error: string | null;
   /** Function to refresh tickets from the API */
   refreshTickets: () => Promise<void>;
+  /** Function to add a new ticket */
+  addTicket: (ticket: Partial<Ticket>) => Promise<void>;
   /** Function to create a new ticket */
   createTicket: (ticket: Partial<Ticket>) => Promise<void>;
   /** Function to update an existing ticket */
   updateTicket: (ticket: Ticket) => Promise<void>;
   /** Function to remove a ticket from the system by its ID */
   deleteTicket: (ticketId: string) => Promise<void>;
+  /** Function to move a ticket between statuses */
+  moveTicket?: (ticketId: string, newStatus: string) => Promise<void>;
 }
 
 /**

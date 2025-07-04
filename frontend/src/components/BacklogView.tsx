@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 
@@ -11,14 +10,13 @@ type SortField = 'id' | 'status' | 'priority' | 'complexity' | 'title' | 'person
 type SortOrder = 'asc' | 'desc'
 
 function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
-  const navigate = useNavigate()
   const { tickets, loading, error } = useTickets()
   const [sortField, setSortField] = useState<SortField>('id')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
   const sortedTickets = [...tickets].sort((a, b) => {
-    let valueA: any = a[sortField] || ''
-    let valueB: any = b[sortField] || ''
+    let valueA: string | number
+    let valueB: string | number
 
     if (sortField === 'priority') {
       const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 }
@@ -29,14 +27,18 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
       valueA = complexityOrder[a.complexity?.toLowerCase() as keyof typeof complexityOrder] || 0
       valueB = complexityOrder[b.complexity?.toLowerCase() as keyof typeof complexityOrder] || 0
     } else {
-      valueA = String(valueA).toLowerCase()
-      valueB = String(valueB).toLowerCase()
+      valueA = String(a[sortField] || '').toLowerCase()
+      valueB = String(b[sortField] || '').toLowerCase()
     }
 
     if (sortOrder === 'desc') {
-      return typeof valueA === 'number' ? valueB - valueA : valueB.localeCompare(valueA)
+      return typeof valueA === 'number' && typeof valueB === 'number' 
+        ? valueB - valueA 
+        : String(valueB).localeCompare(String(valueA))
     } else {
-      return typeof valueA === 'number' ? valueA - valueB : valueA.localeCompare(valueB)
+      return typeof valueA === 'number' && typeof valueB === 'number' 
+        ? valueA - valueB 
+        : String(valueA).localeCompare(String(valueB))
     }
   })
 
@@ -54,7 +56,9 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
     if (onNavigateToTicket && ticket.id) {
       onNavigateToTicket('edit', ticket.id)
     } else if (ticket.id) {
-      navigate(`/edit/${ticket.id}`)
+      // For demo purposes, we'll just log the ticket ID
+      // In a full app, this could use hash navigation or state management
+      console.log('Edit ticket:', ticket.id)
     }
   }
 

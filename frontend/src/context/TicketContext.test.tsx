@@ -7,7 +7,7 @@ import { TicketProvider, useTickets } from "./TicketContext"
 import type { Ticket } from "../types"
 
 // Mock fetch globally
-global.fetch = vi.fn()
+globalThis.fetch = vi.fn()
 
 // Test components
 const TestComponent = () => {
@@ -27,14 +27,14 @@ const TestComponent = () => {
   )
 }
 
-const ErrorTestComponent = () => {
-  try {
-    useTickets()
-    return <div data-testid="no-error">No error</div>
-  } catch (error) {
-    return <div data-testid="error">Hook error</div>
-  }
-}
+// const ErrorTestComponent = () => {
+//   try {
+//     useTickets()
+//     return <div data-testid="no-error">No error</div>
+//   } catch (error) {
+//     return <div data-testid="error">Hook error</div>
+//   }
+// }
 
 describe("TicketContext", () => {
   const mockTickets: Ticket[] = [

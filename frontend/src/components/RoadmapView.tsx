@@ -37,22 +37,11 @@ const RoadmapView: React.FC = () => {
 
   /**
    * Filters tickets by their associated milestone
-   * For now, returns all tickets since tickets don't have milestone assignment
    * @param {string} milestoneId - The milestone ID to filter by
-   * @returns {Ticket[]} Array of tickets (simplified implementation)
+   * @returns {Ticket[]} Array of tickets associated with the milestone
    */
   const getTicketsByMilestone = (milestoneId: string): Ticket[] => {
-    // Since tickets don't have milestone field, distribute tickets evenly across milestones
-    const totalTickets = tickets.length
-    const totalMilestones = milestones.length
-    if (totalMilestones === 0) return []
-    
-    const ticketsPerMilestone = Math.ceil(totalTickets / totalMilestones)
-    const milestoneIndex = milestones.findIndex(m => m.id === milestoneId)
-    const startIndex = milestoneIndex * ticketsPerMilestone
-    const endIndex = startIndex + ticketsPerMilestone
-    
-    return tickets.slice(startIndex, endIndex)
+    return tickets.filter(ticket => ticket.milestone === milestoneId)
   }
 
   /**
@@ -64,7 +53,7 @@ const RoadmapView: React.FC = () => {
     const milestoneTickets = getTicketsByMilestone(milestoneId)
     if (milestoneTickets.length === 0) return 0
     
-    const completedTickets = milestoneTickets.filter(ticket => ticket.status === 'completed')
+    const completedTickets = milestoneTickets.filter(ticket => ticket.status === 'done')
     return Math.round((completedTickets.length / milestoneTickets.length) * 100)
   }
 
@@ -106,13 +95,14 @@ const RoadmapView: React.FC = () => {
    */
   const getStatusIcon = (status: Ticket['status']): string => {
     switch (status) {
-      case 'completed':
+      case 'done':
         return '✅'
       case 'in-progress':
         return '🔄'
-      case 'planning':
-        return '🎯'
-      case 'open':
+      case 'review':
+        return '👀'
+      case 'todo':
+        return '📝'
       default:
         return '📝'
     }

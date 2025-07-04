@@ -266,13 +266,13 @@ function applySorting(tickets: any[], sort: TicketSort): any[] {
         break;
       case 'priority':
         // Priority has a specific order: critical > high > medium > low
-        const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+        const priorityOrder: { [key: string]: number } = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
         valueA = priorityOrder[a.priority?.toLowerCase()] || 0;
         valueB = priorityOrder[b.priority?.toLowerCase()] || 0;
         break;
       case 'complexity':
         // Complexity order: high > medium > low
-        const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+        const complexityOrder: { [key: string]: number } = { 'high': 3, 'medium': 2, 'low': 1 };
         valueA = complexityOrder[a.complexity?.toLowerCase()] || 0;
         valueB = complexityOrder[b.complexity?.toLowerCase()] || 0;
         break;
