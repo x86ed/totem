@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { Controller, Get, Post, Put, Delete, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { CreateTicketDto, UpdateTicketDto, TicketResponseDto, TicketsListResponseDto, ErrorResponseDto } from '../dto/ticket.dto';
 import { readFileSync, existsSync, readdirSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
@@ -11,7 +11,7 @@ import { parse, stringify } from 'yaml';
  * on markdown-based ticket files with YAML frontmatter.
  * 
  * Provides endpoints for:
- * - Retrieving all tickets
+ * - Retrieving all tickets with pagination, filtering, and sorting
  * - Getting a specific ticket by ID
  * - Creating new tickets
  * - Updating existing tickets
@@ -29,6 +29,38 @@ import { parse, stringify } from 'yaml';
  * export class AppModule {}
  * ```
  */
+
+// Interfaces for query parameters and middleware
+interface TicketFilters {
+  id?: string;
+  status?: string;
+  priority?: string;
+  complexity?: string;
+  persona?: string;
+  contributor?: string;
+}
+
+interface TicketSort {
+  field: string;
+  order: 'asc' | 'desc';
+}
+
+interface TicketQueryParams {
+  offset: number;
+  limit: number;
+  filters: TicketFilters;
+  sort: TicketSort;
+}
+
+interface PaginatedResponse extends TicketsListResponseDto {
+  pagination: {
+    offset: number;
+    limit: number;
+    total: number;
+    totalFiltered: number;
+  };
+}
+
 @ApiTags('tickets')
 @Controller('api/ticket')
 export class TicketController {
@@ -190,37 +222,85 @@ export class TicketController {
     return markdown;
   }
 
-  @ApiOperation({ summary: 'Get all tickets', description: 'Retrieve all tickets from the tickets directory' })
+  @ApiOperation({ summary: 'Get all tickets', description: 'Retrieve all tickets from the tickets directory with pagination, filtering, and sorting' })
   @ApiResponse({ status: 200, description: 'Successfully retrieved tickets', type: TicketsListResponseDto })
   @ApiResponse({ status: 404, description: 'No tickets found or tickets directory not found', type: ErrorResponseDto })
   @ApiResponse({ status: 500, description: 'Internal server error', type: ErrorResponseDto })
+  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Number of tickets to skip (pagination)', example: 0 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Maximum number of tickets to return (pagination)', example: 10 })
+  @ApiQuery({ name: 'id', required: false, type: String, description: 'Filter by ticket ID (partial match)', example: 'auth' })
+  @ApiQuery({ name: 'status', required: false, enum: ['open', 'in_progress', 'closed', 'blocked'], description: 'Filter by ticket status' })
+  @ApiQuery({ name: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'], description: 'Filter by ticket priority' })
+  @ApiQuery({ name: 'complexity', required: false, enum: ['low', 'medium', 'high'], description: 'Filter by ticket complexity' })
+  @ApiQuery({ name: 'persona', required: false, type: String, description: 'Filter by persona', example: 'security-sasha' })
+  @ApiQuery({ name: 'contributor', required: false, type: String, description: 'Filter by contributor/collaborator', example: 'john.doe' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['id', 'status', 'priority', 'complexity', 'persona', 'contributor'], description: 'Field to sort by', example: 'priority' })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort order', example: 'asc' })
   @Get()
   /**
-   * Retrieves all tickets from the tickets directory.
+   * Retrieves all tickets from the tickets directory with pagination, filtering, and sorting.
    * 
    * Scans the configured tickets directory for markdown files,
-   * parses each file to extract ticket data, and returns a list
-   * of all valid tickets.
+   * parses each file to extract ticket data, applies filtering,
+   * sorting, and pagination middleware, and returns the processed list.
+   * 
+   * @param offset - Number of tickets to skip for pagination (default: 0)
+   * @param limit - Maximum number of tickets to return (default: 50)
+   * @param id - Filter by ticket ID (partial match)
+   * @param status - Filter by ticket status
+   * @param priority - Filter by ticket priority
+   * @param complexity - Filter by ticket complexity
+   * @param persona - Filter by persona
+   * @param contributor - Filter by contributor/collaborator
+   * @param sortBy - Field to sort by (default: 'id')
+   * @param sortOrder - Sort order: 'asc' or 'desc' (default: 'asc')
    * 
    * @returns {Promise<TicketsListResponseDto>} A promise that resolves to an object containing:
    *   - message: Success message
-   *   - tickets: Array of parsed ticket objects
+   *   - tickets: Array of filtered, sorted, and paginated ticket objects
+   *   - pagination: Pagination metadata
    * 
    * @throws {HttpException} 404 - When tickets directory doesn't exist or no tickets found
    * @throws {HttpException} 500 - When an internal server error occurs
    * 
    * @example
    * ```typescript
-   * // GET /api/ticket
-   * const response = await ticketController.getAllTickets();
-   * console.log(response.tickets.length); // Number of tickets found
+   * // GET /api/ticket?limit=5&offset=10&status=open&priority=high&sortBy=priority&sortOrder=desc
+   * const response = await ticketController.getAllTickets(10, 5, null, 'open', 'high', null, null, null, 'priority', 'desc');
+   * console.log(response.tickets.length); // Up to 5 tickets
    * ```
    */
-  public getAllTickets(): Promise<TicketsListResponseDto> {
-    return this.handleGetAllTickets();
+  public getAllTickets(
+    @Query('offset') offset?: number,
+    @Query('limit') limit?: number,
+    @Query('id') id?: string,
+    @Query('status') status?: string,
+    @Query('priority') priority?: string,
+    @Query('complexity') complexity?: string,
+    @Query('persona') persona?: string,
+    @Query('contributor') contributor?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc'
+  ): Promise<TicketsListResponseDto> {
+    return this.handleGetAllTickets({
+      offset: offset || 0,
+      limit: limit || 50,
+      filters: {
+        id,
+        status,
+        priority,
+        complexity,
+        persona,
+        contributor
+      },
+      sort: {
+        field: sortBy || 'id',
+        order: sortOrder || 'asc'
+      }
+    });
   }
 
-  private async handleGetAllTickets(): Promise<TicketsListResponseDto> {
+  private async handleGetAllTickets(queryParams?: TicketQueryParams): Promise<PaginatedResponse> {
     try {
       const ticketsDir = join(__dirname, '../../../', this.TICKETS_DIR);
       if (!existsSync(ticketsDir)) {
@@ -230,6 +310,7 @@ export class TicketController {
           tickets: []
         }, HttpStatus.NOT_FOUND);
       }
+      
       const files = readdirSync(ticketsDir).filter(file => file.endsWith('.md'));
       if (files.length === 0) {
         throw new HttpException({
@@ -238,9 +319,12 @@ export class TicketController {
           tickets: []
         }, HttpStatus.NOT_FOUND);
       }
-      const tickets = files
+      
+      // Parse all tickets
+      let tickets = files
         .map(file => this.parseTicketMarkdown(join(ticketsDir, file)))
         .filter(ticket => ticket !== null);
+      
       if (tickets.length === 0) {
         throw new HttpException({
           message: 'No valid tickets found',
@@ -248,9 +332,43 @@ export class TicketController {
           tickets: []
         }, HttpStatus.NOT_FOUND);
       }
+
+      const totalTickets = tickets.length;
+
+      // Apply middleware if query parameters are provided
+      if (queryParams) {
+        // 1. FILTER MIDDLEWARE - Apply filtering
+        tickets = this.applyFilters(tickets, queryParams.filters);
+        
+        // 2. SORT MIDDLEWARE - Apply sorting
+        tickets = this.applySorting(tickets, queryParams.sort);
+        
+        // 3. PAGINATION MIDDLEWARE - Apply pagination
+        const totalFiltered = tickets.length;
+        tickets = this.applyPagination(tickets, queryParams.offset, queryParams.limit);
+
+        return {
+          message: 'Get all tickets',
+          tickets,
+          pagination: {
+            offset: queryParams.offset,
+            limit: queryParams.limit,
+            total: totalTickets,
+            totalFiltered
+          }
+        };
+      }
+
+      // Default response without middleware
       return {
         message: 'Get all tickets',
-        tickets
+        tickets,
+        pagination: {
+          offset: 0,
+          limit: tickets.length,
+          total: totalTickets,
+          totalFiltered: totalTickets
+        }
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -263,6 +381,117 @@ export class TicketController {
         tickets: []
       }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  /**
+   * FILTER MIDDLEWARE - Filters tickets based on provided criteria
+   * Supports filtering by: id, status, priority, complexity, persona, contributor
+   */
+  private applyFilters(tickets: any[], filters: TicketFilters): any[] {
+    return tickets.filter(ticket => {
+      // Filter by ID (partial match, case-insensitive)
+      if (filters.id && !ticket.id.toLowerCase().includes(filters.id.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by status (exact match, case-insensitive)
+      if (filters.status && ticket.status.toLowerCase() !== filters.status.toLowerCase()) {
+        return false;
+      }
+      
+      // Filter by priority (exact match, case-insensitive)
+      if (filters.priority && ticket.priority.toLowerCase() !== filters.priority.toLowerCase()) {
+        return false;
+      }
+      
+      // Filter by complexity (exact match, case-insensitive)
+      if (filters.complexity && ticket.complexity.toLowerCase() !== filters.complexity.toLowerCase()) {
+        return false;
+      }
+      
+      // Filter by persona (partial match, case-insensitive)
+      if (filters.persona && (!ticket.persona || !ticket.persona.toLowerCase().includes(filters.persona.toLowerCase()))) {
+        return false;
+      }
+      
+      // Filter by contributor/collaborator (partial match, case-insensitive)
+      if (filters.contributor && (!ticket.collabotator || !ticket.collabotator.toLowerCase().includes(filters.contributor.toLowerCase()))) {
+        return false;
+      }
+      
+      return true;
+    });
+  }
+
+  /**
+   * SORT MIDDLEWARE - Sorts tickets based on specified field and order
+   * Supports sorting by: id, status, priority, complexity, persona, contributor
+   */
+  private applySorting(tickets: any[], sort: TicketSort): any[] {
+    return tickets.sort((a, b) => {
+      let valueA: any, valueB: any;
+      
+      // Get values based on sort field
+      switch (sort.field) {
+        case 'id':
+          valueA = a.id || '';
+          valueB = b.id || '';
+          break;
+        case 'status':
+          valueA = a.status || '';
+          valueB = b.status || '';
+          break;
+        case 'priority':
+          // Priority has a specific order: critical > high > medium > low
+          const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+          valueA = priorityOrder[a.priority?.toLowerCase()] || 0;
+          valueB = priorityOrder[b.priority?.toLowerCase()] || 0;
+          break;
+        case 'complexity':
+          // Complexity order: high > medium > low
+          const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+          valueA = complexityOrder[a.complexity?.toLowerCase()] || 0;
+          valueB = complexityOrder[b.complexity?.toLowerCase()] || 0;
+          break;
+        case 'persona':
+          valueA = a.persona || '';
+          valueB = b.persona || '';
+          break;
+        case 'contributor':
+          valueA = a.collabotator || '';
+          valueB = b.collabotator || '';
+          break;
+        default:
+          valueA = a.id || '';
+          valueB = b.id || '';
+      }
+      
+      // Apply sorting order
+      if (sort.order === 'desc') {
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return valueB - valueA;
+        }
+        return String(valueB).localeCompare(String(valueA));
+      } else {
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return valueA - valueB;
+        }
+        return String(valueA).localeCompare(String(valueB));
+      }
+    });
+  }
+
+  /**
+   * PAGINATION MIDDLEWARE - Applies offset and limit to tickets array
+   * Controls the number of results returned and implements paging
+   */
+  private applyPagination(tickets: any[], offset: number, limit: number): any[] {
+    // Ensure offset and limit are valid numbers
+    const validOffset = Math.max(0, Math.floor(offset));
+    const validLimit = Math.max(1, Math.floor(limit));
+    
+    // Apply pagination
+    return tickets.slice(validOffset, validOffset + validLimit);
   }
 
   @ApiOperation({ summary: 'Get ticket by ID', description: 'Retrieve a specific ticket by its ID' })

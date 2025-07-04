@@ -251,12 +251,29 @@ export class TicketResponseDto {
   filename?: string;
 }
 
+export class PaginationDto {
+  @ApiProperty({ description: 'Number of records to skip', example: 0 })
+  offset: number;
+
+  @ApiProperty({ description: 'Maximum number of records to return', example: 10 })
+  limit: number;
+
+  @ApiProperty({ description: 'Total number of tickets in the system', example: 150 })
+  total: number;
+
+  @ApiProperty({ description: 'Total number of tickets after filtering', example: 25 })
+  totalFiltered: number;
+}
+
 export class TicketsListResponseDto {
   @ApiProperty({ description: 'Response message', example: 'Tickets retrieved successfully' })
   message: string;
 
   @ApiProperty({ description: 'Array of tickets', type: [TicketDto] })
   tickets: TicketDto[];
+
+  @ApiPropertyOptional({ description: 'Pagination metadata', type: PaginationDto })
+  pagination?: PaginationDto;
 }
 
 export class ErrorResponseDto {

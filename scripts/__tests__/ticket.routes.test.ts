@@ -492,4 +492,323 @@ describe('Ticket Routes - Integration Tests', () => {
       expect(response.body.ticket).toEqual(ticketData);
     });
   });
+
+  describe('Middleware Features', () => {
+    describe('Pagination Middleware', () => {
+      it('should handle pagination with limit and offset parameters', async () => {
+        const response = await request(app)
+          .get('/api/ticket?limit=2&offset=0');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          expect(response.body).toHaveProperty('pagination');
+          expect(response.body.pagination).toHaveProperty('offset', 0);
+          expect(response.body.pagination).toHaveProperty('limit', 2);
+          expect(response.body.pagination).toHaveProperty('total');
+          expect(response.body.pagination).toHaveProperty('totalFiltered');
+          expect(response.body.tickets.length).toBeLessThanOrEqual(2);
+        }
+      });
+
+      it('should handle default pagination when no parameters provided', async () => {
+        const response = await request(app)
+          .get('/api/ticket');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          expect(response.body).toHaveProperty('pagination');
+          expect(response.body.pagination).toHaveProperty('offset', 0);
+          expect(response.body.pagination).toHaveProperty('limit');
+        }
+      });
+
+      it('should handle large offset values', async () => {
+        const response = await request(app)
+          .get('/api/ticket?offset=1000&limit=5');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          expect(response.body.pagination.offset).toBe(1000);
+          expect(response.body.tickets.length).toBe(0); // Should be empty due to large offset
+        }
+      });
+    });
+
+    describe('Filtering Middleware', () => {
+      it('should filter tickets by status', async () => {
+        const response = await request(app)
+          .get('/api/ticket?status=open');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have status 'open'
+          response.body.tickets.forEach(ticket => {
+            if (ticket.status) {
+              expect(ticket.status.toLowerCase()).toBe('open');
+            }
+          });
+        }
+      });
+
+      it('should filter tickets by priority', async () => {
+        const response = await request(app)
+          .get('/api/ticket?priority=high');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have priority 'high'
+          response.body.tickets.forEach(ticket => {
+            if (ticket.priority) {
+              expect(ticket.priority.toLowerCase()).toBe('high');
+            }
+          });
+        }
+      });
+
+      it('should filter tickets by complexity', async () => {
+        const response = await request(app)
+          .get('/api/ticket?complexity=medium');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have complexity 'medium'
+          response.body.tickets.forEach(ticket => {
+            if (ticket.complexity) {
+              expect(ticket.complexity.toLowerCase()).toBe('medium');
+            }
+          });
+        }
+      });
+
+      it('should filter tickets by ID (partial match)', async () => {
+        const response = await request(app)
+          .get('/api/ticket?id=test');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have 'test' in their ID
+          response.body.tickets.forEach(ticket => {
+            if (ticket.id) {
+              expect(ticket.id.toLowerCase()).toContain('test');
+            }
+          });
+        }
+      });
+
+      it('should filter tickets by persona', async () => {
+        const response = await request(app)
+          .get('/api/ticket?persona=security');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have persona containing 'security'
+          response.body.tickets.forEach(ticket => {
+            if (ticket.persona) {
+              expect(ticket.persona.toLowerCase()).toContain('security');
+            }
+          });
+        }
+      });
+
+      it('should filter tickets by contributor', async () => {
+        const response = await request(app)
+          .get('/api/ticket?contributor=john');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should have contributor containing 'john'
+          response.body.tickets.forEach(ticket => {
+            if (ticket.collabotator) {
+              expect(ticket.collabotator.toLowerCase()).toContain('john');
+            }
+          });
+        }
+      });
+
+      it('should handle multiple filters', async () => {
+        const response = await request(app)
+          .get('/api/ticket?status=open&priority=high');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // All returned tickets should match both filters
+          response.body.tickets.forEach(ticket => {
+            if (ticket.status) {
+              expect(ticket.status.toLowerCase()).toBe('open');
+            }
+            if (ticket.priority) {
+              expect(ticket.priority.toLowerCase()).toBe('high');
+            }
+          });
+        }
+      });
+    });
+
+    describe('Sorting Middleware', () => {
+      it('should sort tickets by ID in ascending order', async () => {
+        const response = await request(app)
+          .get('/api/ticket?sortBy=id&sortOrder=asc');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200 && response.body.tickets.length > 1) {
+          // Check if tickets are sorted by ID in ascending order
+          for (let i = 0; i < response.body.tickets.length - 1; i++) {
+            const current = response.body.tickets[i].id || '';
+            const next = response.body.tickets[i + 1].id || '';
+            expect(current.localeCompare(next)).toBeLessThanOrEqual(0);
+          }
+        }
+      });
+
+      it('should sort tickets by ID in descending order', async () => {
+        const response = await request(app)
+          .get('/api/ticket?sortBy=id&sortOrder=desc');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200 && response.body.tickets.length > 1) {
+          // Check if tickets are sorted by ID in descending order
+          for (let i = 0; i < response.body.tickets.length - 1; i++) {
+            const current = response.body.tickets[i].id || '';
+            const next = response.body.tickets[i + 1].id || '';
+            expect(current.localeCompare(next)).toBeGreaterThanOrEqual(0);
+          }
+        }
+      });
+
+      it('should sort tickets by priority', async () => {
+        const response = await request(app)
+          .get('/api/ticket?sortBy=priority&sortOrder=desc');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Priority order: critical > high > medium > low
+          const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+          
+          for (let i = 0; i < response.body.tickets.length - 1; i++) {
+            const currentPriority = response.body.tickets[i].priority?.toLowerCase() || 'low';
+            const nextPriority = response.body.tickets[i + 1].priority?.toLowerCase() || 'low';
+            const currentValue = priorityOrder[currentPriority] || 0;
+            const nextValue = priorityOrder[nextPriority] || 0;
+            expect(currentValue).toBeGreaterThanOrEqual(nextValue);
+          }
+        }
+      });
+
+      it('should sort tickets by complexity', async () => {
+        const response = await request(app)
+          .get('/api/ticket?sortBy=complexity&sortOrder=desc');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Complexity order: high > medium > low
+          const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+          
+          for (let i = 0; i < response.body.tickets.length - 1; i++) {
+            const currentComplexity = response.body.tickets[i].complexity?.toLowerCase() || 'low';
+            const nextComplexity = response.body.tickets[i + 1].complexity?.toLowerCase() || 'low';
+            const currentValue = complexityOrder[currentComplexity] || 0;
+            const nextValue = complexityOrder[nextComplexity] || 0;
+            expect(currentValue).toBeGreaterThanOrEqual(nextValue);
+          }
+        }
+      });
+
+      it('should handle default sorting when no sort parameters provided', async () => {
+        const response = await request(app)
+          .get('/api/ticket');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Should return tickets in some consistent order (default is by ID ascending)
+          expect(response.body.tickets).toBeDefined();
+        }
+      });
+    });
+
+    describe('Combined Middleware', () => {
+      it('should apply filtering, sorting, and pagination together', async () => {
+        const response = await request(app)
+          .get('/api/ticket?status=open&sortBy=priority&sortOrder=desc&limit=3&offset=0');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Should have pagination metadata
+          expect(response.body).toHaveProperty('pagination');
+          expect(response.body.pagination.limit).toBe(3);
+          expect(response.body.pagination.offset).toBe(0);
+          expect(response.body.tickets.length).toBeLessThanOrEqual(3);
+          
+          // All tickets should match the filter
+          response.body.tickets.forEach(ticket => {
+            if (ticket.status) {
+              expect(ticket.status.toLowerCase()).toBe('open');
+            }
+          });
+          
+          // Should be sorted by priority (descending)
+          const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+          for (let i = 0; i < response.body.tickets.length - 1; i++) {
+            const currentPriority = response.body.tickets[i].priority?.toLowerCase() || 'low';
+            const nextPriority = response.body.tickets[i + 1].priority?.toLowerCase() || 'low';
+            const currentValue = priorityOrder[currentPriority] || 0;
+            const nextValue = priorityOrder[nextPriority] || 0;
+            expect(currentValue).toBeGreaterThanOrEqual(nextValue);
+          }
+        }
+      });
+
+      it('should handle edge case with filters that return no results', async () => {
+        const response = await request(app)
+          .get('/api/ticket?status=nonexistent&priority=invalid');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          expect(response.body.tickets).toEqual([]);
+          expect(response.body.pagination.totalFiltered).toBe(0);
+        }
+      });
+
+      it('should handle invalid sort parameters gracefully', async () => {
+        const response = await request(app)
+          .get('/api/ticket?sortBy=invalid&sortOrder=invalid');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Should still return tickets, possibly with default sorting
+          expect(Array.isArray(response.body.tickets)).toBe(true);
+        }
+      });
+
+      it('should handle negative offset and limit values', async () => {
+        const response = await request(app)
+          .get('/api/ticket?offset=-5&limit=-3');
+
+        expect([200, 404]).toContain(response.status);
+        
+        if (response.status === 200) {
+          // Should handle negative values gracefully (convert to valid values)
+          expect(response.body.pagination.offset).toBeGreaterThanOrEqual(0);
+          expect(response.body.pagination.limit).toBeGreaterThan(0);
+        }
+      });
+    });
+  });
 });

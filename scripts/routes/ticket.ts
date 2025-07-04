@@ -199,6 +199,138 @@ function parseTicketMarkdown(filePath: string): any {
   }
 }
 
+// Interfaces for middleware
+interface TicketFilters {
+  id?: string;
+  status?: string;
+  priority?: string;
+  complexity?: string;
+  persona?: string;
+  contributor?: string;
+}
+
+interface TicketSort {
+  field: string;
+  order: 'asc' | 'desc';
+}
+
+interface PaginationResult {
+  offset: number;
+  limit: number;
+  total: number;
+  totalFiltered: number;
+}
+
+// Middleware functions
+function applyFilters(tickets: any[], filters: TicketFilters): any[] {
+  return tickets.filter(ticket => {
+    // Filter by ID (partial match, case-insensitive)
+    if (filters.id && !ticket.id.toLowerCase().includes(filters.id.toLowerCase())) {
+      return false;
+    }
+    
+    // Filter by status (exact match, case-insensitive)
+    if (filters.status && ticket.status.toLowerCase() !== filters.status.toLowerCase()) {
+      return false;
+    }
+    
+    // Filter by priority (exact match, case-insensitive)
+    if (filters.priority && ticket.priority.toLowerCase() !== filters.priority.toLowerCase()) {
+      return false;
+    }
+    
+    // Filter by complexity (exact match, case-insensitive)
+    if (filters.complexity && ticket.complexity.toLowerCase() !== filters.complexity.toLowerCase()) {
+      return false;
+    }
+    
+    // Filter by persona (partial match, case-insensitive)
+    if (filters.persona && (!ticket.persona || !ticket.persona.toLowerCase().includes(filters.persona.toLowerCase()))) {
+      return false;
+    }
+    
+    // Filter by contributor/collaborator (partial match, case-insensitive)
+    if (filters.contributor && (!ticket.collabotator || !ticket.collabotator.toLowerCase().includes(filters.contributor.toLowerCase()))) {
+      return false;
+    }
+    
+    return true;
+  });
+}
+
+function applySorting(tickets: any[], sort: TicketSort): any[] {
+  return tickets.sort((a, b) => {
+    let valueA: any, valueB: any;
+    
+    // Get values based on sort field
+    switch (sort.field) {
+      case 'id':
+        valueA = a.id || '';
+        valueB = b.id || '';
+        break;
+      case 'status':
+        valueA = a.status || '';
+        valueB = b.status || '';
+        break;
+      case 'priority':
+        // Priority has a specific order: critical > high > medium > low
+        const priorityOrder = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
+        valueA = priorityOrder[a.priority?.toLowerCase()] || 0;
+        valueB = priorityOrder[b.priority?.toLowerCase()] || 0;
+        break;
+      case 'complexity':
+        // Complexity order: high > medium > low
+        const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+        valueA = complexityOrder[a.complexity?.toLowerCase()] || 0;
+        valueB = complexityOrder[b.complexity?.toLowerCase()] || 0;
+        break;
+      case 'persona':
+        valueA = a.persona || '';
+        valueB = b.persona || '';
+        break;
+      case 'contributor':
+        valueA = a.collabotator || '';
+        valueB = b.collabotator || '';
+        break;
+      default:
+        valueA = a.id || '';
+        valueB = b.id || '';
+    }
+    
+    // Apply sorting order
+    if (sort.order === 'desc') {
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return valueB - valueA;
+      }
+      return String(valueB).localeCompare(String(valueA));
+    } else {
+      if (typeof valueA === 'number' && typeof valueB === 'number') {
+        return valueA - valueB;
+      }
+      return String(valueA).localeCompare(String(valueB));
+    }
+  });
+}
+
+function applyPagination(tickets: any[], offset: number, limit: number): { tickets: any[], pagination: PaginationResult } {
+  // Ensure offset and limit are valid numbers
+  const validOffset = Math.max(0, Math.floor(offset));
+  const validLimit = Math.max(1, Math.floor(limit));
+  
+  const totalFiltered = tickets.length;
+  const paginatedTickets = tickets.slice(validOffset, validOffset + validLimit);
+  
+  return {
+    tickets: paginatedTickets,
+    pagination: {
+      offset: validOffset,
+      limit: validLimit,
+      total: totalFiltered, // This will be updated with total count before filtering
+      totalFiltered
+    }
+  };
+}
+
 // Ticket endpoints
 router.get('/', (req: Request, res: Response) => {
   try {
@@ -239,7 +371,7 @@ router.get('/', (req: Request, res: Response) => {
       });
     }
     
-    const tickets = files
+    let tickets = files
       .map(file => parseTicketMarkdown(join(ticketsDir, file)))
       .filter(ticket => ticket !== null); // Filter out failed parses
     
@@ -251,10 +383,54 @@ router.get('/', (req: Request, res: Response) => {
         tickets: []
       });
     }
+
+    const totalTickets = tickets.length;
+
+    // Extract query parameters for middleware
+    const {
+      offset = 0,
+      limit = 50,
+      id,
+      status,
+      priority,
+      complexity,
+      persona,
+      contributor,
+      sortBy = 'id',
+      sortOrder = 'asc'
+    } = req.query;
+
+    // Prepare middleware parameters
+    const filters: TicketFilters = {
+      id: id as string,
+      status: status as string,
+      priority: priority as string,
+      complexity: complexity as string,
+      persona: persona as string,
+      contributor: contributor as string
+    };
+
+    const sort: TicketSort = {
+      field: sortBy as string,
+      order: (sortOrder as string) === 'desc' ? 'desc' : 'asc'
+    };
+
+    // Apply middleware in order:
     
+    // 1. FILTER MIDDLEWARE
+    tickets = applyFilters(tickets, filters);
+    
+    // 2. SORT MIDDLEWARE
+    tickets = applySorting(tickets, sort);
+    
+    // 3. PAGINATION MIDDLEWARE
+    const paginationResult = applyPagination(tickets, Number(offset), Number(limit));
+    paginationResult.pagination.total = totalTickets; // Set original total count
+
     res.json({
       message: 'Get all tickets',
-      tickets
+      tickets: paginationResult.tickets,
+      pagination: paginationResult.pagination
     });
     return;
   } catch (error) {
