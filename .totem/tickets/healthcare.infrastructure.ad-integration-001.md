@@ -4,6 +4,7 @@ status: completed
 priority: high
 complexity: medium
 persona: security-sasha
+contributor: octocat
 blocks: [healthcare.security.auth-sso-001]
 blocked_by: []
 ```
@@ -34,3 +35,4 @@ Configure secure LDAP connection to hospital's Active Directory for centralized 
 
 [security-sasha]: ./personas/security-sasha.md
 [healthcare.security.auth-sso-001]: ./tickets/healthcare.security.auth-sso-001.md
+[octocat]: .totem/contributors/octocat.md

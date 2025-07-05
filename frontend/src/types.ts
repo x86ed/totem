@@ -15,27 +15,44 @@ export interface Ticket {
   /** Detailed description of what needs to be done or the issue to be resolved */
   description: string;
   /** Current workflow status of the ticket */
-  status: 'open' | 'in-progress' | 'planning' | 'completed' | 'todo' | 'done' | 'closed' | 'blocked' | 'review' | 'in_progress';
+  status: 'open' | 'in-progress' | 'closed' | 'blocked' | 'review' | 'todo' | 'done';
   /** Priority level indicating urgency and importance */
-  priority: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   /** Complexity level of the ticket */
-  complexity?: 'low' | 'medium' | 'high';
+  complexity: 'low' | 'medium' | 'high';
   /** Target persona for this ticket */
   persona?: string;
+  /** Contributor to the ticket */
+  contributor?: string;
   /** Collaborator assigned to the ticket */
   collaborator?: string;
   /** Assignee of the ticket */
   assignee?: string;
   /** Acceptance criteria for the ticket */
-  acceptance_criteria?: string;
+  acceptance_criteria?: Array<{
+    criteria: string;
+    complete: boolean;
+  }>;
+  /** Tags associated with the ticket */
+  tags?: string[];
+  /** Notes or comments about the ticket */
+  notes?: string;
+  /** Risks identified for the ticket */
+  risks?: string[];
+  /** Resources required for the ticket */
+  resources?: string[];
+  /** List of ticket IDs that this ticket blocks */
+  blocks?: string[];
+  /** List of ticket IDs that block this ticket */
+  blocked_by?: string[];
   /** Milestone associated with the ticket */
   milestone?: string;
+  /** Model or template used for the ticket */
+  model?: string;
+  /** Estimated effort in days to complete the ticket */
+  effort_days?: number;
   /** Creation date of the ticket */
   created?: string;
-  /** List of ticket IDs that this ticket blocks */
-  blocks: string[];
-  /** List of ticket IDs that block this ticket */
-  blocked_by: string[];
 }
 
 /**

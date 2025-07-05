@@ -52,9 +52,9 @@ const KanbanBoard: React.FC = () => {
 
   const columns: Column[] = [
     { id: 'open', title: 'Open', color: '#8b4513' },
-    { id: 'planning', title: 'Planning', color: '#7b9a3f' },
+    { id: 'todo', title: 'Planning', color: '#7b9a3f' },
     { id: 'in-progress', title: 'In Progress', color: '#5a6e5a' },
-    { id: 'completed', title: 'Completed', color: '#4a7c59' }
+    { id: 'done', title: 'Completed', color: '#4a7c59' }
   ]
 
   /**
@@ -86,9 +86,9 @@ const KanbanBoard: React.FC = () => {
   const getColumnIcon = (colId: Ticket['status']): string => {
     switch (colId) {
       case 'open': return '📝'
-      case 'planning': return '🎯'
+      case 'todo': return '🎯'
       case 'in-progress': return '🔄'
-      case 'completed': return '✅'
+      case 'done': return '✅'
       default: return '📌'
     }
   }

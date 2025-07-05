@@ -184,7 +184,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
         description: ticket.description || '',
         status: ticket.status || 'open',
         priority: ticket.priority || 'medium',
-        complexity: ticket.complexity || undefined,
+        complexity: ticket.complexity || 'medium',
         persona: ticket.persona || undefined,
         collaborator: ticket.collaborator || undefined,
         assignee: ticket.assignee || undefined,

@@ -37,7 +37,7 @@ interface TicketFilters {
   priority?: string;
   complexity?: string;
   persona?: string;
-  contributor?: string;
+  contributor?: string; // Add contributor to filters interface
 }
 
 interface TicketSort {
@@ -79,6 +79,8 @@ export class TicketController {
       const title = titleMatch ? titleMatch[1] : yamlData.id;
       const descriptionMatch = content.match(/^# .+\n\n(.+?)(?:\n\n|$)/m);
       const description = descriptionMatch ? descriptionMatch[1] : '';
+      
+      // Parse acceptance criteria
       const criteriaSection = content.match(/## Acceptance Criteria\n([\s\S]*?)(?:\n## |$)/);
       const acceptance_criteria: Array<{criteria: string, complete: boolean}> = [];
       if (criteriaSection) {
@@ -91,10 +93,15 @@ export class TicketController {
           }
         });
       }
+
+      // Build tags array
       const tags: string[] = [];
       if (yamlData.persona) tags.push(yamlData.persona);
       if (yamlData.priority) tags.push(yamlData.priority);
       if (yamlData.complexity) tags.push(yamlData.complexity);
+      if (yamlData.contributor) tags.push(yamlData.contributor);
+
+      // Parse risks
       const risksMatch = content.match(/\*\*Risks:\*\*\s*(.+)/);
       const risks: string[] = [];
       if (risksMatch) {
@@ -102,19 +109,23 @@ export class TicketController {
         const riskItems = riskText.split(/,\s*(?=[A-Z])/);
         risks.push(...riskItems.map(risk => risk.trim()));
       }
+
+      // Parse implementation notes
       const notesMatch = content.match(/## Implementation Notes\n```[\s\S]*?\n([\s\S]*?)\n```/);
       const resources: string[] = [];
       if (notesMatch) {
         const notes = notesMatch[1].split('\n').filter(line => line.trim().startsWith('//'));
         resources.push(...notes.map(note => note.replace(/^\/\/\s*/, '').trim()));
       }
+
       return {
         id: yamlData.id,
         status: yamlData.status || 'open',
         priority: yamlData.priority || 'medium',
         complexity: yamlData.complexity || 'medium',
         persona: yamlData.persona || null,
-        collabotator: yamlData.collabotator || null,
+        contributor: yamlData.contributor || null, // Add contributor field
+        collaborator: yamlData.collaborator || null,
         model: yamlData.model || null,
         effort_days: yamlData.effort_days || null,
         blocks: yamlData.blocks || [],
@@ -191,15 +202,18 @@ export class TicketController {
       priority: data.priority || 'medium',
       complexity: data.complexity || 'medium',
       ...(data.persona && { persona: data.persona }),
-      ...(data.collabotator && { collabotator: data.collabotator }),
+      ...(data.contributor && { contributor: data.contributor }), // Include contributor if present
+      ...(data.collaborator && { collaborator: data.collaborator }),
       ...(data.model && { model: data.model }),
       ...(data.effort_days && { effort_days: data.effort_days }),
       ...(data.blocks && data.blocks.length > 0 && { blocks: data.blocks }),
       ...(data.blocked_by && data.blocked_by.length > 0 && { blocked_by: data.blocked_by })
     };
+
     let markdown = '```yaml\n' + stringify(yamlData).trim() + '\n```\n\n';
     markdown += `# ${data.title}\n\n`;
     markdown += `${data.description}\n\n`;
+
     if (data.acceptance_criteria && data.acceptance_criteria.length > 0) {
       markdown += '## Acceptance Criteria\n';
       data.acceptance_criteria.forEach((criteria: any) => {
@@ -208,6 +222,7 @@ export class TicketController {
       });
       markdown += '\n';
     }
+
     if (data.resources && data.resources.length > 0) {
       markdown += '## Implementation Notes\n```javascript\n';
       data.resources.forEach((resource: string) => {
@@ -215,10 +230,17 @@ export class TicketController {
       });
       markdown += '```\n\n';
     }
+
     if (data.risks && data.risks.length > 0) {
       markdown += `**Risks:** ${data.risks.join(', ')}\n\n`;
     }
-    markdown += '---\n';
+
+    // Add reference links section if contributor is present
+    if (data.contributor) {
+      markdown += '---\n\n';
+      markdown += `[${data.contributor}]: .totem/contributors/${data.contributor}.md\n`;
+    }
+
     return markdown;
   }
 
@@ -233,7 +255,7 @@ export class TicketController {
   @ApiQuery({ name: 'priority', required: false, enum: ['low', 'medium', 'high', 'critical'], description: 'Filter by ticket priority' })
   @ApiQuery({ name: 'complexity', required: false, enum: ['low', 'medium', 'high'], description: 'Filter by ticket complexity' })
   @ApiQuery({ name: 'persona', required: false, type: String, description: 'Filter by persona', example: 'security-sasha' })
-  @ApiQuery({ name: 'contributor', required: false, type: String, description: 'Filter by contributor/collaborator', example: 'john.doe' })
+  @ApiQuery({ name: 'contributor', required: false, type: String, description: 'Filter by contributor username', example: 'octocat' })
   @ApiQuery({ name: 'sortBy', required: false, enum: ['id', 'status', 'priority', 'complexity', 'persona', 'contributor'], description: 'Field to sort by', example: 'priority' })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort order', example: 'asc' })
   @Get()
@@ -251,7 +273,7 @@ export class TicketController {
    * @param priority - Filter by ticket priority
    * @param complexity - Filter by ticket complexity
    * @param persona - Filter by persona
-   * @param contributor - Filter by contributor/collaborator
+   * @param contributor - Filter by contributor username
    * @param sortBy - Field to sort by (default: 'id')
    * @param sortOrder - Sort order: 'asc' or 'desc' (default: 'asc')
    * 
@@ -278,7 +300,7 @@ export class TicketController {
     @Query('priority') priority?: string,
     @Query('complexity') complexity?: string,
     @Query('persona') persona?: string,
-    @Query('contributor') contributor?: string,
+    @Query('contributor') contributor?: string, // Add contributor parameter
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc'
   ): Promise<TicketsListResponseDto> {
@@ -291,7 +313,7 @@ export class TicketController {
         priority,
         complexity,
         persona,
-        contributor
+        contributor // Include contributor in filters
       },
       sort: {
         field: sortBy || 'id',
@@ -414,8 +436,8 @@ export class TicketController {
         return false;
       }
       
-      // Filter by contributor/collaborator (partial match, case-insensitive)
-      if (filters.contributor && (!ticket.collabotator || !ticket.collabotator.toLowerCase().includes(filters.contributor.toLowerCase()))) {
+      // Filter by contributor (exact match, case-insensitive)
+      if (filters.contributor && (!ticket.contributor || ticket.contributor.toLowerCase() !== filters.contributor.toLowerCase())) {
         return false;
       }
       
@@ -458,8 +480,8 @@ export class TicketController {
           valueB = b.persona || '';
           break;
         case 'contributor':
-          valueA = a.collabotator || '';
-          valueB = b.collabotator || '';
+          valueA = a.contributor || '';
+          valueB = b.contributor || '';
           break;
         default:
           valueA = a.id || '';

@@ -64,7 +64,7 @@ export class TicketDto {
     description: 'Collaborator assigned to this ticket',
     example: 'john.doe'
   })
-  collabotator: string | null;
+  collaborator: string | null;
 
   @ApiPropertyOptional({
     description: 'AI model associated with this ticket',
@@ -176,7 +176,7 @@ export class CreateTicketDto {
     description: 'Collaborator assigned to this ticket',
     example: 'john.doe'
   })
-  collabotator?: string;
+  collaborator?: string;
 
   @ApiPropertyOptional({
     description: 'AI model associated with this ticket',

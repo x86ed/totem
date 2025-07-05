@@ -130,9 +130,10 @@ ${statusTickets.map(ticket =>
         totalTickets: tickets.length,
         ticketsByStatus: {
           open: tickets.filter(t => t.status === 'open').length,
-          in_progress: tickets.filter(t => t.status === 'in_progress').length,
+          in_progress: tickets.filter(t => t.status === 'in-progress').length,
           blocked: tickets.filter(t => t.status === 'blocked').length,
-          planning: tickets.filter(t => t.status === 'planning').length,
+          todo: tickets.filter(t => t.status === 'todo').length,
+          done: tickets.filter(t => t.status === 'done').length,
           closed: tickets.filter(t => t.status === 'closed').length
         }
       }

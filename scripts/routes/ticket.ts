@@ -78,7 +78,7 @@ function generateTicketMarkdown(data: any): string {
     priority: data.priority || 'medium',
     complexity: data.complexity || 'medium',
     ...(data.persona && { persona: data.persona }),
-    ...(data.collabotator && { collabotator: data.collabotator }),
+    ...(data.collaborator && { collaborator: data.collaborator }),
     ...(data.model && { model: data.model }),
     ...(data.effort_days && { effort_days: data.effort_days }),
     ...(data.blocks && data.blocks.length > 0 && { blocks: data.blocks }),
@@ -242,7 +242,7 @@ function applyFilters(tickets: any[], filters: TicketFilters): any[] {
     }
     
     // Filter by contributor/collaborator (partial match, case-insensitive)
-    if (filters.contributor && (!ticket.collabotator || !ticket.collabotator.toLowerCase().includes(filters.contributor.toLowerCase()))) {
+    if (filters.contributor && (!ticket.collaborator || !ticket.collaborator.toLowerCase().includes(filters.contributor.toLowerCase()))) {
       return false;
     }
     
@@ -281,8 +281,8 @@ function applySorting(tickets: any[], sort: TicketSort): any[] {
         valueB = b.persona || '';
         break;
       case 'contributor':
-        valueA = a.collabotator || '';
-        valueB = b.collabotator || '';
+        valueA = a.collaborator || '';
+        valueB = b.collaborator || '';
         break;
       default:
         valueA = a.id || '';

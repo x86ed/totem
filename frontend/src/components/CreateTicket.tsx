@@ -13,7 +13,7 @@ interface ApiTicket {
   priority?: 'low' | 'medium' | 'high' | 'critical'
   complexity?: 'low' | 'medium' | 'high'
   persona?: string
-  collabotator?: string
+  collaborator?: string
   model?: string
   effort_days?: number
   blocks?: string[]
@@ -43,7 +43,7 @@ interface FormData {
   /** Target persona for this ticket */
   persona: string
   /** Collaborator assigned to this ticket */
-  collabotator: string
+  collaborator: string
   /** AI model associated with this ticket */
   model: string
   /** Estimated effort in days */
@@ -134,7 +134,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     priority: 'medium',
     complexity: 'medium',
     persona: '',
-    collabotator: '',
+    collaborator: '',
     model: '',
     effort_days: '',
     blocks: '',
@@ -185,7 +185,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
         priority: ticket.priority || 'medium',
         complexity: ticket.complexity || 'medium',
         persona: ticket.persona || '',
-        collabotator: ticket.collabotator || '',
+        collaborator: ticket.collaborator || '',
         model: ticket.model || '',
         effort_days: ticket.effort_days || '',
         blocks: ticket.blocks?.join(', ') || '',
@@ -220,7 +220,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       priority: data.priority,
       complexity: data.complexity,
       persona: data.persona || undefined,
-      collabotator: data.collabotator || undefined,
+      collaborator: data.collaborator || undefined,
       model: data.model || undefined,
       effort_days: data.effort_days ? Number(data.effort_days) : undefined,
       blocks: data.blocks ? data.blocks.split(',').map(s => s.trim()).filter(Boolean) : [],
@@ -312,7 +312,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       priority: 'medium',
       complexity: 'medium',
       persona: '',
-      collabotator: '',
+      collaborator: '',
       model: '',
       effort_days: '',
       blocks: '',
@@ -618,15 +618,15 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="collabotator" className="form-label">
+                  <label htmlFor="collaborator" className="form-label">
                     <span className="icon-spacing">🤝</span>
                     Collaborator
                   </label>
                   <input
-                    id="collabotator"
+                    id="collaborator"
                     type="text"
-                    name="collabotator"
-                    value={formData.collabotator}
+                    name="collaborator"
+                    value={formData.collaborator}
                     onChange={handleChange}
                     readOnly={isViewing}
                     className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}

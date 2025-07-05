@@ -69,7 +69,7 @@ function parseTicketMarkdown(filePath) {
       priority: yamlData.priority || 'medium',
       complexity: yamlData.complexity || 'medium',
       persona: yamlData.persona || null,
-      collabotator: yamlData.collabotator || null,
+      collaborator: yamlData.collaborator || null,
       model: yamlData.model || null,
       effort_days: yamlData.effort_days || null,
       blocks: yamlData.blocks || [],
@@ -135,7 +135,7 @@ function testGetTicketById() {
   
   // Compare with sample.json structure
   const expectedFields = [
-    'id', 'status', 'priority', 'complexity', 'persona', 'collabotator', 'model',
+    'id', 'status', 'priority', 'complexity', 'persona', 'collaborator', 'model',
     'blocks', 'blocked_by', 'title', 'description', 'acceptance_criteria', 
     'tags', 'notes', 'risks', 'resources'
   ];
