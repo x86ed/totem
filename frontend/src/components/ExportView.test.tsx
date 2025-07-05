@@ -24,9 +24,7 @@ describe('ExportView', () => {
       priority: 'high',
       complexity: 'medium',
       persona: 'user',
-      collaborator: 'john.doe',
-      createdDate: '2024-01-01',
-      updatedDate: '2024-01-01'
+      collaborator: 'john.doe'
     },
     {
       id: 'TKT-002',

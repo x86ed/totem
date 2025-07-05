@@ -217,7 +217,7 @@ describe('BacklogView', () => {
           description: 'Description',
           status: 'open',
           priority: 'low',
-          complexity: undefined,
+          complexity: 'low',
           persona: undefined,
           blocks: [],
           blocked_by: []
