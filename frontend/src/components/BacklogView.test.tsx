@@ -63,8 +63,8 @@ describe('BacklogView', () => {
     it('renders the backlog view with title', () => {
       renderBacklogView()
       
-      expect(screen.getByText('📋 Backlog')).toBeInTheDocument()
-      expect(screen.getByText('All tickets in a sortable table view')).toBeInTheDocument()
+      expect(screen.getByText('Backlog')).toBeInTheDocument()
+      expect(screen.getByText(/tickets • Sortable table view/)).toBeInTheDocument()
     })
 
     it('renders the data table with correct headers', () => {
@@ -83,7 +83,8 @@ describe('BacklogView', () => {
       
       expect(screen.getByText('healthcare.security.auth-sso-001')).toBeInTheDocument()
       expect(screen.getByText('SSO Authentication for Patient Portal')).toBeInTheDocument()
-      expect(screen.getByText('HIGH')).toBeInTheDocument()
+      // Check for priority badge specifically with role
+      expect(screen.getAllByText('HIGH')).toHaveLength(2) // One for priority, one for complexity
       expect(screen.getByText('security-sasha')).toBeInTheDocument()
     })
   })
@@ -168,7 +169,8 @@ describe('BacklogView', () => {
       
       renderBacklogView()
       
-      expect(screen.getByText('Error: Failed to load tickets')).toBeInTheDocument()
+      expect(screen.getByText('Failed to load tickets')).toBeInTheDocument()
+      expect(screen.getByText('Error Loading Tickets')).toBeInTheDocument()
     })
 
     it('shows empty state when no tickets are available', () => {
@@ -185,7 +187,8 @@ describe('BacklogView', () => {
       
       renderBacklogView()
       
-      expect(screen.getByText('No tickets found.')).toBeInTheDocument()
+      expect(screen.getByText('No tickets found')).toBeInTheDocument()
+      expect(screen.getByText('Create your first ticket to get started')).toBeInTheDocument()
     })
   })
 
@@ -200,8 +203,10 @@ describe('BacklogView', () => {
     it('displays correct priority badges', () => {
       renderBacklogView()
       
-      expect(screen.getByText('HIGH')).toBeInTheDocument()
-      expect(screen.getByText('MEDIUM')).toBeInTheDocument()
+      // Should have multiple HIGH badges (one priority, one complexity)
+      expect(screen.getAllByText('HIGH')).toHaveLength(2)
+      // Should have multiple MEDIUM badges (one priority, one complexity)
+      expect(screen.getAllByText('MEDIUM')).toHaveLength(2)
     })
 
     it('handles missing optional fields gracefully', () => {
