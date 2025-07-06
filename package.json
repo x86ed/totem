@@ -1,14 +1,14 @@
 {
   "name": "totem",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "AI-native, git-native, distributed project management platform - open source and self-hosted",
   "main": "dist/init.js",
   "bin": {
     "totem": "./dist/init.js"
   },
   "scripts": {
-    "start": "npm run build:scripts && node dist/server-nestjs.js",
-    "start:prod": "NODE_ENV=production npm run build:scripts && node dist/server-nestjs.js",
+    "start": "npm run build:scripts && NODE_ENV=production node dist/server-nestjs.js",
+    "start:prod": "NODE_ENV=production npm run build:scripts && NODE_ENV=production node dist/server-nestjs.js",
     "build:scripts": "tsc --project tsconfig.scripts.json",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "NODE_ENV=development PORT=8080 nodemon --ext ts,js,json --exec \"ts-node --project tsconfig.scripts.json scripts/server-nestjs.ts\"",
