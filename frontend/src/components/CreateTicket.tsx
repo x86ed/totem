@@ -332,26 +332,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   }
 
   /**
-   * Navigate to edit a specific ticket
-   * @param {string} id - The ticket ID to edit
-   */
-  const editTicket = (id: string): void => {
-    if (onNavigate) {
-      onNavigate('edit', id)
-    }
-  }
-
-  /**
-   * Navigate to view a specific ticket
-   * @param {string} id - The ticket ID to view
-   */
-  const viewTicket = (id: string): void => {
-    if (onNavigate) {
-      onNavigate('view', id)
-    }
-  }
-
-  /**
    * Navigate back to create mode
    */
   const goToCreateMode = (): void => {
@@ -430,37 +410,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
               >
                 ➕ Create New
               </button>
-            </div>
-          )}
-
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-4 bg-gray-100 rounded-lg">
-              <h4 className="font-semibold text-gray-700">Debug Info:</h4>
-              <p className="text-sm text-gray-600">Mode: {getModeDisplayName()}</p>
-              <p className="text-sm text-gray-600">Ticket ID: {currentTicketId || 'None'}</p>
-              <p className="text-sm text-gray-600">API URL: {API_BASE_URL}</p>
-              <div className="mt-2">
-                <p className="text-sm text-gray-600">Test modes:</p>
-                <button 
-                  onClick={() => editTicket('healthcare.analytics.reporting-engine-015')}
-                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                >
-                  Edit Sample Ticket
-                </button>
-                <button 
-                  onClick={() => viewTicket('healthcare.analytics.reporting-engine-015')}
-                  className="text-xs bg-green-500 text-white px-2 py-1 rounded mr-2"
-                >
-                  View Sample Ticket
-                </button>
-                <button 
-                  onClick={goToCreateMode}
-                  className="text-xs bg-purple-500 text-white px-2 py-1 rounded"
-                >
-                  Create Mode
-                </button>
-              </div>
             </div>
           )}
 
