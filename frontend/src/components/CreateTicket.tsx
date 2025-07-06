@@ -811,7 +811,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     borderRadius: '12px',
                     boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
                     position: 'sticky',
-                    top: '240px',
+                    top: '380px',
                     height: 'fit-content',
                     zIndex: 10
                   }}
