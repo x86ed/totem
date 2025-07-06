@@ -4,6 +4,8 @@ import RoadmapView from './components/RoadmapView'
 import BacklogView from './components/BacklogView'
 import CreateTicket from './components/CreateTicket'
 import DemoView from './components/DemoView'
+import ProjectView from './components/ProjectView'
+import ArtifactsView from './components/ArtifactsView'
 import { TicketProvider } from './context/TicketContext'
 import { TabConfig } from './types'
 import './App.css'
@@ -109,6 +111,8 @@ function App() {
   }
 
   const tabs: TabConfig[] = [
+    { id: 'project', label: 'Project', icon: '🗂️' },
+    { id: 'artifacts', label: 'Artifacts', icon: '📦' },
     { id: 'kanban', label: 'Kanban', icon: '📋' },
     { id: 'roadmap', label: 'Roadmap', icon: '🗺️' },
     { id: 'backlog', label: 'Backlog', icon: '📊' },
@@ -184,6 +188,8 @@ function App() {
               />
             )}
             {activeTab === 'export' && <DemoView />}
+            {activeTab === 'project' && <ProjectView />}
+            {activeTab === 'artifacts' && <ArtifactsView />}
           </main>
         </div>
       </div>

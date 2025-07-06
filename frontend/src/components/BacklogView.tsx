@@ -271,79 +271,73 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="backlog-table min-w-full divide-y divide-gray-200">
+      <div className="overflow-hidden">
+        <table className="backlog-table w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
           <thead className="bg-green-700">
             <tr>
-              <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-16">
-                <div className="flex items-center justify-center">
-                  <span>Icon</span>
-                </div>
-              </th>
+              <th
+                style={{
+                  width: '56px', minWidth: '56px', maxWidth: '56px', padding: 0, border: 'none',
+                }}
+                className="text-center"
+              />
               {[
-                { field: 'id' as SortField, label: 'ID' },
-                { field: 'status' as SortField, label: 'Status' },
-                { field: 'priority' as SortField, label: 'Priority' },
-                { field: 'complexity' as SortField, label: 'Complexity' },
-                { field: 'title' as SortField, label: 'Title' },
-                { field: 'persona' as SortField, label: 'Persona' },
-                { field: 'contributor' as SortField, label: 'Contributor' }
-              ].map(({ field, label }) => (
+                { field: 'id' as SortField, label: 'ID', width: '80px' },
+                { field: 'status' as SortField, label: 'Status', width: '90px' },
+                { field: 'priority' as SortField, label: 'Priority', width: '80px' },
+                { field: 'complexity' as SortField, label: 'Complexity', width: '90px' },
+                { field: 'title' as SortField, label: 'Title', width: 'auto' },
+                { field: 'persona' as SortField, label: 'Persona', width: '100px' },
+                { field: 'contributor' as SortField, label: 'Contributor', width: '120px' }
+              ].map(({ field, label, width }) => (
                 <th 
                   key={field} 
                   onClick={() => handleSort(field)} 
-                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-600 transition-colors select-none"
+                  className="px-2 py-2 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-600 transition-colors select-none"
+                  style={{ width }}
                 >
-                  <div className="flex items-center space-x-2">
-                    <span>{label}</span>
-                    <span className="text-sm">{getSortIcon(field)}</span>
+                  <div className="flex items-center space-x-1">
+                    <span className="truncate">{label}</span>
+                    <span className="text-sm flex-shrink-0">{getSortIcon(field)}</span>
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {sortedTickets.map((ticket, index) => (
-              <tr 
-                key={ticket.id} 
-                onClick={() => handleRowClick(ticket)} 
-                className={`hover:bg-green-50 cursor-pointer transition-colors ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                }`}
-              >
-                <td className="px-4 py-4 whitespace-nowrap w-16">
-                  <div className="flex justify-center items-center">
-                    <div style={{ width: '24px', height: '24px', flexShrink: 0 }}>
-                      <TotemIcon 
-                        seed={ticket.id} 
-                        size={3} 
-                        showControls={false} 
-                        highRes={false}
-                      />
-                    </div>
+            {sortedTickets.map((ticket) => (
+              <tr key={ticket.id} onClick={() => handleRowClick(ticket)} style={{ cursor: 'pointer' }}>
+                <td
+                  style={{
+                    width: '56px', minWidth: '56px', maxWidth: '56px', padding: 0, border: 'none', height: '56px',
+                  }}
+                  className="text-center align-middle"
+                >
+                  <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <TotemIcon seed={ticket.id} size={1.75} showControls={false} />
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm font-mono font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className="text-xs font-mono font-medium text-gray-900 bg-gray-100 px-1 py-0.5 rounded">
                     {ticket.id}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-block rounded ${getStatusColor(ticket.status)}`}>
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className={`inline-block rounded text-xs ${getStatusColor(ticket.status)}`}>
                     {getStatusDisplay(ticket.status)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-block rounded ${getPriorityColor(ticket.priority)}`}>
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className={`inline-block rounded text-xs ${getPriorityColor(ticket.priority)}`}>
                     {getPriorityDisplay(ticket.priority)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-block rounded ${getComplexityColor(ticket.complexity)}`}>
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className={`inline-block rounded text-xs ${getComplexityColor(ticket.complexity)}`}>
                     {getComplexityDisplay(ticket.complexity)}
                   </span>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 py-3">
                   <div className="text-sm font-medium text-gray-900 line-clamp-2">
                     {ticket.title}
                   </div>
@@ -353,14 +347,14 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">
-                    {ticket.persona || <span className="text-gray-400 italic">No persona</span>}
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className="text-xs text-gray-600 truncate block" style={{ maxWidth: '100px' }}>
+                    {ticket.persona || <span className="text-gray-400 italic">None</span>}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">
-                    {ticket.contributor || <span className="text-gray-400 italic">No contributor</span>}
+                <td className="px-2 py-3 whitespace-nowrap">
+                  <span className="text-xs text-gray-600 truncate block" style={{ maxWidth: '120px' }}>
+                    {ticket.contributor || <span className="text-gray-400 italic">None</span>}
                   </span>
                 </td>
               </tr>

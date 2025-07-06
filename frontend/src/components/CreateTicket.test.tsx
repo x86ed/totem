@@ -6,7 +6,6 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CreateTicket from './CreateTicket.tsx'
 import { useTickets } from '../context/TicketContext'
-import { Ticket } from '../types.ts'
 
 // Mock the useTickets hook
 vi.mock('../context/TicketContext', () => ({
@@ -21,7 +20,7 @@ describe('CreateTicket', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset fetch mock
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
     mockUseTickets.mockReturnValue({
       tickets: [],
       milestones: [],
@@ -34,7 +33,7 @@ describe('CreateTicket', () => {
       refreshTickets: function (): Promise<void> {
         throw new Error('Function not implemented.')
       },
-      createTicket: function (_: Partial<Ticket>): Promise<void> {
+      createTicket: function (): Promise<void> {
         throw new Error('Function not implemented.')
       }
     })
@@ -111,7 +110,7 @@ describe('CreateTicket', () => {
         refreshTickets: function (): Promise<void> {
           throw new Error('Function not implemented.')
         },
-        createTicket: function (_: Partial<Ticket>): Promise<void> {
+        createTicket: function (): Promise<void> {
           throw new Error('Function not implemented.')
         }
       })
@@ -175,7 +174,7 @@ describe('CreateTicket', () => {
   describe('Form Submission', () => {
     it('creates a ticket with correct data when form is submitted', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -194,7 +193,7 @@ describe('CreateTicket', () => {
 
       // Wait for the API call
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -207,7 +206,7 @@ describe('CreateTicket', () => {
 
     it('generates unique ticket IDs', async () => {
       // Mock fetch for API calls
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -220,7 +219,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
       
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledTimes(1)
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1)
       })
 
       // Clear the title and add new content
@@ -230,13 +229,13 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledTimes(2)
+        expect(globalThis.fetch).toHaveBeenCalledTimes(2)
       })
     })
 
     it('resets form after successful submission', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -261,7 +260,7 @@ describe('CreateTicket', () => {
 
       // In the current implementation, the form may not reset automatically
       // We'll just verify the API was called successfully
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/ticket',
         expect.objectContaining({
           method: 'POST',
@@ -272,7 +271,7 @@ describe('CreateTicket', () => {
 
     it('shows success message after ticket creation', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -290,7 +289,7 @@ describe('CreateTicket', () => {
 
     it('hides success message after timeout', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -314,7 +313,7 @@ describe('CreateTicket', () => {
 
     it('shows error message when API call fails', async () => {
       // Mock fetch to return an error
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         statusText: 'Internal Server Error',
         json: async () => ({ message: 'Failed to create ticket' })
@@ -360,7 +359,7 @@ describe('CreateTicket', () => {
   describe('Edge Cases', () => {
     it('handles form submission with only required fields', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -373,7 +372,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -386,7 +385,7 @@ describe('CreateTicket', () => {
 
     it('handles form submission with all fields filled', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -403,7 +402,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -455,7 +454,7 @@ describe('CreateTicket', () => {
         refreshTickets: function (): Promise<void> {
           throw new Error('Function not implemented.')
         },
-        createTicket: function (_: Partial<Ticket>): Promise<void> {
+        createTicket: function (): Promise<void> {
           throw new Error('Function not implemented.')
         }
       })

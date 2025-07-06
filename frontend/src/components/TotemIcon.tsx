@@ -521,13 +521,16 @@ function TotemIcon({
       ctx.fillRect(config.cellSize * config.cols - displayX - config.cellSize, displayY, config.cellSize, config.cellSize);
     });
 
-    setTimeout(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    timeoutId = setTimeout(() => {
       const dataURL = canvas.toDataURL('image/png');
       setPngUrl(dataURL);
       if (onPngGenerated) {
         onPngGenerated(dataURL);
       }
     }, 10);
+    // Cleanup timeout on unmount to avoid state update after test teardown
+    return () => clearTimeout(timeoutId);
   }, [config.cols, config.rows, config.sections, config.cellSize, sectionBackgrounds, sectionBorderColors, onPngGenerated]);
 
   const handleGenerate = () => {

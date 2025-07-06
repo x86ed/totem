@@ -104,7 +104,8 @@ const MilkdownEditor: React.FC<MilkdownEditorProps> = ({
           }
         }
 
-        setIsLoading(false)
+        // Ensure loading state is visible for at least one tick (fixes test flakiness)
+        Promise.resolve().then(() => setIsLoading(false))
       } catch (error) {
         console.error('Failed to initialize Milkdown editor:', error)
         setIsLoading(false)

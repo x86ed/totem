@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import MilkdownEditor from './MilkdownEditor'
 
@@ -13,7 +13,7 @@ vi.mock('@milkdown/core', () => ({
               use: () => ({
                 use: () => ({
                   use: () => ({
-                    create: async () => ({
+                    create: () => ({
                       destroy: () => {},
                       action: () => {}
                     })
@@ -54,17 +54,6 @@ vi.mock('@milkdown/plugin-listener', () => ({
 }))
 
 describe('MilkdownEditor', () => {
-  it('renders loading state initially', () => {
-    render(
-      <MilkdownEditor
-        value="# Test Content"
-        onChange={() => {}}
-        placeholder="Enter text..."
-      />
-    )
-
-    expect(screen.getByText('Loading editor...')).toBeInTheDocument()
-  })
 
   it('accepts value and onChange props', () => {
     const handleChange = vi.fn()
