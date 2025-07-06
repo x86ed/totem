@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import KanbanBoard from './components/KanbanBoard'
 import RoadmapView from './components/RoadmapView'
 import BacklogView from './components/BacklogView'
@@ -35,6 +35,8 @@ function App() {
   const [ticketMode, setTicketMode] = useState<'create' | 'edit' | 'view'>('create')
   const [ticketId, setTicketId] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
+  const [scrollProgress, setScrollProgress] = useState<number>(0)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   // Parse URL and set initial state
   useEffect(() => {
@@ -73,6 +75,24 @@ function App() {
     return () => window.removeEventListener('hashchange', parseUrl)
   }, [])
 
+  // Scroll progress tracking
+  useEffect(() => {
+    const handleScroll = () => {
+      if (contentRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = contentRef.current
+        const totalScrollable = scrollHeight - clientHeight
+        const progress = totalScrollable > 0 ? (scrollTop / totalScrollable) * 100 : 0
+        setScrollProgress(Math.min(progress, 100))
+      }
+    }
+
+    const contentElement = contentRef.current
+    if (contentElement) {
+      contentElement.addEventListener('scroll', handleScroll)
+      return () => contentElement.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
   // Update URL when tab changes
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -101,9 +121,6 @@ function App() {
       <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
         {/* Sidenav */}
         <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          <div className="sidenav-header">
-            <h1 className="sidenav-title">totem</h1>
-          </div>
           <div className="sidenav-items">
             {tabs.map((tab) => (
               <button
@@ -145,9 +162,17 @@ function App() {
               ☰
             </button>
             <h1 className="header-title">totem</h1>
+            
+            {/* Scroll Progress Bar */}
+            <div className="scroll-progress">
+              <div 
+                className="scroll-progress-bar" 
+                style={{ width: `${scrollProgress}%` }}
+              />
+            </div>
           </header>
 
-          <main className="content-area">
+          <main className="content-area" ref={contentRef}>
             {activeTab === 'kanban' && <KanbanBoard />}
             {activeTab === 'roadmap' && <RoadmapView />}
             {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
