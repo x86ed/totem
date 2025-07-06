@@ -24,7 +24,7 @@ describe('ExportView', () => {
       priority: 'high',
       complexity: 'medium',
       persona: 'user',
-      collaborator: 'john.doe'
+      contributor: 'john.doe'
     },
     {
       id: 'TKT-002',
@@ -34,7 +34,7 @@ describe('ExportView', () => {
       priority: 'medium',
       complexity: 'low',
       persona: 'admin',
-      collaborator: undefined,
+      contributor: undefined,
       createdDate: '2024-01-02',
       updatedDate: '2024-01-02'
     }
@@ -255,8 +255,8 @@ describe('ExportView', () => {
       const previewButton = screen.getByRole('button', { name: /Preview/ })
       fireEvent.click(previewButton)
       
-      // Should show "None" for ticket with undefined collaborator
-      expect(screen.getByText(/\*\*Collaborator:\*\* None/)).toBeInTheDocument()
+      // Should show "None" for ticket with undefined contributor
+      expect(screen.getByText(/\*\*Contributor:\*\* None/)).toBeInTheDocument()
     })
   })
 

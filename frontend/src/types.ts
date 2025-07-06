@@ -22,10 +22,8 @@ export interface Ticket {
   complexity: 'low' | 'medium' | 'high';
   /** Target persona for this ticket */
   persona?: string;
-  /** Contributor to the ticket */
+  /** Contributor assigned to the ticket */
   contributor?: string;
-  /** Collaborator assigned to the ticket */
-  collaborator?: string;
   /** Assignee of the ticket */
   assignee?: string;
   /** Acceptance criteria for the ticket */

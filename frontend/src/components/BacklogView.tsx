@@ -6,7 +6,7 @@ interface BacklogViewProps {
   onNavigateToTicket?: (mode: 'edit', id: string) => void
 }
 
-type SortField = 'id' | 'status' | 'priority' | 'complexity' | 'title' | 'persona' | 'collaborator'
+type SortField = 'id' | 'status' | 'priority' | 'complexity' | 'title' | 'persona' | 'contributor'
 type SortOrder = 'asc' | 'desc'
 
 function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
@@ -202,7 +202,7 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
                 { field: 'complexity' as SortField, label: 'Complexity', icon: '🧩' },
                 { field: 'title' as SortField, label: 'Title', icon: '📝' },
                 { field: 'persona' as SortField, label: 'Persona', icon: '👤' },
-                { field: 'collaborator' as SortField, label: 'Collaborator', icon: '🤝' }
+                { field: 'contributor' as SortField, label: 'Contributor', icon: '🤝' }
               ].map(({ field, label, icon }) => (
                 <th 
                   key={field} 
@@ -285,8 +285,8 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
                   <div className="flex items-center">
                     <span className="text-lg mr-2">🤝</span>
                     <span className="text-sm text-gray-600 font-medium">
-                      {ticket.collaborator || (
-                        <span className="text-gray-400 italic">No collaborator</span>
+                      {ticket.contributor || (
+                        <span className="text-gray-400 italic">No contributor</span>
                       )}
                     </span>
                   </div>

@@ -19,7 +19,7 @@ interface TicketCardProps {
  * Features:
  * - Visual representation of ticket details
  * - Priority indicators with color coding
- * - Assignee information
+ * - Assignee/contributor information
  * - Ticket ID and title display
  * - Truncated description with line clamping
  * 
@@ -102,10 +102,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </span>
           {ticket.priority.toUpperCase()}
         </span>
-        {ticket.collaborator && (
+        {ticket.contributor && (
           <span className="assignee-green px-2 py-1 rounded text-xs">
             <span className="icon-spacing">👤</span>
-            {ticket.collaborator}
+            {ticket.contributor}
           </span>
         )}
       </div>

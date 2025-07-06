@@ -6,6 +6,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CreateTicket from './CreateTicket.tsx'
 import { useTickets } from '../context/TicketContext'
+import { Ticket } from '../types.ts'
 
 // Mock the useTickets hook
 vi.mock('../context/TicketContext', () => ({
@@ -28,8 +29,14 @@ describe('CreateTicket', () => {
       updateTicket: vi.fn(),
       deleteTicket: vi.fn(),
       moveTicket: vi.fn(),
-      addMilestone: vi.fn(),
-      updateMilestone: vi.fn(),
+      loading: false,
+      error: null,
+      refreshTickets: function (): Promise<void> {
+        throw new Error('Function not implemented.')
+      },
+      createTicket: function (_: Partial<Ticket>): Promise<void> {
+        throw new Error('Function not implemented.')
+      }
     })
   })
 
@@ -41,7 +48,7 @@ describe('CreateTicket', () => {
       expect(screen.getByPlaceholderText('Enter ticket title')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Describe the ticket requirements...')).toBeInTheDocument()
       expect(screen.getByLabelText(/Priority/)).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('Assigned collaborator')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Assigned contributor')).toBeInTheDocument()
       expect(screen.getByLabelText(/Complexity/)).toBeInTheDocument()
     })
 
@@ -51,13 +58,13 @@ describe('CreateTicket', () => {
       const titleInput = screen.getByPlaceholderText('Enter ticket title') as HTMLInputElement
       const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...') as HTMLTextAreaElement
       const prioritySelect = screen.getByLabelText(/Priority/) as HTMLSelectElement
-      const collaboratorInput = screen.getByPlaceholderText('Assigned collaborator') as HTMLInputElement
+      const contributorInput = screen.getByPlaceholderText('Assigned contributor') as HTMLInputElement
       const complexitySelect = screen.getByLabelText(/Complexity/) as HTMLSelectElement
 
       expect(titleInput.value).toBe('')
       expect(descriptionInput.value).toBe('')
       expect(prioritySelect.value).toBe('medium')
-      expect(collaboratorInput.value).toBe('')
+      expect(contributorInput.value).toBe('')
       expect(complexitySelect.value).toBe('medium')
     })
 
@@ -95,15 +102,15 @@ describe('CreateTicket', () => {
       
       const titleInput = screen.getByPlaceholderText('Enter ticket title')
       const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...')
-      const collaboratorInput = screen.getByPlaceholderText('Assigned collaborator')
+      const contributorInput = screen.getByPlaceholderText('Assigned contributor')
 
       await user.type(titleInput, 'Test Ticket Title')
       await user.type(descriptionInput, 'Test description')
-      await user.type(collaboratorInput, 'john.doe')
+      await user.type(contributorInput, 'john.doe')
 
       expect(titleInput).toHaveValue('Test Ticket Title')
       expect(descriptionInput).toHaveValue('Test description')
-      expect(collaboratorInput).toHaveValue('john.doe')
+      expect(contributorInput).toHaveValue('john.doe')
     }, 10000)
 
     it('updates priority when selection changes', async () => {
@@ -142,7 +149,7 @@ describe('CreateTicket', () => {
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Test Ticket')
       await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Test description')
       await user.selectOptions(screen.getByRole('combobox', { name: /priority/i }), 'high')
-      await user.type(screen.getByPlaceholderText('Assigned collaborator'), 'john.doe')
+      await user.type(screen.getByPlaceholderText('Assigned contributor'), 'john.doe')
       await user.selectOptions(screen.getByRole('combobox', { name: /complexity/i }), 'high')
 
       // Submit the form
@@ -203,11 +210,11 @@ describe('CreateTicket', () => {
       // Fill out the form
       const titleInput = screen.getByPlaceholderText('Enter ticket title')
       const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...')
-      const collaboratorInput = screen.getByPlaceholderText('Assigned collaborator')
+      const contributorInput = screen.getByPlaceholderText('Assigned contributor')
       
       await user.type(titleInput, 'Test Ticket')
       await user.type(descriptionInput, 'Test description')
-      await user.type(collaboratorInput, 'john.doe')
+      await user.type(contributorInput, 'john.doe')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
@@ -298,7 +305,7 @@ describe('CreateTicket', () => {
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Test Ticket')
       await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Test description')
       await user.selectOptions(screen.getByLabelText(/Priority/), 'high')
-      await user.type(screen.getByPlaceholderText('Assigned collaborator'), 'john.doe')
+      await user.type(screen.getByPlaceholderText('Assigned contributor'), 'john.doe')
 
       // Click reset button
       await user.click(screen.getByRole('button', { name: /Reset Form/ }))
@@ -307,7 +314,7 @@ describe('CreateTicket', () => {
       expect(screen.getByPlaceholderText('Enter ticket title')).toHaveValue('')
       expect(screen.getByPlaceholderText('Describe the ticket requirements...')).toHaveValue('')
       expect(screen.getByLabelText(/Priority/)).toHaveValue('medium')
-      expect(screen.getByPlaceholderText('Assigned collaborator')).toHaveValue('')
+      expect(screen.getByPlaceholderText('Assigned contributor')).toHaveValue('')
       expect(screen.getByLabelText(/Complexity/)).toHaveValue('medium')
     })
   })
@@ -353,7 +360,7 @@ describe('CreateTicket', () => {
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Complete Ticket')
       await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Full description')
       await user.selectOptions(screen.getByLabelText(/Priority/), 'low')
-      await user.type(screen.getByPlaceholderText('Assigned collaborator'), 'jane.doe')
+      await user.type(screen.getByPlaceholderText('Assigned contributor'), 'jane.doe')
       await user.selectOptions(screen.getByLabelText(/Complexity/), 'high')
 
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
@@ -379,7 +386,7 @@ describe('CreateTicket', () => {
       expect(screen.getByLabelText(/Description/)).not.toBeRequired()
       expect(screen.getByLabelText(/Priority/)).toBeInTheDocument()
       expect(screen.getByLabelText(/Complexity/)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Collaborator/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Contributor/)).toBeInTheDocument()
     })
 
     it('has proper button roles and accessibility attributes', () => {

@@ -13,7 +13,7 @@ interface ApiTicket {
   priority?: 'low' | 'medium' | 'high' | 'critical'
   complexity?: 'low' | 'medium' | 'high'
   persona?: string
-  collaborator?: string
+  contributor?: string
   model?: string
   effort_days?: number
   blocks?: string[]
@@ -42,8 +42,8 @@ interface FormData {
   complexity: 'low' | 'medium' | 'high'
   /** Target persona for this ticket */
   persona: string
-  /** Collaborator assigned to this ticket */
-  collaborator: string
+  /** Contributor assigned to this ticket */
+  contributor: string
   /** AI model associated with this ticket */
   model: string
   /** Estimated effort in days */
@@ -82,7 +82,7 @@ interface CreateTicketProps {
  * 
  * A form component for creating, editing, and viewing tickets in the project management system.
  * Provides fields for all ticket properties including title, description, priority,
- * complexity, persona, collaborator, acceptance criteria, and more.
+ * complexity, persona, contributor, acceptance criteria, and more.
  * 
  * Features:
  * - Form validation (title is required)
@@ -134,7 +134,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     priority: 'medium',
     complexity: 'medium',
     persona: '',
-    collaborator: '',
+    contributor: '',
     model: '',
     effort_days: '',
     blocks: '',
@@ -185,7 +185,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
         priority: ticket.priority || 'medium',
         complexity: ticket.complexity || 'medium',
         persona: ticket.persona || '',
-        collaborator: ticket.collaborator || '',
+        contributor: ticket.contributor || '',
         model: ticket.model || '',
         effort_days: ticket.effort_days || '',
         blocks: ticket.blocks?.join(', ') || '',
@@ -220,7 +220,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       priority: data.priority,
       complexity: data.complexity,
       persona: data.persona || undefined,
-      collaborator: data.collaborator || undefined,
+      contributor: data.contributor || undefined,
       model: data.model || undefined,
       effort_days: data.effort_days ? Number(data.effort_days) : undefined,
       blocks: data.blocks ? data.blocks.split(',').map(s => s.trim()).filter(Boolean) : [],
@@ -312,7 +312,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       priority: 'medium',
       complexity: 'medium',
       persona: '',
-      collaborator: '',
+      contributor: '',
       model: '',
       effort_days: '',
       blocks: '',
@@ -618,19 +618,19 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="collaborator" className="form-label">
+                  <label htmlFor="contributor" className="form-label">
                     <span className="icon-spacing">🤝</span>
-                    Collaborator
+                    Contributor
                   </label>
                   <input
-                    id="collaborator"
+                    id="contributor"
                     type="text"
-                    name="collaborator"
-                    value={formData.collaborator}
+                    name="contributor"
+                    value={formData.contributor}
                     onChange={handleChange}
                     readOnly={isViewing}
                     className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Assigned collaborator"
+                    placeholder="Assigned contributor"
                   />
                 </div>
 

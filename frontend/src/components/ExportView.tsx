@@ -69,7 +69,7 @@ const ExportView: React.FC = () => {
 **Priority:** ${ticket.priority}
 **Complexity:** ${ticket.complexity || 'None'}
 **Persona:** ${ticket.persona || 'None'}
-**Collaborator:** ${ticket.collaborator || 'None'}
+**Contributor:** ${ticket.contributor || 'None'}
 
 ## Description
 

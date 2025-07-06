@@ -15,9 +15,7 @@ describe('TicketCard', () => {
     priority: 'medium',
     complexity: 'medium',
     persona: 'user',
-    collaborator: 'john.doe',
-    createdDate: '2024-01-01',
-    updatedDate: '2024-01-01'
+    contributor: 'john.doe',
   }
 
   describe('Basic rendering', () => {
@@ -32,13 +30,13 @@ describe('TicketCard', () => {
       expect(screen.getByText('john.doe')).toBeInTheDocument()
     })
 
-    it('renders without optional collaborator', () => {
-      const ticketWithoutCollaborator: Ticket = {
+    it('renders without optional contributor', () => {
+      const ticketWithoutContributor: Ticket = {
         ...baseTicket,
-        collaborator: undefined
+        contributor: undefined
       }
       
-      render(<TicketCard ticket={ticketWithoutCollaborator} />)
+      render(<TicketCard ticket={ticketWithoutContributor} />)
       
       expect(screen.getByText('TKT-001')).toBeInTheDocument()
       expect(screen.queryByText('👤')).not.toBeInTheDocument()
@@ -88,24 +86,24 @@ describe('TicketCard', () => {
     })
   })
 
-  describe('Collaborator handling', () => {
-    it('displays collaborator with correct icon and styling', () => {
+  describe('Contributor handling', () => {
+    it('displays contributor with correct icon and styling', () => {
       render(<TicketCard ticket={baseTicket} />)
       
       expect(screen.getByText('👤')).toBeInTheDocument()
       expect(screen.getByText('john.doe')).toBeInTheDocument()
       
-      const collaboratorElement = screen.getByText('john.doe').closest('span')
-      expect(collaboratorElement).toHaveClass('assignee-green')
+      const contributorElement = screen.getByText('john.doe').closest('span')
+      expect(contributorElement).toHaveClass('assignee-green')
     })
 
-    it('handles empty collaborator string', () => {
-      const ticketWithEmptyCollaborator: Ticket = {
+    it('handles empty contributor string', () => {
+      const ticketWithEmptyContributor: Ticket = {
         ...baseTicket,
-        collaborator: ''
+        contributor: ''
       }
-      
-      render(<TicketCard ticket={ticketWithEmptyCollaborator} />)
+
+      render(<TicketCard ticket={ticketWithEmptyContributor} />)
       
       expect(screen.queryByText('👤')).not.toBeInTheDocument()
     })
@@ -156,8 +154,6 @@ describe('TicketCard', () => {
         description: 'Min desc',
         status: 'todo',
         priority: 'low',
-        createdDate: '2024-01-01',
-        updatedDate: '2024-01-01'
       }
       
       render(<TicketCard ticket={minimalTicket} />)
@@ -174,7 +170,7 @@ describe('TicketCard', () => {
         id: 'TKT-SPECIAL',
         title: 'Title with émojis 🎉',
         description: 'Description with spéciál characters',
-        collaborator: 'user@domain.com'
+        contributor: 'user@domain.com'
       }
       
       render(<TicketCard ticket={specialTicket} />)
