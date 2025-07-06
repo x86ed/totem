@@ -61,10 +61,10 @@ export class TicketDto {
   persona: string | null;
 
   @ApiPropertyOptional({
-    description: 'Collaborator assigned to this ticket',
+    description: 'Contributor assigned to this ticket',
     example: 'john.doe'
   })
-  collaborator: string | null;
+  contributor: string | null;
 
   @ApiPropertyOptional({
     description: 'AI model associated with this ticket',
@@ -173,10 +173,10 @@ export class CreateTicketDto {
   persona?: string;
 
   @ApiPropertyOptional({
-    description: 'Collaborator assigned to this ticket',
+    description: 'Contributor assigned to this ticket',
     example: 'john.doe'
   })
-  collaborator?: string;
+  contributor?: string;
 
   @ApiPropertyOptional({
     description: 'AI model associated with this ticket',

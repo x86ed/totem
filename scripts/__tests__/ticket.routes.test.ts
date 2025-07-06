@@ -612,8 +612,8 @@ describe('Ticket Routes - Integration Tests', () => {
         if (response.status === 200) {
           // All returned tickets should have contributor containing 'john'
           response.body.tickets.forEach((ticket: any) => {
-            if (ticket.collaborator) {
-              expect(ticket.collaborator.toLowerCase()).toContain('john');
+            if (ticket.contributor) {
+              expect(ticket.contributor.toLowerCase()).toContain('john');
             }
           });
         }

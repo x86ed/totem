@@ -1,5 +1,7 @@
 # complexity
+
 represents the relative size and effort required for a work item
+
 - `xs` - Trivial change, less than 1 hour of work
 - `s` - Small change, 1-4 hours of work
 - `m` - Medium change, 1-2 days of work

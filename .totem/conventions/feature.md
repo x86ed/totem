@@ -1,5 +1,7 @@
 # feature
+
 represents specific functionality or capabilities within a component
+
 - **login** - User authentication and session management
 - **signup** - User registration and account creation
 - **profile** - User profile management and settings

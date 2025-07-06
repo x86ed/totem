@@ -124,8 +124,7 @@ export class TicketController {
         priority: yamlData.priority || 'medium',
         complexity: yamlData.complexity || 'medium',
         persona: yamlData.persona || null,
-        contributor: yamlData.contributor || null, // Add contributor field
-        collaborator: yamlData.collaborator || null,
+        contributor: yamlData.contributor || null,
         model: yamlData.model || null,
         effort_days: yamlData.effort_days || null,
         blocks: yamlData.blocks || [],
@@ -203,7 +202,7 @@ export class TicketController {
       complexity: data.complexity || 'medium',
       ...(data.persona && { persona: data.persona }),
       ...(data.contributor && { contributor: data.contributor }), // Include contributor if present
-      ...(data.collaborator && { collaborator: data.collaborator }),
+      ...(data.contributor && { contributor: data.contributor }),
       ...(data.model && { model: data.model }),
       ...(data.effort_days && { effort_days: data.effort_days }),
       ...(data.blocks && data.blocks.length > 0 && { blocks: data.blocks }),

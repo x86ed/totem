@@ -491,7 +491,7 @@ This provides:
       "priority": "high",
       "complexity": "medium",
       "persona": "security-sasha",
-      "collaborator": null,
+      "contributor": null,
       "model": null,
       "effort_days": null,
       "blocks": ["patient-dashboard-003"],

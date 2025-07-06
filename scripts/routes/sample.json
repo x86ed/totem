@@ -4,7 +4,7 @@
   "priority": "high",
   "complexity": "medium",
   "persona": "security-sasha",
-  "collaborator": "guy@example.com",
+  "contributor": "guy@example.com",
   "model": "Chat-GPT 4o",
   "blocks": ["patient-dashboard-003"],
   "blocked_by": ["ad-integration-001"],
