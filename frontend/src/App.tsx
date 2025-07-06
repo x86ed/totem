@@ -34,6 +34,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<string>('kanban')
   const [ticketMode, setTicketMode] = useState<'create' | 'edit' | 'view'>('create')
   const [ticketId, setTicketId] = useState<string | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
 
   // Parse URL and set initial state
   useEffect(() => {
@@ -97,50 +98,69 @@ function App() {
 
   return (
     <TicketProvider>
-      <div className="min-h-screen" style={{ background: '#f0f4f1' }}>
-        <header className="header-green">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
-                <span className="icon-spacing text-2xl">🎯</span>
-                <h1 className="text-2xl font-bold" style={{ color: '#e8f5e8' }}>
-                  Totem
-                </h1>
-              </div>
-              <nav className="flex space-x-4">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`nav-btn-green ${activeTab === tab.id ? 'active' : ''}`}
-                  >
-                    <span className="icon-spacing">{tab.icon}</span>
-                    {tab.label}
-                    {tab.id === 'ticket' && ticketMode !== 'create' && (
-                      <span className="ml-1 text-xs opacity-75">
-                        ({ticketMode})
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-            </div>
+      <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
+        {/* Sidenav */}
+        <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+          <div className="sidenav-header">
+            <h1 className="sidenav-title">totem</h1>
           </div>
-        </header>
+          <div className="sidenav-items">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  handleTabChange(tab.id)
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`sidenav-item ${activeTab === tab.id ? 'active' : ''}`}
+                title={tab.label}
+              >
+                <span className="sidenav-icon">{tab.icon}</span>
+                <span className="sidenav-label">{tab.label}</span>
+                {tab.id === 'ticket' && ticketMode !== 'create' && (
+                  <span className="sidenav-badge">
+                    {ticketMode}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </nav>
 
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          {activeTab === 'kanban' && <KanbanBoard />}
-          {activeTab === 'roadmap' && <RoadmapView />}
-          {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
-          {activeTab === 'ticket' && (
-            <CreateTicket 
-              mode={ticketMode}
-              ticketId={ticketId}
-              onNavigate={navigateToTicket}
-            />
-          )}
-          {activeTab === 'export' && <DemoView />}
-        </main>
+        {/* Overlay for mobile menu */}
+        {isMobileMenuOpen && (
+          <div 
+            className="mobile-overlay"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Main content */}
+        <div className="main-content">
+          <header className="top-header">
+            <button
+              className="mobile-menu-toggle md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              ☰
+            </button>
+            <h1 className="header-title">totem</h1>
+          </header>
+
+          <main className="content-area">
+            {activeTab === 'kanban' && <KanbanBoard />}
+            {activeTab === 'roadmap' && <RoadmapView />}
+            {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
+            {activeTab === 'ticket' && (
+              <CreateTicket 
+                mode={ticketMode}
+                ticketId={ticketId}
+                onNavigate={navigateToTicket}
+              />
+            )}
+            {activeTab === 'export' && <DemoView />}
+          </main>
+        </div>
       </div>
     </TicketProvider>
   )
