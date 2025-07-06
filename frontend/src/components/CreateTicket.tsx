@@ -718,10 +718,11 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
                     position: 'sticky',
                     top: '20px',
-                    height: 'fit-content'
+                    height: 'fit-content',
+                    zIndex: 20
                   }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6">Status & Priority</h3>
+                  <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
                   
                   <div className="space-y-6">
                     <div>
@@ -804,29 +805,30 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 <div 
                   style={{
                     width: '320px',
-                    backgroundColor: '#1f2937',
+                    backgroundColor: '#8B4513',
                     color: 'white',
                     padding: '24px',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+                    boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
                     position: 'sticky',
-                    top: '20px',
-                    height: 'fit-content'
+                    top: '240px',
+                    height: 'fit-content',
+                    zIndex: 10
                   }}
                 >
-                  <h3 className="text-lg font-semibold text-white mb-6">Dependencies</h3>
+                  <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Dependencies</h3>
                   
                   <div className="space-y-6">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="blocks" className="block text-sm font-medium text-gray-300">
+                        <label htmlFor="blocks" className="block text-sm font-medium text-orange-100">
                           Blocks (Tickets)
                         </label>
                         {formData.blocks.length > 0 && (
                           <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, blocks: [] }))}
-                            className="text-xs text-red-400 hover:text-red-300 underline"
+                            className="text-xs text-red-300 hover:text-red-200 underline"
                             disabled={isViewing}
                           >
                             Clear
@@ -840,10 +842,16 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                         value={formData.blocks}
                         onChange={handleMultiSelectChange('blocks')}
                         disabled={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="dependencies-dropdown"
                         style={{ 
                           minHeight: formData.blocks.length > 0 ? '80px' : '40px',
-                          maxHeight: '120px'
+                          maxHeight: '120px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#A0522D',
+                          border: '1px solid #CD853F',
+                          borderRadius: '6px',
+                          color: 'white'
                         }}
                       >
                         {tickets
@@ -855,19 +863,19 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           ))
                         }
                       </select>
-                      <p className="text-xs text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                      <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="blocked_by" className="block text-sm font-medium text-gray-300">
+                        <label htmlFor="blocked_by" className="block text-sm font-medium text-orange-100">
                           Blocked By (Tickets)
                         </label>
                         {formData.blocked_by.length > 0 && (
                           <button
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, blocked_by: [] }))}
-                            className="text-xs text-red-400 hover:text-red-300 underline"
+                            className="text-xs text-red-300 hover:text-red-200 underline"
                             disabled={isViewing}
                           >
                             Clear
@@ -881,10 +889,16 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                         value={formData.blocked_by}
                         onChange={handleMultiSelectChange('blocked_by')}
                         disabled={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="dependencies-dropdown"
                         style={{ 
                           minHeight: formData.blocked_by.length > 0 ? '80px' : '40px',
-                          maxHeight: '120px'
+                          maxHeight: '120px',
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#A0522D',
+                          border: '1px solid #CD853F',
+                          borderRadius: '6px',
+                          color: 'white'
                         }}
                       >
                         {tickets
@@ -896,7 +910,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           ))
                         }
                       </select>
-                      <p className="text-xs text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                      <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
                     </div>
                   </div>
                 </div>
