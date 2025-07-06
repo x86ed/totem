@@ -349,15 +349,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     return 'Create'
   }
 
-  /**
-   * Get the current mode icon
-   */
-  const getModeIcon = (): string => {
-    if (isViewing) return '👁️'
-    if (isEditing) return '✏️'
-    return '➕'
-  }
-
   if (loading) {
     return (
       <div className="page-container">
@@ -380,7 +371,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="content-wrapper">
           <h2 className="section-title">
-            <span className="icon-spacing">{getModeIcon()}</span>
             {getModeDisplayName()} Ticket
             {currentTicketId && (
               <span className="text-sm font-normal text-gray-600 ml-2">
