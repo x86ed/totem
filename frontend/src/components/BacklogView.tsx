@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
+import { TotemIcon } from './TotemIcon'
 
 interface BacklogViewProps {
   onNavigateToTicket?: (mode: 'edit' | 'view', id: string) => void
@@ -274,6 +275,11 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
         <table className="backlog-table min-w-full divide-y divide-gray-200">
           <thead className="bg-green-700">
             <tr>
+              <th className="px-4 py-3 text-center text-xs font-medium text-white uppercase tracking-wider w-16">
+                <div className="flex items-center justify-center">
+                  <span>Icon</span>
+                </div>
+              </th>
               {[
                 { field: 'id' as SortField, label: 'ID' },
                 { field: 'status' as SortField, label: 'Status' },
@@ -305,6 +311,18 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                 }`}
               >
+                <td className="px-4 py-4 whitespace-nowrap w-16">
+                  <div className="flex justify-center items-center">
+                    <div style={{ width: '24px', height: '24px', flexShrink: 0 }}>
+                      <TotemIcon 
+                        seed={ticket.id} 
+                        size={3} 
+                        showControls={false} 
+                        highRes={false}
+                      />
+                    </div>
+                  </div>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className="text-sm font-mono font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded">
                     {ticket.id}
