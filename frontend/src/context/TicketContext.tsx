@@ -154,7 +154,9 @@ export function TicketProvider({ children }: TicketProviderProps) {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
       
-      const response = await fetch('/api/ticket')
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket'
+      const response = await fetch(apiUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch tickets: ${response.status}`)
       }

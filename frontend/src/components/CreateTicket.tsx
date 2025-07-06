@@ -151,7 +151,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
 
-  const API_BASE_URL = 'http://localhost:7073/api/ticket'
+  // Use relative URL in production, absolute URL in development
+  const API_BASE_URL = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket'
 
   /**
    * Load ticket data for editing when component mounts

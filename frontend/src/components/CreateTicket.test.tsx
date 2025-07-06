@@ -158,7 +158,7 @@ describe('CreateTicket', () => {
       // Wait for the API call
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:7073/api/ticket',
+          'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -227,7 +227,7 @@ describe('CreateTicket', () => {
       // In the current implementation, the form may not reset automatically
       // We'll just verify the API was called successfully
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:7073/api/ticket',
+        'http://localhost:8080/api/ticket',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
@@ -336,7 +336,7 @@ describe('CreateTicket', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:7073/api/ticket',
+          'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -367,7 +367,7 @@ describe('CreateTicket', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:7073/api/ticket',
+          'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

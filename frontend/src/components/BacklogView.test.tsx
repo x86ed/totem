@@ -24,6 +24,7 @@ const mockTickets: Ticket[] = [
     priority: 'high',
     complexity: 'medium',
     persona: 'security-sasha',
+    contributor: 'alice.dev',
     blocks: ['healthcare.frontend.patient-dashboard-003'],
     blocked_by: ['healthcare.infrastructure.ad-integration-001']
   },
@@ -35,6 +36,7 @@ const mockTickets: Ticket[] = [
     priority: 'medium',
     complexity: 'high',
     persona: 'product-proteus',
+    contributor: 'bob.frontend',
     blocks: ['healthcare.mobile.app-sync-007'],
     blocked_by: ['healthcare.security.auth-sso-001']
   }
@@ -76,6 +78,7 @@ describe('BacklogView', () => {
       expect(screen.getByText('Complexity')).toBeInTheDocument()
       expect(screen.getByText('Title')).toBeInTheDocument()
       expect(screen.getByText('Persona')).toBeInTheDocument()
+      expect(screen.getByText('Contributor')).toBeInTheDocument()
     })
 
     it('renders ticket data in the table', () => {
@@ -86,6 +89,8 @@ describe('BacklogView', () => {
       // Check for priority badge specifically with role
       expect(screen.getAllByText('HIGH')).toHaveLength(2) // One for priority, one for complexity
       expect(screen.getByText('security-sasha')).toBeInTheDocument()
+      expect(screen.getByText('alice.dev')).toBeInTheDocument()
+      expect(screen.getByText('bob.frontend')).toBeInTheDocument()
     })
   })
 
@@ -121,6 +126,20 @@ describe('BacklogView', () => {
       await waitFor(() => {
         const priorityElements = screen.getAllByText(/HIGH|MEDIUM/)
         expect(priorityElements[0]).toHaveTextContent('HIGH')
+      })
+    })
+
+    it('sorts tickets by contributor when Contributor header is clicked', async () => {
+      renderBacklogView()
+      
+      const contributorHeader = screen.getByText('Contributor')
+      fireEvent.click(contributorHeader)
+      
+      // Should be sorted alphabetically (alice.dev comes before bob.frontend)
+      await waitFor(() => {
+        const rows = screen.getAllByRole('row')
+        const firstDataRow = rows[1] // Skip header row
+        expect(firstDataRow).toHaveTextContent('alice.dev')
       })
     })
   })
@@ -219,6 +238,7 @@ describe('BacklogView', () => {
           priority: 'low',
           complexity: 'low',
           persona: undefined,
+          contributor: undefined,
           blocks: [],
           blocked_by: []
         }
@@ -239,6 +259,7 @@ describe('BacklogView', () => {
       
       expect(screen.getByText('healthcare.minimal.test-001')).toBeInTheDocument()
       expect(screen.getByText('Minimal Ticket')).toBeInTheDocument()
+      expect(screen.getByText('No contributor')).toBeInTheDocument()
     })
   })
 })

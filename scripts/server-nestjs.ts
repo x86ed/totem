@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
 // Load environment variables first
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 dotenv.config();
 
-import 'reflect-metadata';
+require('reflect-metadata');
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './src/app.module';
 import { TotemService } from './src/services/totem.service';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+const fs = require('fs');
+const path = require('path');
 
 // Read package.json
-const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 
 async function bootstrap() {
   console.log('🎯 Starting Totem AI-Native Project Management Platform...');
@@ -26,7 +26,7 @@ async function bootstrap() {
   const ENABLE_SWAGGER = process.env.ENABLE_SWAGGER !== 'false';
   
   // Create NestJS application
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule.forRoot());
   
   // Enable CORS with configuration
   app.enableCors({
