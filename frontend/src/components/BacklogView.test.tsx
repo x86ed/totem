@@ -66,19 +66,21 @@ describe('BacklogView', () => {
       renderBacklogView()
       
       expect(screen.getByText('Backlog')).toBeInTheDocument()
-      expect(screen.getByText(/tickets • Sortable table view/)).toBeInTheDocument()
+      // Filter controls are always visible now, no toggle button
+      expect(screen.getByText(/\d+ total/)).toBeInTheDocument()
     })
 
     it('renders the data table with correct headers', () => {
       renderBacklogView()
       
       expect(screen.getByText('ID')).toBeInTheDocument()
-      expect(screen.getByText('Status')).toBeInTheDocument()
-      expect(screen.getByText('Priority')).toBeInTheDocument()
-      expect(screen.getByText('Complexity')).toBeInTheDocument()
+      // Use getAllByText since these appear in both filter labels and table headers
+      expect(screen.getAllByText('Status')).toHaveLength(2) // Filter label + table header
+      expect(screen.getAllByText('Priority')).toHaveLength(2) // Filter label + table header  
+      expect(screen.getAllByText('Complexity')).toHaveLength(2) // Filter label + table header
       expect(screen.getByText('Title')).toBeInTheDocument()
-      expect(screen.getByText('Persona')).toBeInTheDocument()
-      expect(screen.getByText('Contributor')).toBeInTheDocument()
+      expect(screen.getAllByText('Persona')).toHaveLength(2) // Filter label + table header
+      expect(screen.getAllByText('Contributor')).toHaveLength(2) // Filter label + table header
     })
 
     it('renders ticket data in the table', () => {
@@ -119,8 +121,10 @@ describe('BacklogView', () => {
     it('sorts tickets by priority when Priority header is clicked', async () => {
       renderBacklogView()
       
-      const priorityHeader = screen.getByText('Priority')
-      fireEvent.click(priorityHeader)
+      // Use getAllByText to get the table header (not the filter label)
+      const priorityHeaders = screen.getAllByText('Priority')
+      const tableHeader = priorityHeaders[1] // Second one is the table header
+      fireEvent.click(tableHeader)
       
       // Priority should be sorted with high priority first (descending by default)
       await waitFor(() => {
@@ -132,8 +136,10 @@ describe('BacklogView', () => {
     it('sorts tickets by contributor when Contributor header is clicked', async () => {
       renderBacklogView()
       
-      const contributorHeader = screen.getByText('Contributor')
-      fireEvent.click(contributorHeader)
+      // Use getAllByText to get the table header (not the filter label)
+      const contributorHeaders = screen.getAllByText('Contributor')
+      const tableHeader = contributorHeaders[1] // Second one is the table header
+      fireEvent.click(tableHeader)
       
       // Should be sorted alphabetically (alice.dev comes before bob.frontend)
       await waitFor(() => {
@@ -145,14 +151,14 @@ describe('BacklogView', () => {
   })
 
   describe('Navigation', () => {
-    it('navigates to edit view when a row is clicked', () => {
+    it('navigates to view mode when a row is clicked', () => {
       const mockOnNavigateToTicket = vi.fn()
       render(<BacklogView onNavigateToTicket={mockOnNavigateToTicket} />)
       
       const firstRow = screen.getAllByRole('row')[1] // Skip header row
       fireEvent.click(firstRow)
       
-      expect(mockOnNavigateToTicket).toHaveBeenCalledWith('edit', 'healthcare.frontend.patient-dashboard-003')
+      expect(mockOnNavigateToTicket).toHaveBeenCalledWith('view', 'healthcare.frontend.patient-dashboard-003')
     })
   })
 

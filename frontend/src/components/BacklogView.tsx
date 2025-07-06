@@ -3,7 +3,7 @@ import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 
 interface BacklogViewProps {
-  onNavigateToTicket?: (mode: 'edit', id: string) => void
+  onNavigateToTicket?: (mode: 'edit' | 'view', id: string) => void
 }
 
 type SortField = 'id' | 'status' | 'priority' | 'complexity' | 'title' | 'persona' | 'contributor'
@@ -14,7 +14,35 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
   const [sortField, setSortField] = useState<SortField>('id')
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
-  const sortedTickets = [...tickets].sort((a, b) => {
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [priorityFilter, setPriorityFilter] = useState<string>('')
+  const [complexityFilter, setComplexityFilter] = useState<string>('')
+  const [personaFilter, setPersonaFilter] = useState<string>('')
+  const [contributorFilter, setContributorFilter] = useState<string>('')
+
+  // Apply filters
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesStatus = !statusFilter || ticket.status?.toLowerCase() === statusFilter.toLowerCase()
+    const matchesPriority = !priorityFilter || ticket.priority?.toLowerCase() === priorityFilter.toLowerCase()
+    const matchesComplexity = !complexityFilter || ticket.complexity?.toLowerCase() === complexityFilter.toLowerCase()
+    const matchesPersona = !personaFilter || ticket.persona?.toLowerCase().includes(personaFilter.toLowerCase())
+    const matchesContributor = !contributorFilter || ticket.contributor?.toLowerCase().includes(contributorFilter.toLowerCase())
+    
+    return matchesStatus && matchesPriority && matchesComplexity && matchesPersona && matchesContributor
+  })
+
+  const clearAllFilters = () => {
+    setStatusFilter('')
+    setPriorityFilter('')
+    setComplexityFilter('')
+    setPersonaFilter('')
+    setContributorFilter('')
+  }
+
+  const hasActiveFilters = statusFilter || priorityFilter || complexityFilter || personaFilter || contributorFilter
+
+  const sortedTickets = [...filteredTickets].sort((a, b) => {
     let valueA: string | number
     let valueB: string | number
 
@@ -47,76 +75,51 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
       setSortField(field)
-      // For priority, default to descending (high priority first)
       setSortOrder(field === 'priority' ? 'desc' : 'asc')
     }
   }
 
   const handleRowClick = (ticket: Ticket) => {
     if (onNavigateToTicket && ticket.id) {
-      onNavigateToTicket('edit', ticket.id)
+      onNavigateToTicket('view', ticket.id)
     } else if (ticket.id) {
-      // For demo purposes, we'll just log the ticket ID
-      // In a full app, this could use hash navigation or state management
-      console.log('Edit ticket:', ticket.id)
+      console.log('View ticket:', ticket.id)
     }
   }
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return '↕️'
-    return sortOrder === 'asc' ? '⬆️' : '⬇️'
-  }
-
-  const getPriorityColor = (priority?: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'critical': return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
-      case 'high': return 'bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-md'
-      case 'medium': return 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-sm'
-      case 'low': return 'bg-gradient-to-r from-green-400 to-green-500 text-white shadow-sm'
-      default: return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-sm'
-    }
+    if (sortField !== field) return '⇅'
+    return sortOrder === 'asc' ? '⇈' : '⇊'
   }
 
   const getStatusColor = (status?: string) => {
     switch (status?.toLowerCase()) {
-      case 'open': return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-      case 'in-progress': return 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md'
-      case 'planning': return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white shadow-md'
-      case 'completed': return 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
-      case 'done': return 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md'
-      case 'blocked': return 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-md'
-      default: return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-sm'
+      case 'open': return 'status-open'
+      case 'in-progress': return 'status-in-progress'
+      case 'planning': return 'status-planning'
+      case 'completed': return 'status-completed'
+      case 'done': return 'status-done'
+      case 'blocked': return 'status-blocked'
+      default: return 'status-default'
+    }
+  }
+
+  const getPriorityColor = (priority?: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'critical': return 'priority-critical'
+      case 'high': return 'priority-high'
+      case 'medium': return 'priority-medium'
+      case 'low': return 'priority-low'
+      default: return 'priority-default'
     }
   }
 
   const getComplexityColor = (complexity?: string) => {
     switch (complexity?.toLowerCase()) {
-      case 'high': return 'bg-gradient-to-r from-red-400 to-pink-500 text-white shadow-sm'
-      case 'medium': return 'bg-gradient-to-r from-blue-400 to-blue-500 text-white shadow-sm'
-      case 'low': return 'bg-gradient-to-r from-teal-400 to-cyan-500 text-white shadow-sm'
-      default: return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-sm'
-    }
-  }
-
-  const getPriorityIcon = (priority?: string) => {
-    switch (priority?.toLowerCase()) {
-      case 'critical': return '🚨'
-      case 'high': return '🔥'
-      case 'medium': return '⚡'
-      case 'low': return '🌱'
-      default: return '➖'
-    }
-  }
-
-  const getStatusIcon = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case 'open': return '🆕'
-      case 'in-progress': return '⚡'
-      case 'planning': return '📋'
-      case 'completed': return '✅'
-      case 'done': return '✅'
-      case 'blocked': return '🚫'
-      default: return '❓'
+      case 'high': return 'complexity-high'
+      case 'medium': return 'complexity-medium'
+      case 'low': return 'complexity-low'
+      default: return 'complexity-default'
     }
   }
 
@@ -125,7 +128,9 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
       case 'open': return 'OPEN'
       case 'in-progress': return 'IN PROGRESS'
       case 'planning': return 'PLANNING'
-      case 'completed': return 'COMPLETED'
+      case 'completed': return 'DONE'
+      case 'done': return 'DONE'
+      case 'blocked': return 'BLOCKED'
       default: return status?.toUpperCase() || 'OPEN'
     }
   }
@@ -134,11 +139,15 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
     return priority?.toUpperCase() || 'MEDIUM'
   }
 
+  const getComplexityDisplay = (complexity?: string) => {
+    return complexity?.toUpperCase() || 'MEDIUM'
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
         <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           <div className="text-lg text-gray-600 font-medium">Loading tickets...</div>
         </div>
       </div>
@@ -147,12 +156,14 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
 
   if (error) {
     return (
-      <div className="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-lg p-6 shadow-sm">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
         <div className="flex items-center">
-          <span className="text-2xl mr-3">❌</span>
-          <div>
-            <h3 className="font-semibold text-red-800">Error Loading Tickets</h3>
-            <p className="text-red-600 mt-1">{error}</p>
+          <div className="flex-shrink-0">
+            <div className="w-5 h-5 text-red-400">⚠</div>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Error Loading Tickets</h3>
+            <p className="text-sm text-red-600 mt-1">{error}</p>
           </div>
         </div>
       </div>
@@ -161,8 +172,7 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
 
   if (tickets.length === 0) {
     return (
-      <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-        <div className="text-6xl mb-4">📋</div>
+      <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
         <div className="text-gray-500 text-xl font-medium">No tickets found</div>
         <div className="text-gray-400 text-sm mt-2">Create your first ticket to get started</div>
       </div>
@@ -170,51 +180,117 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-6 text-white">
+    <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-green-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold flex items-center">
-              <span className="text-3xl mr-3">📋</span>
-              Backlog
-            </h2>
-            <p className="text-blue-100 text-sm mt-2">
-              {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} • Sortable table view
-            </p>
-          </div>
-          <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
-            <div className="text-right">
-              <div className="text-2xl font-bold">{tickets.length}</div>
-              <div className="text-xs uppercase tracking-wide">Total</div>
-            </div>
+          <h2 className="text-xl font-semibold">Backlog</h2>
+          <div className="bg-green-600 rounded px-3 py-1 text-sm font-medium">
+            {filteredTickets.length} {filteredTickets.length !== tickets.length ? 'filtered' : 'total'}
           </div>
         </div>
       </div>
 
+      {/* Filter Controls */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+            >
+              <option value="">All</option>
+              <option value="open">Open</option>
+              <option value="in-progress">In Progress</option>
+              <option value="planning">Planning</option>
+              <option value="completed">Completed</option>
+              <option value="blocked">Blocked</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+            >
+              <option value="">All</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Complexity</label>
+            <select
+              value={complexityFilter}
+              onChange={(e) => setComplexityFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+            >
+              <option value="">All</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Persona</label>
+            <input
+              type="text"
+              placeholder="Filter by persona..."
+              value={personaFilter}
+              onChange={(e) => setPersonaFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Contributor</label>
+            <input
+              type="text"
+              placeholder="Filter by contributor..."
+              value={contributorFilter}
+              onChange={(e) => setContributorFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+            />
+          </div>
+        </div>
+        {hasActiveFilters && (
+          <div className="mt-3">
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-green-600 hover:text-green-800 font-medium"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+        <table className="backlog-table min-w-full divide-y divide-gray-200">
+          <thead className="bg-green-700">
             <tr>
               {[
-                { field: 'id' as SortField, label: 'ID', icon: '🏷️' },
-                { field: 'status' as SortField, label: 'Status', icon: '📊' },
-                { field: 'priority' as SortField, label: 'Priority', icon: '⚠️' },
-                { field: 'complexity' as SortField, label: 'Complexity', icon: '🧩' },
-                { field: 'title' as SortField, label: 'Title', icon: '📝' },
-                { field: 'persona' as SortField, label: 'Persona', icon: '👤' },
-                { field: 'contributor' as SortField, label: 'Contributor', icon: '🤝' }
-              ].map(({ field, label, icon }) => (
+                { field: 'id' as SortField, label: 'ID' },
+                { field: 'status' as SortField, label: 'Status' },
+                { field: 'priority' as SortField, label: 'Priority' },
+                { field: 'complexity' as SortField, label: 'Complexity' },
+                { field: 'title' as SortField, label: 'Title' },
+                { field: 'persona' as SortField, label: 'Persona' },
+                { field: 'contributor' as SortField, label: 'Contributor' }
+              ].map(({ field, label }) => (
                 <th 
                   key={field} 
                   onClick={() => handleSort(field)} 
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors duration-200 select-none"
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:bg-green-600 transition-colors select-none"
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm">{icon}</span>
                     <span>{label}</span>
-                    <span className="text-lg transition-transform duration-200 hover:scale-110">
-                      {getSortIcon(field)}
-                    </span>
+                    <span className="text-sm">{getSortIcon(field)}</span>
                   </div>
                 </th>
               ))}
@@ -225,71 +301,49 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
               <tr 
                 key={ticket.id} 
                 onClick={() => handleRowClick(ticket)} 
-                className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 cursor-pointer transition-all duration-200 transform hover:scale-[1.01] ${
+                className={`hover:bg-green-50 cursor-pointer transition-colors ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                 }`}
-                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-lg mr-2">🏷️</span>
-                    <span className="text-sm font-mono font-semibold text-gray-900 bg-gray-100 px-2 py-1 rounded-md">
-                      {ticket.id}
-                    </span>
-                  </div>
+                  <span className="text-sm font-mono font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                    {ticket.id}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg ${getStatusColor(ticket.status)} transform transition-transform hover:scale-105`}>
-                    <span className="mr-1.5">{getStatusIcon(ticket.status)}</span>
+                  <span className={`inline-block rounded ${getStatusColor(ticket.status)}`}>
                     {getStatusDisplay(ticket.status)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg ${getPriorityColor(ticket.priority)} transform transition-transform hover:scale-105`}>
-                    <span className="mr-1.5">{getPriorityIcon(ticket.priority)}</span>
+                  <span className={`inline-block rounded ${getPriorityColor(ticket.priority)}`}>
                     {getPriorityDisplay(ticket.priority)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg ${getComplexityColor(ticket.complexity)} transform transition-transform hover:scale-105`}>
-                    <span className="mr-1.5">🧩</span>
-                    {(ticket.complexity || 'medium').toUpperCase()}
+                  <span className={`inline-block rounded ${getComplexityColor(ticket.complexity)}`}>
+                    {getComplexityDisplay(ticket.complexity)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-start">
-                    <span className="text-lg mr-2 mt-0.5">📝</span>
-                    <div className="max-w-xs">
-                      <div className="text-sm font-semibold text-gray-900 line-clamp-2 hover:text-blue-600 transition-colors">
-                        {ticket.title}
-                      </div>
-                      {ticket.description && (
-                        <div className="text-xs text-gray-500 mt-1 line-clamp-1">
-                          {ticket.description}
-                        </div>
-                      )}
+                  <div className="text-sm font-medium text-gray-900 line-clamp-2">
+                    {ticket.title}
+                  </div>
+                  {ticket.description && (
+                    <div className="text-xs text-gray-500 mt-1 line-clamp-1">
+                      {ticket.description}
                     </div>
-                  </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-lg mr-2">👤</span>
-                    <span className="text-sm text-gray-600 font-medium">
-                      {ticket.persona || (
-                        <span className="text-gray-400 italic">No persona</span>
-                      )}
-                    </span>
-                  </div>
+                  <span className="text-sm text-gray-600">
+                    {ticket.persona || <span className="text-gray-400 italic">No persona</span>}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-lg mr-2">🤝</span>
-                    <span className="text-sm text-gray-600 font-medium">
-                      {ticket.contributor || (
-                        <span className="text-gray-400 italic">No contributor</span>
-                      )}
-                    </span>
-                  </div>
+                  <span className="text-sm text-gray-600">
+                    {ticket.contributor || <span className="text-gray-400 italic">No contributor</span>}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -297,19 +351,19 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
         </table>
       </div>
       
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t border-gray-200">
-        <div className="flex items-center justify-between text-sm text-gray-600">
+      {/* Footer */}
+      <div className="bg-green-700 px-6 py-3 border-t border-green-600">
+        <div className="flex items-center justify-between text-sm text-white">
           <div className="flex items-center space-x-4">
-            <span className="flex items-center">
-              <span className="text-blue-500 mr-1">📊</span>
+            <span>
               Showing {sortedTickets.length} tickets
+              {filteredTickets.length !== tickets.length && ` (filtered from ${tickets.length})`}
             </span>
-            <span className="flex items-center">
-              <span className="text-purple-500 mr-1">🔄</span>
+            <span>
               Sorted by {sortField} ({sortOrder})
             </span>
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-green-100">
             Click any row to view details
           </div>
         </div>
@@ -317,4 +371,5 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
     </div>
   )
 }
+
 export default BacklogView

@@ -55,8 +55,8 @@ describe('App', () => {
 
       expect(screen.getByRole('banner')).toBeInTheDocument()
       expect(screen.getByRole('main')).toBeInTheDocument()
-      expect(screen.getByText('Totem')).toBeInTheDocument()
-      expect(screen.getByText('🎯')).toBeInTheDocument()
+      expect(screen.getByText('totem')).toBeInTheDocument()
+      expect(screen.getByText('📋')).toBeInTheDocument()
     })
 
     it('should wrap content in TicketProvider', () => {
@@ -79,16 +79,15 @@ describe('App', () => {
       render(<App />)
 
       // Find the actual main div with classes (inside the mocked provider)
-      const mainDiv = screen.getByText('Totem').closest('div[class*="min-h-screen"]') as HTMLElement
+      const mainDiv = screen.getByText('totem').closest('div[class*="min-h-screen"]') as HTMLElement
       expect(mainDiv).toHaveClass('min-h-screen')
-      expect(mainDiv).toHaveStyle({ background: '#f0f4f1' })
+      expect(mainDiv).toHaveStyle({ background: 'rgb(240, 244, 241)' })
 
       const header = screen.getByRole('banner')
-      expect(header).toHaveClass('header-green')
+      expect(header).toHaveClass('top-header')
 
-      const title = screen.getByText('Totem')
-      expect(title).toHaveClass('text-2xl', 'font-bold')
-      expect(title).toHaveStyle({ color: '#e8f5e8' })
+      const title = screen.getByText('totem')
+      expect(title).toHaveClass('header-title')
     })
   })
 
@@ -184,18 +183,18 @@ describe('App', () => {
     it('should apply correct CSS classes to tab buttons', () => {
       render(<App />)
 
-      const tabs = screen.getAllByRole('button')
+      const tabs = screen.getAllByRole('button').filter(button => !button.classList.contains('mobile-menu-toggle'))
       tabs.forEach(tab => {
-        expect(tab).toHaveClass('nav-btn-green')
+        expect(tab).toHaveClass('sidenav-item')
       })
     })
 
     it('should have proper icon spacing in tabs', () => {
       render(<App />)
 
-      const iconElements = screen.getAllByText(/[📋🗺️🎟️📁]/)
+      const iconElements = screen.getAllByText(/[📋🗺️🎟️🎨]/)
       iconElements.forEach(icon => {
-        expect(icon).toHaveClass('icon-spacing')
+        expect(icon).toHaveClass('sidenav-icon')
       })
     })
   })
@@ -205,18 +204,17 @@ describe('App', () => {
       render(<App />)
 
       const header = screen.getByRole('banner')
-      const headerContent = header.firstChild as HTMLElement
-      expect(headerContent).toHaveClass('max-w-7xl', 'mx-auto')
+      expect(header).toHaveClass('top-header')
 
-      const flexContainer = headerContent.firstChild as HTMLElement
-      expect(flexContainer).toHaveClass('flex', 'justify-between', 'items-center', 'py-4')
+      const mobileMenuToggle = screen.getByRole('button', { name: '☰' })
+      expect(mobileMenuToggle).toHaveClass('mobile-menu-toggle', 'md:hidden')
     })
 
     it('should have proper main content area', () => {
       render(<App />)
 
       const main = screen.getByRole('main')
-      expect(main).toHaveClass('max-w-7xl', 'mx-auto', 'py-6', 'px-4', 'sm:px-6', 'lg:px-8')
+      expect(main).toHaveClass('content-area')
     })
   })
 
@@ -292,7 +290,7 @@ describe('App', () => {
       render(<App />)
 
       const buttons = screen.getAllByRole('button')
-      expect(buttons).toHaveLength(5)
+      expect(buttons).toHaveLength(6) // 5 sidenav items + 1 mobile menu toggle
       
       buttons.forEach(button => {
         expect(button).toBeVisible()
@@ -304,7 +302,7 @@ describe('App', () => {
       render(<App />)
 
       const heading = screen.getByRole('heading', { level: 1 })
-      expect(heading).toHaveTextContent('Totem')
+      expect(heading).toHaveTextContent('totem')
     })
   })
 
