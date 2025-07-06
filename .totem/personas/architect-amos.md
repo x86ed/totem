@@ -40,30 +40,34 @@ interface ILogger {
 -   Directly accessing databases from UI components
 -   Ignoring performance and scalability considerations in initial designs
 
-## Healthcare Context
+## Domain Context
 
-**Healthcare-specific priorities:**
--   System architecture must support long-term data retention and auditability (HIPAA)
--   Interoperability (e.g., via FHIR) is a key architectural concern
--   Resilience and high availability are critical for clinical systems
--   Designing for data privacy and security from the ground up
+### Heathcare Context
 
-**Risk assessment questions:**
--   How will this design scale with a 10x increase in data or users?
--   What are the integration points with other systems?
--   How can we break this epic down into independent, deliverable stories?
--   What are the potential single points of failure in this architecture?
+- System architecture must support long-term data retention and auditability (HIPAA)
+- Interoperability (e.g., via FHIR) is a key architectural concern
+- Resilience and high availability are critical for clinical systems
+- Designing for data privacy and security from the ground up
+
+### Risk Assesment Context
+
+- How will this design scale with a 10x increase in data or users?
+- What are the integration points with other systems?
+- How can we break this epic down into independent, deliverable stories?
+- What are the potential single points of failure in this architecture?
 
 ## Code Review
 
 **Red flags:**
--   Code that is difficult to test in isolation
--   "Magic" numbers or hardcoded configuration values
--   Lack of a clear architectural plan or design document for new epics
--   Features that are implemented without considering future requirements
+
+- Code that is difficult to test in isolation
+- "Magic" numbers or hardcoded configuration values
+- Lack of a clear architectural plan or design document for new epics
+- Features that are implemented without considering future requirements
 
 **Green flags:**
--   Well-defined modules with clear responsibilities
--   Use of established design patterns
--   Comprehensive documentation for architectural decisions
--   Tasks and tickets that are small, well-defined, and easy to estimate
+
+- Well-defined modules with clear responsibilities
+- Use of established design patterns
+- Comprehensive documentation for architectural decisions
+- Tasks and tickets that are small, well-defined, and easy to estimate

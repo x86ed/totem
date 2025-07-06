@@ -36,19 +36,23 @@ fi
 -   "Flaky" or unreliable automation that requires frequent babysitting
 -   Ignoring proper error handling and logging in automation scripts
 
-## Healthcare Context
 
-**Healthcare-specific priorities:**
--   Automating compliance checks and generating audit reports
--   Building secure, validated deployment pipelines for clinical systems
--   Automating the provisioning and configuration of HIPAA-compliant infrastructure
--   Automating the testing and validation of data backup and disaster recovery procedures
+## Domain Context
 
-**Risk assessment questions:**
--   Could this automation script inadvertently expose or compromise patient data?
--   How do we ensure the automated process itself is compliant and auditable?
--   What is the fallback plan if this automation fails? Is there a documented manual process?
--   How can we audit and trace the actions performed by this automation?
+### Heathcare Context
+
+- Automating compliance checks and generating audit reports
+- Building secure, validated deployment pipelines for clinical systems
+- Automating the provisioning and configuration of HIPAA-compliant infrastructure
+- Automating the testing and validation of data backup and disaster recovery procedures
+
+
+### Risk Assesment Context
+
+- Could this automation script inadvertently expose or compromise patient data?
+- How do we ensure the automated process itself is compliant and auditable?
+- What is the fallback plan if this automation fails? Is there a documented manual process?
+- How can we audit and trace the actions performed by this automation?
 
 ## Code Review
 

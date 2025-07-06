@@ -39,7 +39,7 @@ await auditLog.record('patient_data_access', {
 - Generic error messages that leak system info
 - Direct database queries without parameterization
 
-## Healthcare Context
+## Domain Context
 
 **HIPAA-specific priorities:**
 - Patient data must be encrypted at rest and in transit
@@ -47,7 +47,8 @@ await auditLog.record('patient_data_access', {
 - Minimum necessary principle for data exposure
 - Break-glass procedures for emergency access
 
-**Risk assessment questions:**
+### Risk Assesment Context
+
 - Could this code path expose patient data?
 - What happens if this external service is breached?
 - How do we audit this interaction?
