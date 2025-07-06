@@ -44,7 +44,7 @@ describe('CreateTicket', () => {
     it('renders the create ticket form with all required elements', () => {
       render(<CreateTicket />)
       
-      expect(screen.getByRole('heading', { name: /Create Ticket/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Ticket/i })).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Enter ticket title')).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Describe the ticket requirements...')).toBeInTheDocument()
       expect(screen.getByLabelText(/Priority/)).toBeInTheDocument()

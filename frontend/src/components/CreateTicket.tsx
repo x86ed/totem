@@ -340,15 +340,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     }
   }
 
-  /**
-   * Get the current mode display name
-   */
-  const getModeDisplayName = (): string => {
-    if (isViewing) return 'View'
-    if (isEditing) return 'Edit'
-    return 'Create'
-  }
-
   if (loading) {
     return (
       <div className="page-container">
@@ -371,7 +362,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="content-wrapper">
           <h2 className="section-title">
-            {getModeDisplayName()} Ticket
+            Ticket
             {currentTicketId && (
               <span className="text-sm font-normal text-gray-600 ml-2">
                 {currentTicketId}
