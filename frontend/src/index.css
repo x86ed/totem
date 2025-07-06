@@ -922,3 +922,96 @@ h5, h6 {
       display: block;
     }
   }
+
+/* Ticket Markdown View Styles */
+.ticket-markdown-view {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-none;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+.ticket-markdown-view pre {
+  @apply bg-gray-50 rounded-lg p-4 mb-4 overflow-x-auto;
+  border: 1px solid #e5e7eb;
+}
+
+.ticket-markdown-view code {
+  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono;
+  color: #374151;
+}
+
+.ticket-markdown-view pre code {
+  @apply bg-transparent p-0;
+  color: inherit;
+}
+
+.ticket-markdown-view .yaml-frontmatter {
+  @apply bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg;
+}
+
+.ticket-markdown-view .yaml-frontmatter code {
+  @apply bg-green-100;
+}
+
+/* Checkbox styling for acceptance criteria */
+.ticket-markdown-view input[type="checkbox"] {
+  @apply mr-2 text-green-600 focus:ring-green-500 border-gray-300 rounded;
+}
+
+.ticket-markdown-view .task-list-item {
+  @apply list-none;
+}
+
+.ticket-markdown-view .task-list-item input {
+  @apply mr-3;
+}
+
+/* Syntax highlighter overrides */
+.ticket-markdown-view .token.comment,
+.ticket-markdown-view .token.prolog,
+.ticket-markdown-view .token.doctype,
+.ticket-markdown-view .token.cdata {
+  color: #6a737d;
+}
+
+.ticket-markdown-view .token.punctuation {
+  color: #586069;
+}
+
+.ticket-markdown-view .token.property,
+.ticket-markdown-view .token.tag,
+.ticket-markdown-view .token.boolean,
+.ticket-markdown-view .token.number,
+.ticket-markdown-view .token.constant,
+.ticket-markdown-view .token.symbol,
+.ticket-markdown-view .token.deleted {
+  color: #d73a49;
+}
+
+.ticket-markdown-view .token.selector,
+.ticket-markdown-view .token.attr-name,
+.ticket-markdown-view .token.string,
+.ticket-markdown-view .token.char,
+.ticket-markdown-view .token.builtin,
+.ticket-markdown-view .token.inserted {
+  color: #22863a;
+}
+
+.ticket-markdown-view .token.operator,
+.ticket-markdown-view .token.entity,
+.ticket-markdown-view .token.url,
+.ticket-markdown-view .language-css .token.string,
+.ticket-markdown-view .style .token.string {
+  color: #6f42c1;
+}
+
+.ticket-markdown-view .token.atrule,
+.ticket-markdown-view .token.attr-value,
+.ticket-markdown-view .token.keyword {
+  color: #005cc5;
+}
+
+.ticket-markdown-view .token.function,
+.ticket-markdown-view .token.class-name {
+  color: #6f42c1;
+}

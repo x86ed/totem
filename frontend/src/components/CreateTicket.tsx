@@ -1,5 +1,6 @@
 import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react'
 import { useTickets } from '../context/TicketContext'
+import TicketMarkdownView from './TicketMarkdownView'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -119,6 +120,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
   const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
   const [currentTicketId, setCurrentTicketId] = useState<string | null>(ticketId)
+  const [loadedTicket, setLoadedTicket] = useState<ApiTicket | null>(null)
 
   // Update state when props change
   useEffect(() => {
@@ -177,6 +179,9 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       
       const data = await response.json()
       const ticket: ApiTicket = data.ticket
+      
+      // Store the loaded ticket for markdown view
+      setLoadedTicket(ticket)
       
       // Map API ticket data to form data
       setFormData({
@@ -475,7 +480,39 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-6 ${isViewing ? 'view-mode' : ''}`}>
+          {isViewing && loadedTicket && loadedTicket.id ? (
+            <>
+              <TicketMarkdownView ticket={{
+                ...loadedTicket,
+                id: loadedTicket.id,
+                status: loadedTicket.status || 'open',
+                priority: loadedTicket.priority || 'medium',
+                complexity: loadedTicket.complexity || 'medium'
+              }} />
+              
+              {/* Buttons for view mode */}
+              <div className="button-group mt-6">
+                <button 
+                  type="button"
+                  onClick={() => currentTicketId && onNavigate?.('edit', currentTicketId)}
+                  className="btn-primary-green"
+                >
+                  <span className="icon-spacing">✏️</span>
+                  Edit Ticket
+                </button>
+                
+                <button 
+                  type="button"
+                  onClick={goToCreateMode}
+                  className="btn-secondary-green"
+                >
+                  <span className="icon-spacing">➕</span>
+                  Create New
+                </button>
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit} className={`space-y-6 ${isViewing ? 'view-mode' : ''}`}>
             {/* Basic Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
@@ -817,7 +854,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 </button>
               )}
               
-              {(isEditing || isViewing) && (
+              {(isEditing) && (
                 <button 
                   type="button"
                   onClick={goToCreateMode}
@@ -827,19 +864,9 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                   Create New
                 </button>
               )}
-
-              {isViewing && currentTicketId && (
-                <button 
-                  type="button"
-                  onClick={() => onNavigate?.('edit', currentTicketId)}
-                  className="btn-primary-green"
-                >
-                  <span className="icon-spacing">✏️</span>
-                  Edit Ticket
-                </button>
-              )}
             </div>
           </form>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 {
   "name": "textlint-rule-word-count-limit",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "A textlint rule that warns at 200+ words and errors at 400+ words",
   "main": "word-count-limit.js",
   "keywords": ["textlint", "rule", "word-count"],
