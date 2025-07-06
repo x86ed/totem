@@ -483,7 +483,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 style={{
                   position: 'fixed',
                   bottom: '20px',
-                  right: '20px',
+                  left: '260px',
                   display: 'flex',
                   flexDirection: 'row',
                   gap: '10px',
@@ -706,8 +706,18 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
               </div>
 
               {/* Sidebar with Status & Priority and Dependencies */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* Floating status form on the right */}
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '20px',
+                  position: 'sticky',
+                  top: '20px',
+                  height: 'fit-content',
+                  zIndex: 20
+                }}
+              >
+                {/* Status & Priority Block */}
                 <div 
                   style={{
                     width: '320px',
@@ -716,10 +726,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     padding: '24px',
                     borderRadius: '12px',
                     boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
-                    position: 'sticky',
-                    top: '20px',
-                    height: 'fit-content',
-                    zIndex: 20
+                    height: 'fit-content'
                   }}
                 >
                   <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
@@ -801,7 +808,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                   </div>
                 </div>
 
-                {/* Dependencies Block - Separate floating block */}
+                {/* Dependencies Block */}
                 <div 
                   style={{
                     width: '320px',
@@ -810,10 +817,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     padding: '24px',
                     borderRadius: '12px',
                     boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
-                    position: 'sticky',
-                    top: '380px',
-                    height: 'fit-content',
-                    zIndex: 10
+                    height: 'fit-content'
                   }}
                 >
                   <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Dependencies</h3>
@@ -924,7 +928,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
               style={{
                 position: 'fixed',
                 bottom: '20px',
-                right: '20px',
+                left: '260px',
                 display: 'flex',
                 flexDirection: 'row',
                 gap: '10px',
