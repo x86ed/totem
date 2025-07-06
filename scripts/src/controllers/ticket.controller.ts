@@ -75,13 +75,33 @@ export class TicketController {
         throw new Error('No YAML frontmatter found');
       }
       const yamlData = parse(yamlMatch[1]) as any;
+
+      // Extract title
       const titleMatch = content.match(/^# (.+)$/m);
       const title = titleMatch ? titleMatch[1] : yamlData.id;
-      const descriptionMatch = content.match(/^# .+\n\n(.+?)(?:\n\n|$)/m);
-      const description = descriptionMatch ? descriptionMatch[1] : '';
+
+      // Extract description - everything between the title and the first ## header
+      const descriptionMatch = content.match(/^# .+\n\n([\s\S]*?)(?:\n## |$)/m);
+      let description = '';
+      if (descriptionMatch) {
+        description = descriptionMatch[1].trim();
+      }
+
+      // If description is empty or very short, try to get content after "## Overview" or "## Detailed Description"
+      if (!description || description.length < 50) {
+        const overviewMatch = content.match(/## Overview\n\n([\s\S]*?)(?:\n## |$)/);
+        const detailedMatch = content.match(/## Detailed Description\n\n([\s\S]*?)(?:\n## |$)/);
+        if (overviewMatch && detailedMatch) {
+          description = overviewMatch[1].trim() + '\n\n' + detailedMatch[1].trim();
+        } else if (overviewMatch) {
+          description = overviewMatch[1].trim();
+        } else if (detailedMatch) {
+          description = detailedMatch[1].trim();
+        }
+      }
       
       // Parse acceptance criteria
-      const criteriaSection = content.match(/## Acceptance Criteria\n([\s\S]*?)(?:\n## |$)/);
+      const criteriaSection = content.match(/## Acceptance Criteria\n\n([\s\S]*?)(?:\n## |$)/);
       const acceptance_criteria: Array<{criteria: string, complete: boolean}> = [];
       if (criteriaSection) {
         const criteriaLines = criteriaSection[1].split('\n').filter(line => line.trim().startsWith('- ['));
@@ -94,6 +114,17 @@ export class TicketController {
         });
       }
 
+      // Parse implementation notes - get all content between ## Implementation Notes and ### Risks
+      let notes = '';
+      const notesSection = content.match(/## Implementation Notes\n\n([\s\S]*?)(?:\n### Risks|\n---|\n\[.*\]:|$)/);
+      if (notesSection) {
+        let noteContent = notesSection[1].trim();
+        // Remove any trailing reference links or markdown artifacts
+        noteContent = noteContent.replace(/\n\[.*\]:.*$/gm, '').trim();
+        // Clean up extra whitespace
+        notes = noteContent.replace(/\n\n+/g, '\n\n').trim();
+      }
+
       // Build tags array
       const tags: string[] = [];
       if (yamlData.persona) tags.push(yamlData.persona);
@@ -101,21 +132,61 @@ export class TicketController {
       if (yamlData.complexity) tags.push(yamlData.complexity);
       if (yamlData.contributor) tags.push(yamlData.contributor);
 
-      // Parse risks
-      const risksMatch = content.match(/\*\*Risks:\*\*\s*(.+)/);
+      // Parse risks from various possible locations
       const risks: string[] = [];
+      
+      // First try to find risks in the standard **Risks:** format
+      const risksMatch = content.match(/\*\*Risks:\*\*\s*(.+)/);
       if (risksMatch) {
         const riskText = risksMatch[1];
-        const riskItems = riskText.split(/,\s*(?=[A-Z])/);
+        // Split by comma followed by capital letter or parenthesis (risk level indicators)
+        const riskItems = riskText.split(/,\s*(?=[A-Z]|\([a-z]+\))/);
         risks.push(...riskItems.map(risk => risk.trim()));
       }
+      
+      // Also try to find a ## Risks section
+      const risksSectionMatch = content.match(/## Risks\n\n([\s\S]*?)(?:\n## |$)/);
+      if (risksSectionMatch) {
+        const riskLines = risksSectionMatch[1].split('\n').filter(line => 
+          line.trim().startsWith('-') || line.trim().startsWith('*')
+        );
+        risks.push(...riskLines.map(line => line.replace(/^[-*]\s*/, '').trim()));
+      }
 
-      // Parse implementation notes
-      const notesMatch = content.match(/## Implementation Notes\n```[\s\S]*?\n([\s\S]*?)\n```/);
+      // Parse resources from dedicated sections
       const resources: string[] = [];
-      if (notesMatch) {
-        const notes = notesMatch[1].split('\n').filter(line => line.trim().startsWith('//'));
-        resources.push(...notes.map(note => note.replace(/^\/\/\s*/, '').trim()));
+      
+      // Look for ## Resources section first
+      const resourcesSectionMatch = content.match(/## Resources\n\n([\s\S]*?)(?:\n## |$)/);
+      if (resourcesSectionMatch) {
+        const resourceLines = resourcesSectionMatch[1].split('\n').filter(line => 
+          line.trim().startsWith('-') || line.trim().startsWith('*') || 
+          line.trim().match(/^https?:\/\//) || line.trim().match(/^\[.*\]\(.*\)/)
+        );
+        resources.push(...resourceLines.map(line => 
+          line.replace(/^[-*]\s*/, '').trim()
+        ));
+      }
+      
+      // Also look for embedded links in description or other sections
+      const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
+      if (linkMatches) {
+        linkMatches.forEach(link => {
+          const linkMatch = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
+          if (linkMatch && linkMatch[2].startsWith('http')) {
+            resources.push(`${linkMatch[1]}: ${linkMatch[2]}`);
+          }
+        });
+      }
+      
+      // Extract URLs from text content
+      const urlMatches = content.match(/https?:\/\/[^\s)]+/g);
+      if (urlMatches) {
+        urlMatches.forEach(url => {
+          if (!resources.some(r => r.includes(url))) {
+            resources.push(url);
+          }
+        });
       }
 
       return {
@@ -133,7 +204,7 @@ export class TicketController {
         description,
         acceptance_criteria,
         tags,
-        notes: description,
+        notes,
         risks,
         resources
       };
@@ -214,7 +285,7 @@ export class TicketController {
     markdown += `${data.description}\n\n`;
 
     if (data.acceptance_criteria && data.acceptance_criteria.length > 0) {
-      markdown += '## Acceptance Criteria\n';
+      markdown += '## Acceptance Criteria\n\n';
       data.acceptance_criteria.forEach((criteria: any) => {
         const checkbox = criteria.complete ? '[x]' : '[ ]';
         markdown += `- ${checkbox} ${criteria.criteria}\n`;
@@ -222,14 +293,24 @@ export class TicketController {
       markdown += '\n';
     }
 
-    if (data.resources && data.resources.length > 0) {
-      markdown += '## Implementation Notes\n```javascript\n';
-      data.resources.forEach((resource: string) => {
-        markdown += `// ${resource}\n`;
-      });
-      markdown += '```\n\n';
+    // Add implementation notes section if present
+    if (data.notes && data.notes.trim()) {
+      markdown += '## Implementation Notes\n\n';
+      markdown += `${data.notes}\n\n`;
     }
 
+    // Add resources section if present
+    if (data.resources && data.resources.length > 0) {
+      markdown += '## Resources\n\n';
+      data.resources.forEach((resource: string) => {
+        if (resource.trim()) {
+          markdown += `- ${resource}\n`;
+        }
+      });
+      markdown += '\n';
+    }
+
+    // Add risks section if present
     if (data.risks && data.risks.length > 0) {
       markdown += `**Risks:** ${data.risks.join(', ')}\n\n`;
     }
