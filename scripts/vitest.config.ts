@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: [],
-    // Point to the correct tsconfig for decorators
-    tsconfig: '../tsconfig.scripts.json',
+    // Remove unsupported tsconfig option for Vitest 1.x+
+    // TypeScript config is picked up automatically from tsconfig.json hierarchy
   },
 });

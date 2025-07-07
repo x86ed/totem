@@ -4,10 +4,11 @@ import { join } from 'path';
 import { ApiController } from './controllers/api.controller';
 import { TicketController } from './controllers/ticket.controller';
 import { PersonaController } from './controllers/persona.controller';
+import { ArtifactsController } from './controllers/artifacts.controller';
 import { TotemService } from './services/totem.service';
 
 @Module({
-  controllers: [ApiController, TicketController, PersonaController],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController],
   providers: [TotemService],
 })
 export class AppModule {
@@ -37,7 +38,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController, PersonaController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController],
       providers: [TotemService],
     };
   }

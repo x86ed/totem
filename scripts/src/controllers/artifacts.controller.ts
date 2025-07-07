@@ -6,7 +6,7 @@ import { join, resolve, extname, basename } from 'path';
 @ApiTags('artifacts')
 @Controller('api/artifacts')
 export class ArtifactsController {
-  private readonly ARTIFACTS_DIR = resolve(process.cwd(), 'artifacts');
+  private readonly ARTIFACTS_DIR = resolve(process.cwd(), '.totem/artifacts');
   private readonly ALLOWED_EXTENSIONS = ['.md', '.markdown', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
 
   /**
