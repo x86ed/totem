@@ -7,6 +7,7 @@ import DemoView from './components/DemoView'
 import ProjectView from './components/ProjectView'
 import ArtifactsView from './components/ArtifactsView'
 import { TicketProvider } from './context/TicketContext'
+import { ArtifactsProvider } from './context/ArtifactsContext'
 import { TabConfig } from './types'
 import './App.css'
 
@@ -122,7 +123,8 @@ function App() {
 
   return (
     <TicketProvider>
-      <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
+      <ArtifactsProvider>
+        <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
         {/* Sidenav */}
         <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           <div className="sidenav-items">
@@ -193,6 +195,7 @@ function App() {
           </main>
         </div>
       </div>
+        </ArtifactsProvider>
     </TicketProvider>
   )
 }
