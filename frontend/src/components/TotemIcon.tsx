@@ -464,6 +464,7 @@ function TotemIcon({
     return newCells;
   }, [config.cols, config.rows, config.sections, randomGenerator, getGroups]);
 
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTotemIcon = useCallback((cells: Cell[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -521,16 +522,16 @@ function TotemIcon({
       ctx.fillRect(config.cellSize * config.cols - displayX - config.cellSize, displayY, config.cellSize, config.cellSize);
     });
 
-    let timeoutId: ReturnType<typeof setTimeout>;
-    timeoutId = setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
       const dataURL = canvas.toDataURL('image/png');
       setPngUrl(dataURL);
       if (onPngGenerated) {
         onPngGenerated(dataURL);
       }
     }, 10);
-    // Cleanup timeout on unmount to avoid state update after test teardown
-    return () => clearTimeout(timeoutId);
   }, [config.cols, config.rows, config.sections, config.cellSize, sectionBackgrounds, sectionBorderColors, onPngGenerated]);
 
   const handleGenerate = () => {
@@ -573,11 +574,18 @@ function TotemIcon({
     setCells(newCells);
   }, [randomGenerator, generateCells]);
 
+
   // Draw when cells or palettes change
   useEffect(() => {
     if (cells.length > 0) {
       drawTotemIcon(cells);
     }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, [cells, palettes, drawTotemIcon]);
 
   return (

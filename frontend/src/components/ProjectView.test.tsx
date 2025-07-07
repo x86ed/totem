@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 import { render, screen, fireEvent } from '@testing-library/react'
 import ProjectView from './ProjectView'
 

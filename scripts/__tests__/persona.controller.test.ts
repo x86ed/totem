@@ -1,31 +1,32 @@
-import { Test, TestingModule } from '@nestjs/testing';
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import mockfs from 'mock-fs';
 import { PersonaController } from '../src/controllers/persona.controller';
 import { PersonaDto } from '../src/dto/persona.dto';
-import * as fs from 'fs';
 import * as path from 'path';
 
 describe('PersonaController', () => {
   let controller: PersonaController;
   const personasDir = path.join(process.cwd(), '.totem/personas');
 
-  beforeEach(async () => {
+
+  beforeEach(() => {
     controller = new PersonaController();
-    // Optionally, you can mock fs if you want to avoid real file IO
+    mockfs.restore(); // Ensure clean fs before each test
+  });
+
+  afterEach(() => {
+    mockfs.restore();
   });
 
   describe('getAllPersonas', () => {
     it('should return an array of PersonaDto', () => {
       // Arrange
-      const files = ['refactor-raleigh.md', 'security-sasha.md'];
-      jest.spyOn(fs, 'readdirSync').mockReturnValue(files as any);
-      jest.spyOn(fs, 'readFileSync').mockImplementation((filePath: any) => {
-        if (filePath.endsWith('refactor-raleigh.md')) {
-          return '# Refactor-Raleigh\n\n**Primary Focus:** Code consistency\n\n**When choosing between options, prioritize:**\n1. Code clarity\n\n**Default assumptions:**\n- Every codebase accumulates technical debt over time\n\n## Domain Context\n### Example Context\n- Example item';
+      mockfs({
+        '.totem/personas': {
+          'refactor-raleigh.md': '# Refactor-Raleigh\n\n**Primary Focus:** Code consistency\n\n**When choosing between options, prioritize:**\n1. Code clarity\n\n**Default assumptions:**\n- Every codebase accumulates technical debt over time\n\n## Domain Context\n### Example Context\n- Example item',
+          'security-sasha.md': '# Security-Sasha\n\n**Primary Focus:** Security\n\n**When choosing between options, prioritize:**\n1. Data security\n\n**Default assumptions:**\n- All user input is malicious until validated\n\n## Domain Context\n### Example Context\n- Example item'
         }
-        if (filePath.endsWith('security-sasha.md')) {
-          return '# Security-Sasha\n\n**Primary Focus:** Security\n\n**When choosing between options, prioritize:**\n1. Data security\n\n**Default assumptions:**\n- All user input is malicious until validated\n\n## Domain Context\n### Example Context\n- Example item';
-        }
-        return '';
       });
       // Act
       const result = controller.getAllPersonas();
@@ -37,15 +38,17 @@ describe('PersonaController', () => {
     });
 
     it('should throw if personas directory cannot be read', () => {
-      jest.spyOn(fs, 'readdirSync').mockImplementation(() => { throw new Error('fail'); });
+      mockfs({}); // No .totem/personas directory
       expect(() => controller.getAllPersonas()).toThrow('Could not read personas directory');
     });
   });
 
   describe('getPersonaByName', () => {
     it('should return a PersonaDto for a valid persona', () => {
-      jest.spyOn(fs, 'readFileSync').mockImplementation((filePath: any) => {
-        return '# Refactor-Raleigh\n\n**Primary Focus:** Code consistency\n\n**When choosing between options, prioritize:**\n1. Code clarity\n\n**Default assumptions:**\n- Every codebase accumulates technical debt over time\n\n## Domain Context\n### Example Context\n- Example item';
+      mockfs({
+        '.totem/personas': {
+          'refactor-raleigh.md': '# Refactor-Raleigh\n\n**Primary Focus:** Code consistency\n\n**When choosing between options, prioritize:**\n1. Code clarity\n\n**Default assumptions:**\n- Every codebase accumulates technical debt over time\n\n## Domain Context\n### Example Context\n- Example item'
+        }
       });
       const result = controller.getPersonaByName('refactor-raleigh');
       expect(result).toBeDefined();
@@ -56,7 +59,11 @@ describe('PersonaController', () => {
     });
 
     it('should throw 404 if persona not found', () => {
-      jest.spyOn(fs, 'readFileSync').mockImplementation(() => { throw new Error('fail'); });
+      mockfs({
+        '.totem/personas': {
+          // No file for 'notfound'
+        }
+      });
       expect(() => controller.getPersonaByName('notfound')).toThrow('Persona not found');
     });
   });

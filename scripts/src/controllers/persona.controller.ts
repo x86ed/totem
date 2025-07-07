@@ -14,7 +14,9 @@ export class PersonaController {
   @ApiOperation({ summary: 'Get all personas', description: 'Retrieve all personas from markdown files' })
   @ApiResponse({ status: 200, description: 'List of personas', type: PersonaDto, isArray: true })
   public getAllPersonas(): PersonaDto[] {
-    if (!existsSync(this.personasDir)) return [];
+    if (!existsSync(this.personasDir)) {
+      throw new Error('Could not read personas directory');
+    }
     const files = readdirSync(this.personasDir).filter(f => f.endsWith('.md'));
     return files
       .map(f => this.parsePersonaMarkdown(join(this.personasDir, f)))

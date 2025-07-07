@@ -74,7 +74,7 @@ const TicketMarkdownView: React.FC<TicketMarkdownViewProps> = ({
       >
         <h3 className="text-lg font-semibold text-white mb-6">Ticket Details</h3>
         <SyntaxHighlighter
-          style={tomorrow as any}
+          style={tomorrow as { [key: string]: React.CSSProperties }}
           language="yaml"
           PreTag="div"
           customStyle={{

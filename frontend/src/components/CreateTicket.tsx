@@ -461,15 +461,15 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 isEditable={true}
                 onTicketUpdate={(updatedFields) => {
                   if (loadedTicket) {
-                    const updatedTicket: ApiTicket = { 
-                      ...loadedTicket, 
+                    const updatedTicket: ApiTicket = {
+                      ...loadedTicket,
                       ...updatedFields,
                       id: loadedTicket.id,
                       title: loadedTicket.title,
-                      description: updatedFields.description || loadedTicket.description,
-                      status: (updatedFields.status as any) || loadedTicket.status || 'open',
-                      priority: (updatedFields.priority as any) || loadedTicket.priority || 'medium',
-                      complexity: (updatedFields.complexity as any) || loadedTicket.complexity || 'medium'
+                      description: typeof updatedFields.description === 'string' ? updatedFields.description : loadedTicket.description,
+                      status: typeof updatedFields.status === 'string' ? updatedFields.status as ApiTicket['status'] : loadedTicket.status || 'open',
+                      priority: typeof updatedFields.priority === 'string' ? updatedFields.priority as ApiTicket['priority'] : loadedTicket.priority || 'medium',
+                      complexity: typeof updatedFields.complexity === 'string' ? updatedFields.complexity as ApiTicket['complexity'] : loadedTicket.complexity || 'medium'
                     }
                     setLoadedTicket(updatedTicket)
                     // Optionally save changes immediately or on a timer

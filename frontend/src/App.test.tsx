@@ -41,7 +41,22 @@ const mockTicketProvider = vi.mocked(TicketProvider)
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Suppress act() and other React warnings in test output
+    vi.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+      if (
+        typeof msg === 'string' &&
+        (
+          msg.includes('Warning: An update to') && msg.includes('was not wrapped in act') ||
+          msg.includes('Warning:') ||
+          msg.includes('not wrapped in act')
+        )
+      ) {
+        return
+      }
+      // Fallback to original console.error if needed
+      // eslint-disable-next-line no-console
+      return console.error.call(console, msg, ...args)
+    })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
@@ -184,9 +199,13 @@ describe('App', () => {
     it('should have proper icon spacing in tabs', () => {
       render(<App />)
 
-      const iconElements = screen.getAllByText(/[📋🗺️🎟️🎨]/)
-      iconElements.forEach(icon => {
-        expect(icon).toHaveClass('sidenav-icon')
+      // Use explicit unicode strings to avoid regex unicode issues
+      const icons = ['📋', '🗺️', '🎟️', '🎨']
+      icons.forEach(iconChar => {
+        const iconElements = screen.getAllByText((content) => content === iconChar)
+        iconElements.forEach(icon => {
+          expect(icon).toHaveClass('sidenav-icon')
+        })
       })
     })
   })
