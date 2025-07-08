@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync } from 'fs';
 import { join, resolve, extname, basename } from 'path';
@@ -81,11 +81,11 @@ export class ArtifactsController {
    * POST /api/artifacts/file - Create or update a markdown or image file in artifacts.
    * Body: { path: string, content: string, encoding?: 'utf-8' | 'base64' }
    */
-  @Post('file')
-  @ApiOperation({ summary: 'Save artifact file', description: 'Create or update a markdown or image file in the artifacts directory.' })
+  @Put('file')
+  @ApiOperation({ summary: 'Update artifact file', description: 'Update a markdown or image file in the artifacts directory.' })
   @ApiBody({ schema: { properties: { path: { type: 'string' }, content: { type: 'string' }, encoding: { type: 'string', enum: ['utf-8', 'base64'] } }, required: ['path', 'content'] } })
-  @ApiResponse({ status: 200, description: 'File saved.' })
-  saveArtifactFile(@Body() body: { path: string, content: string, encoding?: 'utf-8' | 'base64' }) {
+  @ApiResponse({ status: 200, description: 'File updated.' })
+  updateArtifactFile(@Body() body: { path: string, content: string, encoding?: 'utf-8' | 'base64' }) {
     const { path: relPath, content, encoding = 'utf-8' } = body;
     if (!relPath || !content) throw new HttpException('Path and content are required', HttpStatus.BAD_REQUEST);
     const safePath = resolve(this.ARTIFACTS_DIR, relPath);
@@ -96,7 +96,7 @@ export class ArtifactsController {
     if (!this.ALLOWED_EXTENSIONS.includes(ext)) {
       throw new HttpException('File type not allowed', HttpStatus.FORBIDDEN);
     }
-    if (lstatSync(safePath).isSymbolicLink()) {
+    if (existsSync(safePath) && lstatSync(safePath).isSymbolicLink()) {
       throw new HttpException('Cannot write to symlink', HttpStatus.FORBIDDEN);
     }
     // Ensure parent directory exists
@@ -109,7 +109,7 @@ export class ArtifactsController {
     } else {
       writeFileSync(safePath, content, 'utf-8');
     }
-    return { message: 'File saved', path: relPath };
+    return { message: 'File updated', path: relPath };
   }
 
   /**
