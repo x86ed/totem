@@ -115,6 +115,20 @@ export class PersonaReviewChecklistDto {
   greenFlags: string[];
 }
 
+export class MarkdownDto {
+  @ApiProperty({
+    description: 'Name of the file',
+    example: 'refactor-raleigh.md'
+  })
+  fileName: string;
+
+  @ApiProperty({
+    description: 'Markdown content of the file',
+    example: '# Refactor Raleigh\n\n## Context\n\n- Item 1\n- Item 2\n'
+  })
+  content: string;
+}
+
 export class PersonaDto {
   @ApiProperty({
     description: 'Persona name',

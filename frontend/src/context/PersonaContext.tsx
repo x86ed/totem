@@ -70,13 +70,18 @@ export function PersonaProvider({ children }: PersonaProviderProps) {
   const [state, dispatch] = useReducer(personaReducer, initialState)
 
   useEffect(() => {
-    refreshPersonas()
+    // Prevent running in non-browser (test) environments
+    if (typeof window === 'undefined') return;
+    // Always handle the promise to avoid unhandled rejections in tests
+    Promise.resolve(refreshPersonas()).catch(() => {});
   }, [])
 
   /**
    * Refreshes personas from the API
    */
   const refreshPersonas = async (): Promise<void> => {
+    // Prevent running in non-browser (test) environments
+    if (typeof window === 'undefined') return Promise.resolve();
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })

@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-import CollaboratorsView from './CollaboratorsView'
+import ContributorsDirectoryView from './ContributorsDirectoryView'
 import PersonasDirectoryView from './PersonasDirectoryView'
 
 /**
  * ProjectView - A placeholder for project-level settings, info, or dashboard.
  */
 function ProjectView() {
-  const [activeTab, setActiveTab] = useState<'settings' | 'collaborators' | 'personas'>('settings')
+  const [activeTab, setActiveTab] = useState<'settings' | 'contributors' | 'personas'>('settings')
 
   return (
     <div className="project-view">
@@ -19,10 +19,10 @@ function ProjectView() {
           Settings
         </button>
         <button
-          className={`pb-2 px-4 font-medium text-lg border-b-2 transition-colors duration-150 ${activeTab === 'collaborators' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
-          onClick={() => setActiveTab('collaborators')}
+          className={`pb-2 px-4 font-medium text-lg border-b-2 transition-colors duration-150 ${activeTab === 'contributors' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
+          onClick={() => setActiveTab('contributors')}
         >
-          Collaborators
+          Contributors
         </button>
         <button
           className={`pb-2 px-4 font-medium text-lg border-b-2 transition-colors duration-150 ${activeTab === 'personas' ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-green-700'}`}
@@ -38,8 +38,8 @@ function ProjectView() {
             <p className="text-gray-500">Settings for your project will appear here.</p>
           </div>
         )}
-        {activeTab === 'collaborators' && (
-          <CollaboratorsView />
+        {activeTab === 'contributors' && (
+          <ContributorsDirectoryView />
         )}
         {activeTab === 'personas' && (
           <PersonasDirectoryView />

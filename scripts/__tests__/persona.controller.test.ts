@@ -1,3 +1,104 @@
+  describe('createPersona', () => {
+    it('should create a new persona and return PersonaDto', () => {
+      mockfs({ '.totem/personas': {} });
+      const controller = new PersonaController();
+      const dto: PersonaDto = {
+        name: 'Test-Persona',
+        primaryFocus: 'Testing',
+        decisionFramework: { priorities: ['A'], defaultAssumptions: ['B'] },
+        codePatterns: undefined,
+        requirementsPatterns: undefined,
+        domainContexts: [],
+        reviewChecklist: undefined,
+      };
+      const created = controller.createPersona(dto);
+      expect(created.name).toBe('Test-Persona');
+      expect(created.primaryFocus).toBe('Testing');
+    });
+
+    it('should throw if persona already exists', () => {
+      mockfs({ '.totem/personas': { 'test-persona.md': '# Test-Persona' } });
+      const controller = new PersonaController();
+      const dto: PersonaDto = {
+        name: 'Test-Persona',
+        primaryFocus: 'Testing',
+        decisionFramework: { priorities: ['A'], defaultAssumptions: ['B'] },
+        codePatterns: undefined,
+        requirementsPatterns: undefined,
+        domainContexts: [],
+        reviewChecklist: undefined,
+      };
+      expect(() => controller.createPersona(dto)).toThrow('Persona already exists');
+    });
+  });
+
+  describe('updatePersona', () => {
+    it('should update persona with markdown', () => {
+      mockfs({ '.totem/personas': { 'refactor-raleigh.md': '# Refactor-Raleigh\n\n**Primary Focus:** Old' } });
+      const controller = new PersonaController();
+      const updated = controller.updatePersona('refactor-raleigh', { markdown: '# Refactor-Raleigh\n\n**Primary Focus:** Updated' });
+      expect(updated.name).toBe('Refactor-Raleigh');
+      expect(updated.primaryFocus).toBe('Updated');
+    });
+
+    it('should throw if persona does not exist', () => {
+      mockfs({ '.totem/personas': {} });
+      const controller = new PersonaController();
+      expect(() => controller.updatePersona('notfound', { markdown: '# Notfound' })).toThrow('Persona not found');
+    });
+  });
+
+  describe('deletePersona', () => {
+    it('should delete an existing persona', () => {
+      mockfs({ '.totem/personas': { 'delete-me.md': '# Delete-Me\n\n**Primary Focus:** To be deleted' } });
+      const controller = new PersonaController();
+      const resp = controller.deletePersona('delete-me');
+      expect(resp).toHaveProperty('message');
+      expect(resp.message).toMatch(/deleted/i);
+      expect(() => controller.getPersonaByName('delete-me')).toThrow('Persona not found');
+    });
+
+    it('should throw if persona does not exist', () => {
+      mockfs({ '.totem/personas': {} });
+      const controller = new PersonaController();
+      expect(() => controller.deletePersona('notfound')).toThrow('Persona not found');
+    });
+  });
+
+  describe('personaToMarkdown', () => {
+    it('should generate markdown from PersonaDto', () => {
+      const controller = new PersonaController();
+      const dto: PersonaDto = {
+        name: 'Test-Persona',
+        primaryFocus: 'Testing',
+        decisionFramework: { priorities: ['A'], defaultAssumptions: ['B'] },
+        codePatterns: undefined,
+        requirementsPatterns: undefined,
+        domainContexts: [],
+        reviewChecklist: undefined,
+      };
+      const md = controller['personaToMarkdown'](dto);
+      expect(md).toContain('# Test-Persona');
+      expect(md).toContain('**Primary Focus:** Testing');
+    });
+  });
+
+  const personasDir = require('path').join(process.cwd(), '.totem/personas');
+
+describe('wrapPersonaJson', () => {
+  it('should return fileName and content', () => {
+    mockfs({ '.totem/personas': { 'refactor-raleigh.md': '# Refactor-Raleigh\n\n**Primary Focus:** Test' } });
+    const controller = new PersonaController();
+    const result = controller['wrapPersonaJson'](require('path').join(process.cwd(), '.totem/personas', 'refactor-raleigh.md'));
+    expect(result).toHaveProperty('fileName');
+    expect(result).toHaveProperty('content');
+    expect(result && result.content).toContain('Refactor-Raleigh');
+  });
+  it('should return null on error', () => {
+    const controller = new PersonaController();
+    expect(controller['wrapPersonaJson']('notfound.md')).toBeNull();
+  });
+});
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import mockfs from 'mock-fs';
@@ -7,7 +108,6 @@ import * as path from 'path';
 
 describe('PersonaController', () => {
   let controller: PersonaController;
-  const personasDir = path.join(process.cwd(), '.totem/personas');
 
 
   beforeEach(() => {
@@ -44,7 +144,7 @@ describe('PersonaController', () => {
   });
 
   describe('getPersonaByName', () => {
-    it('should return a PersonaDto for a valid persona', () => {
+    it('should return a MarkdownDto for a valid persona', () => {
       mockfs({
         '.totem/personas': {
           'refactor-raleigh.md': '# Refactor-Raleigh\n\n**Primary Focus:** Code consistency\n\n**When choosing between options, prioritize:**\n1. Code clarity\n\n**Default assumptions:**\n- Every codebase accumulates technical debt over time\n\n## Domain Context\n### Example Context\n- Example item'
@@ -52,10 +152,8 @@ describe('PersonaController', () => {
       });
       const result = controller.getPersonaByName('refactor-raleigh');
       expect(result).toBeDefined();
-      expect(result.name).toBe('Refactor-Raleigh');
-      expect(result.primaryFocus).toContain('Code consistency');
-      expect(result.domainContexts[0].name).toBe('Example Context');
-      expect(result.domainContexts[0].items[0]).toBe('Example item');
+      expect(result.fileName).toContain('refactor-raleigh.md');
+      expect(result.content).toContain('Refactor-Raleigh');
     });
 
     it('should throw 404 if persona not found', () => {

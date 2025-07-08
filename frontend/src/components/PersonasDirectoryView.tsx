@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { usePersonas } from '../context/PersonaContext';
-import type { Persona } from '../types';
 import { Crepe } from '@milkdown/crepe';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
 import '@milkdown/crepe/theme/common/style.css';
@@ -10,6 +9,7 @@ import '@milkdown/crepe/theme/frame.css';
 const MilkdownEditorWrapper: React.FC<{
   content: string;
   editable?: boolean;
+  onChange?: (value: string) => void;
   crepeRef?: React.MutableRefObject<Crepe | null>;
 }> = ({ content, editable = false, crepeRef }) => {
   useEditor(
@@ -25,97 +25,80 @@ const MilkdownEditorWrapper: React.FC<{
 };
 
 function PersonasDirectoryView() {
-  const { personas, loading, error } = usePersonas();
+  const { personas, loading, error, updatePersona, refreshPersonas } = usePersonas();
   const [selected, setSelected] = useState<string | null>(null);
   const crepeRef = useRef<Crepe | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedContent, setEditedContent] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [rawMarkdown, setRawMarkdown] = useState<string | null>(null);
+  const lastSavedContent = useRef<string | null>(null);
 
   // Sort personas alphabetically by name
   const sorted = [...personas].sort((a, b) => a.name.localeCompare(b.name));
   const selectedPersona = sorted.find(p => p.name === selected) || sorted[0];
 
-  // Compose markdown from persona fields (for now, just show the markdown as-is if available)
-  // In a real app, you might want to store the raw markdown in Persona, or fetch it on select
-  // Here, we just render a simple markdown summary for demo
-  function personaToMarkdown(persona: Persona): string {
-    let md = `# ${persona.name}\n\n`;
-    md += `**Primary Focus:** ${persona.primaryFocus}\n\n`;
-    if (persona.decisionFramework?.priorities?.length) {
-      md += `**When choosing between options, prioritize:**\n`;
-      persona.decisionFramework.priorities.forEach((p: string, i: number) => {
-        md += `${i + 1}. ${p}\n`;
-      });
-      md += `\n`;
-    }
-    if (persona.decisionFramework?.defaultAssumptions?.length) {
-      md += `**Default assumptions:**\n`;
-      persona.decisionFramework.defaultAssumptions.forEach((a: string) => {
-        md += `- ${a}\n`;
-      });
-      md += `\n`;
-    }
-    if (persona.codePatterns) {
-      md += `## Code Patterns\n\n`;
-      if (persona.codePatterns.alwaysImplement?.length) {
-        md += `**Always implement:**\n`;
-        persona.codePatterns.alwaysImplement.forEach((a: string) => {
-          md += `- ${a}\n`;
-        });
-        md += `\n`;
+  // Fetch raw markdown for selected persona
+  useEffect(() => {
+    async function fetchMarkdown() {
+      if (!selectedPersona) {
+        setRawMarkdown(null);
+        return;
       }
-      if (persona.codePatterns.avoid?.length) {
-        md += `**Avoid:**\n`;
-        persona.codePatterns.avoid.forEach((a: string) => {
-          md += `- ${a}\n`;
-        });
-        md += `\n`;
+      try {
+        const apiUrl = import.meta.env?.DEV
+          ? `http://localhost:8080/api/persona/${selectedPersona.name}`
+          : `/api/persona/${selectedPersona.name}`;
+        const res = await fetch(apiUrl, { headers: { Accept: 'text/markdown,application/json' } });
+        if (res.ok) {
+          const text = await res.text();
+          if (text.trim().startsWith('{')) {
+            const obj = JSON.parse(text);
+            setRawMarkdown(obj.content);
+          } else {
+            setRawMarkdown(text);
+          }
+        } else {
+          setRawMarkdown(null);
+        }
+      } catch {
+        setRawMarkdown(null);
       }
     }
-    if (persona.requirementsPatterns) {
-      md += `## Requirements Patterns\n\n`;
-      if (persona.requirementsPatterns.alwaysInclude?.length) {
-        md += `**Always include:**\n`;
-        persona.requirementsPatterns.alwaysInclude.forEach((a: string) => {
-          md += `- ${a}\n`;
-        });
-        md += `\n`;
-      }
-      if (persona.requirementsPatterns.avoid?.length) {
-        md += `**Avoid:**\n`;
-        persona.requirementsPatterns.avoid.forEach((a: string) => {
-          md += `- ${a}\n`;
-        });
-        md += `\n`;
-      }
+    fetchMarkdown();
+  }, [selectedPersona]);
+
+  // When persona or markdown changes, reset edit state
+  useEffect(() => {
+    setEditMode(false);
+    setEditedContent(null);
+    setSaveError(null);
+    lastSavedContent.current = rawMarkdown;
+  }, [rawMarkdown, selectedPersona]);
+
+  // Save handler
+  const handleSave = async () => {
+    if (!selectedPersona) return;
+    let contentToSave = editedContent ?? '';
+    if (crepeRef.current && typeof crepeRef.current.getMarkdown === 'function') {
+      contentToSave = crepeRef.current.getMarkdown();
     }
-    if (persona.domainContexts?.length) {
-      md += `## Domain Context\n\n`;
-      persona.domainContexts.forEach((ctx: { name: string; items: string[] }) => {
-        md += `### ${ctx.name}\n\n`;
-        ctx.items.forEach((item: string) => {
-          md += `- ${item}\n`;
-        });
-        md += `\n`;
-      });
+    try {
+      await updatePersona(selectedPersona.name, { content: contentToSave });
+      setEditMode(false);
+      setEditedContent(null);
+      setSaveError(null);
+      await refreshPersonas();
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Failed to save');
     }
-    if (persona.reviewChecklist) {
-      md += `## Code Review\n\n`;
-      if (persona.reviewChecklist.redFlags?.length) {
-        md += `**Red flags:**\n\n`;
-        persona.reviewChecklist.redFlags.forEach((r: string) => {
-          md += `- ${r}\n`;
-        });
-        md += `\n`;
-      }
-      if (persona.reviewChecklist.greenFlags?.length) {
-        md += `**Green flags:**\n\n`;
-        persona.reviewChecklist.greenFlags.forEach((g: string) => {
-          md += `- ${g}\n`;
-        });
-        md += `\n`;
-      }
-    }
-    return md.trim() + '\n';
-  }
+  };
+
+  // Reset handler
+  const handleReset = () => {
+    setEditedContent(lastSavedContent.current);
+    setTimeout(() => setEditedContent(lastSavedContent.current), 0);
+  };
 
   return (
     <div style={{ display: 'flex', gap: 32 }}>
@@ -146,10 +129,55 @@ function PersonasDirectoryView() {
       <div style={{ flex: 1, minWidth: 0 }}>
         {selectedPersona ? (
           <div className="milkdown-editor-outer site-font">
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, gap: 12 }}>
+              {!editMode ? (
+                <button
+                  className="px-3 py-1 rounded bg-blue-600 text-white"
+                  onClick={() => {
+                    setEditMode(true);
+                    setEditedContent(lastSavedContent.current ?? rawMarkdown ?? '');
+                  }}
+                  style={{ fontWeight: 600 }}
+                >
+                  Edit
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="px-3 py-1 rounded bg-blue-600 text-white"
+                    onClick={() => {
+                      setEditMode(false);
+                      setEditedContent(null);
+                      setSaveError(null);
+                    }}
+                    style={{ fontWeight: 600 }}
+                  >
+                    View
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded bg-green-600 text-white font-semibold"
+                    onClick={handleSave}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded bg-gray-300 text-gray-700 font-semibold"
+                    onClick={handleReset}
+                  >
+                    Reset
+                  </button>
+                </>
+              )}
+              {saveError && <span className="text-red-500 ml-2">{saveError}</span>}
+            </div>
             <MilkdownProvider>
               <MilkdownEditorWrapper
-                content={personaToMarkdown(selectedPersona)}
-                editable={false}
+                key={selectedPersona.name + (editMode ? '-edit' : '-view')}
+                content={editMode && editedContent !== null ? editedContent : rawMarkdown ?? ''}
+                editable={editMode}
+                onChange={value => {
+                  if (editMode) setEditedContent(value);
+                }}
                 crepeRef={crepeRef}
               />
             </MilkdownProvider>

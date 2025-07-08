@@ -19,6 +19,7 @@
 ## Code Patterns
 
 **Always implement:**
+
 ```bash
 # Idempotent shell scripts for infrastructure and deployment
 if ! command -v jq &> /dev/null; then

@@ -1,7 +1,7 @@
 
 import { Controller, Get, Param, Post, Body, Put, Delete, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { PersonaDto, PersonaContextSectionDto } from '../dto/persona.dto';
+import { PersonaDto, PersonaContextSectionDto, MarkdownDto } from '../dto/persona.dto';
 import { readdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -26,14 +26,14 @@ export class PersonaController {
   @Get(':name')
   @ApiOperation({ summary: 'Get persona by name', description: 'Retrieve a persona by name (filename without .md)' })
   @ApiParam({ name: 'name', description: 'Persona name (filename without .md)', example: 'refactor-raleigh' })
-  @ApiResponse({ status: 200, description: 'Persona found', type: PersonaDto })
+  @ApiResponse({ status: 200, description: 'Persona found', type: MarkdownDto })
   @ApiResponse({ status: 404, description: 'Persona not found', type: String })
-  public getPersonaByName(@Param('name') name: string): PersonaDto {
+  public getPersonaByName(@Param('name') name: string): MarkdownDto {
     const filePath = join(this.personasDir, `${name}.md`);
     if (!existsSync(filePath)) {
       throw new HttpException('Persona not found', 404);
     }
-    const persona = this.parsePersonaMarkdown(filePath);
+    const persona = this.wrapPersonaJson(filePath);
     if (!persona) {
       throw new HttpException('Persona not found', 404);
     }
@@ -59,13 +59,17 @@ export class PersonaController {
   @Put(':name')
   @ApiOperation({ summary: 'Update a persona', description: 'Update an existing persona markdown file' })
   @ApiParam({ name: 'name', description: 'Persona name (filename without .md)', example: 'refactor-raleigh' })
-  @ApiBody({ type: PersonaDto, description: 'Persona data to update' })
+  @ApiBody({ type: PersonaDto, description: 'Persona data to update, or { markdown: string } to update raw markdown' })
   @ApiResponse({ status: 200, description: 'Persona updated successfully', type: PersonaDto })
   @ApiResponse({ status: 404, description: 'Persona not found', type: String })
-  public updatePersona(@Param('name') name: string, @Body() dto: PersonaDto): PersonaDto {
+  public updatePersona(@Param('name') name: string, @Body() dto: any): PersonaDto {
     const filePath = join(this.personasDir, `${name}.md`);
     if (!existsSync(filePath)) {
       throw new HttpException('Persona not found', 404);
+    }
+    if (dto.markdown && typeof dto.markdown === 'string') {
+      writeFileSync(filePath, dto.markdown, 'utf-8');
+      return this.parsePersonaMarkdown(filePath)!;
     }
     const markdown = this.personaToMarkdown(dto);
     writeFileSync(filePath, markdown, 'utf-8');
@@ -188,6 +192,8 @@ export class PersonaController {
       let currentSection = '';
       let currentContext: PersonaContextSectionDto | null = null;
       let buffer: string[] = [];
+      let inCodeBlock = false;
+      let codeBlockBuffer: string[] = [];
 
       const flushBufferTo = (target: string[]) => {
         if (buffer.length > 0) {
@@ -198,62 +204,106 @@ export class PersonaController {
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (line.match(/^```/)) {
+          inCodeBlock = !inCodeBlock;
+          // If closing a code block, push to the right section
+          if (!inCodeBlock && codeBlockBuffer.length > 0) {
+            if (currentSection === 'alwaysImplement') {
+              alwaysImplement.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'avoid') {
+              avoid.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'requirementsAlwaysInclude') {
+              requirementsAlwaysInclude.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'requirementsAvoid') {
+              requirementsAvoid.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'reviewRedFlags') {
+              reviewRedFlags.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'reviewGreenFlags') {
+              reviewGreenFlags.push(codeBlockBuffer.join('\n'));
+            } else if (currentSection === 'contextSection' && currentContext) {
+              currentContext.items.push(codeBlockBuffer.join('\n'));
+            }
+            codeBlockBuffer = [];
+          }
+          continue;
+        }
+        if (inCodeBlock) {
+          codeBlockBuffer.push(line);
+          continue;
+        }
         if (line.startsWith('# ')) {
           name = line.replace('# ', '').trim();
         } else if (line.startsWith('**Primary Focus:**')) {
           primaryFocus = line.replace('**Primary Focus:**', '').trim();
-        } else if (line.match(/^##?\s*Decision Framework/)) {
+        }
+        // Accept both with and without '## Decision Framework' section
+        if (line.match(/^##?\s*Decision Framework/)) {
           currentSection = 'decisionFramework';
-        } else if (line.match(/^##?\s*Code Patterns/)) {
+        }
+        // Accept both with and without '## Code Patterns' section
+        if (line.match(/^##?\s*Code Patterns/)) {
           currentSection = 'codePatterns';
-        } else if (line.match(/^##?\s*Requirements Patterns/)) {
+        }
+        // Accept both with and without '## Requirements Patterns' section
+        if (line.match(/^##?\s*Requirements Patterns/)) {
           currentSection = 'requirementsPatterns';
-        } else if (line.match(/^##?\s*Domain Context/)) {
+        }
+        // Accept both with and without '## Domain Context' section
+        if (line.match(/^##?\s*Domain Context/)) {
           currentSection = 'domainContext';
-        } else if (line.match(/^##?\s*Review/)) {
+        }
+        // Accept both '## Code Review' and '## Review Checklist' as review section
+        if (line.match(/^##?\s*(Code Review|Review Checklist)/)) {
           currentSection = 'review';
-        } else if (line.match(/^###\s*(.+)$/)) {
-          // Arbitrary context section
+        }
+        if (line.match(/^###\s*(.+)$/)) {
           flushBufferTo(currentContext?.items || []);
           if (currentContext) {
             domainContexts.push({ ...currentContext });
           }
           currentContext = { name: line.replace(/^###\s*/, '').trim(), items: [] };
           currentSection = 'contextSection';
-        } else if (line.match(/^\*\*When choosing between options, prioritize:\*\*/)) {
+        }
+        // Accept both bold and non-bold section headers for lists
+        if (line.match(/^(\*\*|)When choosing between options, prioritize:(\*\*|)/)) {
           currentSection = 'priorities';
-        } else if (line.match(/^\*\*Default assumptions:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Default assumptions:(\*\*|)/)) {
           currentSection = 'defaultAssumptions';
-        } else if (line.match(/^\*\*Always implement:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Always implement:(\*\*|)/)) {
           currentSection = 'alwaysImplement';
-        } else if (line.match(/^\*\*Avoid:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Avoid:(\*\*|)/)) {
           currentSection = 'avoid';
-        } else if (line.match(/^\*\*Always include:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Always include:(\*\*|)/)) {
           currentSection = 'requirementsAlwaysInclude';
-        } else if (line.match(/^\*\*Red flags:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Red flags:(\*\*|)/)) {
           currentSection = 'reviewRedFlags';
-        } else if (line.match(/^\*\*Green flags:\*\*/)) {
+        }
+        if (line.match(/^(\*\*|)Green flags:(\*\*|)/)) {
           currentSection = 'reviewGreenFlags';
-        } else if (line.match(/^```/)) {
-          // Skip code fences for now
-          continue;
-        } else if (currentSection === 'priorities' && line.match(/^\d+\.\s/)) {
-          priorities.push(line.replace(/^\d+\.\s*/, '').trim());
-        } else if (currentSection === 'defaultAssumptions' && line.trim().startsWith('-')) {
+        }
+        // Accept both numbered and bulleted lists for priorities
+        if (currentSection === 'priorities' && (line.match(/^\d+\.\s/) || line.trim().startsWith('-') || line.trim().startsWith('*'))) {
+          priorities.push(line.replace(/^\d+\.\s*/, '').replace(/^[-*]\s*/, '').trim());
+        } else if (currentSection === 'defaultAssumptions' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           defaultAssumptions.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'alwaysImplement' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'alwaysImplement' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           alwaysImplement.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'avoid' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'avoid' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           avoid.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'requirementsAlwaysInclude' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'requirementsAlwaysInclude' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           requirementsAlwaysInclude.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'requirementsAvoid' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'requirementsAvoid' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           requirementsAvoid.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'reviewRedFlags' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'reviewRedFlags' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           reviewRedFlags.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'reviewGreenFlags' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'reviewGreenFlags' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           reviewGreenFlags.push(line.replace(/^[-*]\s*/, '').trim());
-        } else if (currentSection === 'contextSection' && line.trim().startsWith('-')) {
+        } else if (currentSection === 'contextSection' && (line.trim().startsWith('-') || line.trim().startsWith('*'))) {
           if (currentContext) currentContext.items.push(line.replace(/^[-*]\s*/, '').trim());
         }
       }
@@ -289,4 +339,16 @@ export class PersonaController {
     }
   }
 
+  private wrapPersonaJson(filePath: string): MarkdownDto | null {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      return{
+        fileName: filePath,
+        content: content
+      }
+    }catch (error) {
+      console.error(`Error parsing persona file ${filePath}:`, error);
+      return null;
+    }
+  }
 }

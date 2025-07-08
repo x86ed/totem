@@ -5,10 +5,11 @@ import { ApiController } from './controllers/api.controller';
 import { TicketController } from './controllers/ticket.controller';
 import { PersonaController } from './controllers/persona.controller';
 import { ArtifactsController } from './controllers/artifacts.controller';
+import { ContributorController } from './controllers/contributor.controller';
 import { TotemService } from './services/totem.service';
 
 @Module({
-  controllers: [ApiController, TicketController, PersonaController, ArtifactsController],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController],
   providers: [TotemService],
 })
 export class AppModule {
@@ -38,7 +39,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController, PersonaController, ArtifactsController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController],
       providers: [TotemService],
     };
   }

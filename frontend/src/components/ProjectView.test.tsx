@@ -1,33 +1,39 @@
-/// <reference types="vitest" />
 
-import { render, screen, fireEvent } from '@testing-library/react'
-import ProjectView from './ProjectView'
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import ProjectView from './ProjectView';
+import { PersonaProvider } from '../context/PersonaContext';
 
 describe('ProjectView', () => {
+  // Helper to wrap with PersonaProvider
+  const renderWithProviders = (ui: React.ReactElement) =>
+    render(<PersonaProvider>{ui}</PersonaProvider>);
+
   it('renders Project Overview heading', () => {
-    render(<ProjectView />)
-    expect(screen.getByText(/Project Overview/i)).toBeInTheDocument()
-  })
+    renderWithProviders(<ProjectView />);
+    expect(screen.getByText(/Project Overview/i)).toBeInTheDocument();
+  });
 
   it('shows Settings tab by default', () => {
-    render(<ProjectView />)
-    expect(screen.getByText(/Project Settings/i)).toBeInTheDocument()
-    expect(screen.getByText(/Settings for your project will appear here/i)).toBeInTheDocument()
-  })
+    renderWithProviders(<ProjectView />);
+    expect(screen.getByText(/Project Settings/i)).toBeInTheDocument();
+    expect(screen.getByText(/Settings for your project will appear here/i)).toBeInTheDocument();
+  });
 
-  it('switches to Collaborators tab', () => {
-    render(<ProjectView />)
-    fireEvent.click(screen.getByRole('button', { name: /Collaborators/i }))
-    // Heading for Collaborators
-    expect(screen.getByRole('heading', { name: /Collaborators/i, level: 3 })).toBeInTheDocument()
-    expect(screen.getByText(/Manage project collaborators here/i)).toBeInTheDocument()
-  })
+  it('switches to Contributors tab', () => {
+    renderWithProviders(<ProjectView />);
+    fireEvent.click(screen.getByRole('button', { name: /Contributors/i }));
+    // Heading for Contributors
+    expect(screen.getByRole('heading', { name: /Contributors/i, level: 3 })).toBeInTheDocument();
+    expect(screen.getByText(/Manage project contributors here/i)).toBeInTheDocument();
+  });
 
   it('switches to Personas tab', () => {
-    render(<ProjectView />)
-    fireEvent.click(screen.getByRole('button', { name: /Personas/i }))
-    // Heading for Personas
-    expect(screen.getByRole('heading', { name: /Personas/i, level: 3 })).toBeInTheDocument()
-    expect(screen.getByText(/Define and manage project personas here/i)).toBeInTheDocument()
-  })
-})
+    renderWithProviders(<ProjectView />);
+    fireEvent.click(screen.getByRole('button', { name: /Personas/i }));
+    // Heading for Personas (should be level 2 based on PersonasDirectoryView)
+    expect(screen.getByRole('heading', { name: /Personas/i, level: 2 })).toBeInTheDocument();
+    // Directory view default text
+    expect(screen.getByText(/Select a persona to view details/i)).toBeInTheDocument();
+  });
+});

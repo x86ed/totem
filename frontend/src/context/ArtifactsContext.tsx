@@ -65,6 +65,8 @@ export function ArtifactsProvider({ children }: ArtifactsProviderProps) {
 
   // Fetch the artifacts directory tree
   const refreshTree = useCallback(async () => {
+    // Prevent running in non-browser (Node/test) environments
+    if (typeof window === 'undefined') return Promise.resolve();
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
@@ -135,7 +137,11 @@ export function ArtifactsProvider({ children }: ArtifactsProviderProps) {
 
   // Load tree on mount
   useEffect(() => {
-    refreshTree()
+    if (typeof window === 'undefined') return;
+    const maybePromise = refreshTree();
+    if (maybePromise && typeof maybePromise.then === 'function') {
+      maybePromise.catch(() => {});
+    }
   }, [refreshTree])
 
   const value: ArtifactsContextType = {
