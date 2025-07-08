@@ -79,4 +79,3 @@ MRI scanners generate large volumes of imaging data, which must be stored in sta
 * [NIfTI Format](https://nifti.nimh.nih.gov/)
 
 * [dcm2niix Converter](https://github.com/rordenlab/dcm2niix)
-

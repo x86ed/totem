@@ -30,8 +30,8 @@ describe('ArtifactsController', () => {
 
   it('should write a new markdown file', () => {
     const body = { path: TEST_FILE, content: '# Test', encoding: 'utf-8' as const };
-    const result = controller.saveArtifactFile(body);
-    expect(result).toHaveProperty('message', 'File saved');
+    const result = controller.updateArtifactFile(body);
+    expect(result).toHaveProperty('message', 'File updated');
     expect(result).toHaveProperty('path', TEST_FILE);
     expect(existsSync(TEST_PATH)).toBe(true);
     expect(readFileSync(TEST_PATH, 'utf-8')).toBe('# Test');
@@ -40,8 +40,8 @@ describe('ArtifactsController', () => {
   it('should update an existing markdown file', () => {
     writeFileSync(TEST_PATH, 'Old content', 'utf-8');
     const body = { path: TEST_FILE, content: 'New content', encoding: 'utf-8' as const };
-    const result = controller.saveArtifactFile(body);
-    expect(result).toHaveProperty('message', 'File saved');
+    const result = controller.updateArtifactFile(body);
+    expect(result).toHaveProperty('message', 'File updated');
     expect(readFileSync(TEST_PATH, 'utf-8')).toBe('New content');
   });
 });

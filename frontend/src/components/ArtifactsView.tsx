@@ -50,7 +50,7 @@ function ArtifactsView() {
   const [editMode, setEditMode] = useState(false)
   const [editedContent, setEditedContent] = useState<string | null>(null)
   const lastSavedContent = useRef<string | null>(null)
-  const crepeRef = useRef<any>(null);
+  const crepeRef = useRef<Crepe | null>(null);
 
   useEffect(() => {
     if (selectedPath) {
@@ -60,7 +60,11 @@ function ArtifactsView() {
         .then(f => {
           setFile(f)
           setEditedContent(null)
-          lastSavedContent.current = f.content
+          if (f) {
+            lastSavedContent.current = f.content
+          } else {
+            lastSavedContent.current = null
+          }
         })
         .catch(e => setFileError(e.message || 'Failed to load file'))
         .finally(() => setFileLoading(false))
@@ -184,11 +188,11 @@ type CrepeEditorProps = {
   content: string;
   editable?: boolean;
   onChange?: (value: string) => void;
-  crepeRef?: React.MutableRefObject<any>;
+  crepeRef?: React.MutableRefObject<Crepe | null>;
 };
 
 // Custom hook to sync readonly state with editMode
-const useCrepeReadonly = (readonly: boolean, crepeRef?: React.MutableRefObject<any>) => {
+const useCrepeReadonly = (readonly: boolean, crepeRef?: React.MutableRefObject<Crepe | null>) => {
   useEffect(() => {
     if (crepeRef && crepeRef.current) {
       crepeRef.current.setReadonly(readonly);
@@ -196,14 +200,13 @@ const useCrepeReadonly = (readonly: boolean, crepeRef?: React.MutableRefObject<a
   }, [readonly, crepeRef]);
 };
 
-const CrepeEditor: React.FC<CrepeEditorProps> = ({ content, editable = false, onChange, crepeRef }) => {
+const CrepeEditor: React.FC<CrepeEditorProps> = ({ content, editable = false, crepeRef }) => {
   useCrepeReadonly(!editable, crepeRef);
   useEditor(
     (root) => {
       const crepe = new Crepe({
         root,
         defaultValue: content,
-        onChange,
       });
       crepe.setReadonly(!editable);
       if (crepeRef) crepeRef.current = crepe;
@@ -218,7 +221,7 @@ type MilkdownEditorWrapperProps = {
   content: string;
   editable?: boolean;
   onChange?: (value: string) => void;
-  crepeRef?: React.MutableRefObject<any>;
+  crepeRef?: React.MutableRefObject<Crepe | null>;
 };
 
 const MilkdownEditorWrapper: React.FC<MilkdownEditorWrapperProps> = ({ content, editable = false, onChange, crepeRef }) => {

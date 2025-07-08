@@ -164,6 +164,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     if ((isEditing || isViewing) && currentTicketId) {
       loadTicketData(currentTicketId)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTicketId, isEditing, isViewing])
 
   /**
