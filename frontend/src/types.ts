@@ -115,6 +115,53 @@ export interface TicketContextType {
   moveTicket?: (ticketId: string, newStatus: string) => Promise<void>;
 }
 
+
+/**
+ * Represents a section of domain context for a persona
+ */
+export interface PersonaContextSection {
+  name: string;
+  items: string[];
+}
+
+/**
+ * Represents a persona in the system (see backend PersonaDto)
+ */
+export interface Persona {
+  name: string;
+  primaryFocus: string;
+  decisionFramework?: {
+    priorities?: string[];
+    defaultAssumptions?: string[];
+  };
+  codePatterns?: {
+    alwaysImplement?: string[];
+    avoid?: string[];
+  };
+  requirementsPatterns?: {
+    alwaysInclude?: string[];
+    avoid?: string[];
+  };
+  domainContexts?: PersonaContextSection[];
+  reviewChecklist?: {
+    redFlags?: string[];
+    greenFlags?: string[];
+  };
+}
+
+/**
+ * Context interface for persona management state and operations
+ */
+export interface PersonaContextType {
+  personas: Persona[];
+  loading: boolean;
+  error: string | null;
+  refreshPersonas: () => Promise<void>;
+  createPersona: (persona: Partial<Persona>) => Promise<void>;
+  updatePersona: (name: string, persona: Persona) => Promise<void>;
+  deletePersona: (name: string) => Promise<void>;
+}
+
 /**
  * Configuration interface for navigation tabs in the application
  * 

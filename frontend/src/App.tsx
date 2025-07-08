@@ -8,6 +8,7 @@ import ProjectView from './components/ProjectView'
 import ArtifactsView from './components/ArtifactsView'
 import { TicketProvider } from './context/TicketContext'
 import { ArtifactsProvider } from './context/ArtifactsContext'
+import { PersonaProvider } from './context/PersonaContext'
 import { TabConfig } from './types'
 import './App.css'
 
@@ -124,78 +125,80 @@ function App() {
   return (
     <TicketProvider>
       <ArtifactsProvider>
-        <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
-        {/* Sidenav */}
-        <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          <div className="sidenav-items">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  handleTabChange(tab.id)
-                  setIsMobileMenuOpen(false)
-                }}
-                className={`sidenav-item ${activeTab === tab.id ? 'active' : ''}`}
-                title={tab.label}
-              >
-                <span className="sidenav-icon">{tab.icon}</span>
-                <span className="sidenav-label">{tab.label}</span>
-                {tab.id === 'ticket' && ticketMode !== 'create' && (
-                  <span className="sidenav-badge">
-                    {ticketMode}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </nav>
+        <PersonaProvider>
+          <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
+            {/* Sidenav */}
+            <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+              <div className="sidenav-items">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      handleTabChange(tab.id)
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className={`sidenav-item ${activeTab === tab.id ? 'active' : ''}`}
+                    title={tab.label}
+                  >
+                    <span className="sidenav-icon">{tab.icon}</span>
+                    <span className="sidenav-label">{tab.label}</span>
+                    {tab.id === 'ticket' && ticketMode !== 'create' && (
+                      <span className="sidenav-badge">
+                        {ticketMode}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </nav>
 
-        {/* Overlay for mobile menu */}
-        {isMobileMenuOpen && (
-          <div 
-            className="mobile-overlay"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-        )}
-
-        {/* Main content */}
-        <div className="main-content">
-          <header className="top-header">
-            <button
-              className="mobile-menu-toggle md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              ☰
-            </button>
-            <h1 className="header-title">totem</h1>
-            
-            {/* Scroll Progress Bar */}
-            <div className="scroll-progress">
+            {/* Overlay for mobile menu */}
+            {isMobileMenuOpen && (
               <div 
-                className="scroll-progress-bar" 
-                style={{ width: `${scrollProgress}%` }}
-              />
-            </div>
-          </header>
-
-          <main className="content-area" ref={contentRef}>
-            {activeTab === 'kanban' && <KanbanBoard />}
-            {activeTab === 'roadmap' && <RoadmapView />}
-            {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
-            {activeTab === 'ticket' && (
-              <CreateTicket 
-                mode={ticketMode}
-                ticketId={ticketId}
-                onNavigate={navigateToTicket}
+                className="mobile-overlay"
+                onClick={() => setIsMobileMenuOpen(false)}
               />
             )}
-            {activeTab === 'export' && <DemoView />}
-            {activeTab === 'project' && <ProjectView />}
-            {activeTab === 'artifacts' && <ArtifactsView />}
-          </main>
-        </div>
-      </div>
-        </ArtifactsProvider>
+
+            {/* Main content */}
+            <div className="main-content">
+              <header className="top-header">
+                <button
+                  className="mobile-menu-toggle md:hidden"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  ☰
+                </button>
+                <h1 className="header-title">totem</h1>
+                
+                {/* Scroll Progress Bar */}
+                <div className="scroll-progress">
+                  <div 
+                    className="scroll-progress-bar" 
+                    style={{ width: `${scrollProgress}%` }}
+                  />
+                </div>
+              </header>
+
+              <main className="content-area" ref={contentRef}>
+                {activeTab === 'kanban' && <KanbanBoard />}
+                {activeTab === 'roadmap' && <RoadmapView />}
+                {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
+                {activeTab === 'ticket' && (
+                  <CreateTicket 
+                    mode={ticketMode}
+                    ticketId={ticketId}
+                    onNavigate={navigateToTicket}
+                  />
+                )}
+                {activeTab === 'export' && <DemoView />}
+                {activeTab === 'project' && <ProjectView />}
+                {activeTab === 'artifacts' && <ArtifactsView />}
+              </main>
+            </div>
+          </div>
+        </PersonaProvider>
+      </ArtifactsProvider>
     </TicketProvider>
   )
 }
