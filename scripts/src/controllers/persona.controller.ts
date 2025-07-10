@@ -1,7 +1,7 @@
 
 import { Controller, Get, Param, Post, Body, Put, Delete, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { PersonaDto, PersonaContextSectionDto, MarkdownDto } from '../dto/persona.dto';
+import { PersonaDto, PersonaContextSectionDto, PersonaMarkdownDto } from '../dto/persona.dto';
 import { readdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -26,9 +26,9 @@ export class PersonaController {
   @Get(':name')
   @ApiOperation({ summary: 'Get persona by name', description: 'Retrieve a persona by name (filename without .md)' })
   @ApiParam({ name: 'name', description: 'Persona name (filename without .md)', example: 'refactor-raleigh' })
-  @ApiResponse({ status: 200, description: 'Persona found', type: MarkdownDto })
+  @ApiResponse({ status: 200, description: 'Persona found', type: PersonaMarkdownDto })
   @ApiResponse({ status: 404, description: 'Persona not found', type: String })
-  public getPersonaByName(@Param('name') name: string): MarkdownDto {
+  public getPersonaByName(@Param('name') name: string): PersonaMarkdownDto {
     const filePath = join(this.personasDir, `${name}.md`);
     if (!existsSync(filePath)) {
       throw new HttpException('Persona not found', 404);
@@ -339,7 +339,7 @@ export class PersonaController {
     }
   }
 
-  private wrapPersonaJson(filePath: string): MarkdownDto | null {
+  private wrapPersonaJson(filePath: string): PersonaMarkdownDto | null {
     try {
       const content = readFileSync(filePath, 'utf-8');
       return{

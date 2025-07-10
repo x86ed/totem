@@ -178,7 +178,7 @@ export class ContributorDto {
   lastUpdated?: string;
 }
 
-export class MarkdownDto {
+export class ContributorMarkdownDto {
   @ApiProperty({ description: 'Name of the file', example: 'acid-burn.md' })
   fileName!: string;
 

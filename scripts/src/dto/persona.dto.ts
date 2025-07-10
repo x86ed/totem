@@ -115,7 +115,7 @@ export class PersonaReviewChecklistDto {
   greenFlags: string[];
 }
 
-export class MarkdownDto {
+export class PersonaMarkdownDto {
   @ApiProperty({
     description: 'Name of the file',
     example: 'refactor-raleigh.md'

@@ -1,6 +1,6 @@
 # id-conventions.md
 
-Format: `{layer}.{component}-{feature}-{number}`
+Format: `{prefix}.{layer}.{component}-{feature}-{number}`
 Examples:
 
 - security.auth-sso-001

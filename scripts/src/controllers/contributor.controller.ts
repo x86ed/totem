@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Post, Body, Put, Delete, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { ContributorDto, MarkdownDto } from '../dto/contributor.dto';
+import { ContributorDto, ContributorMarkdownDto } from '../dto/contributor.dto';
 import { readdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
@@ -25,9 +25,9 @@ export class ContributorController {
   @Get(':name')
   @ApiOperation({ summary: 'Get contributor by name', description: 'Retrieve a contributor by name (filename without .md)' })
   @ApiParam({ name: 'name', description: 'Contributor name (filename without .md)', example: 'jane-doe' })
-  @ApiResponse({ status: 200, description: 'Contributor found', type: MarkdownDto })
+  @ApiResponse({ status: 200, description: 'Contributor found', type: ContributorMarkdownDto })
   @ApiResponse({ status: 404, description: 'Contributor not found', type: String })
-  public getContributorByName(@Param('name') name: string): MarkdownDto {
+  public getContributorByName(@Param('name') name: string): ContributorMarkdownDto {
     const filePath = join(this.contributorsDir, `${name}.md`);
     if (!existsSync(filePath)) {
       throw new HttpException('Contributor not found', 404);
@@ -341,7 +341,7 @@ export class ContributorController {
     }
   }
 
-  private wrapContributorJson(filePath: string): MarkdownDto | null {
+  private wrapContributorJson(filePath: string): ContributorMarkdownDto | null {
     try {
       const content = readFileSync(filePath, 'utf-8');
       return {
