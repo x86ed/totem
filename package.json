@@ -1,6 +1,6 @@
 {
   "name": "totem",
-  "version": "0.12.12",
+  "version": "0.12.13",
   "description": "AI-native, git-native, distributed project management platform - open source and self-hosted",
   "main": "dist/init.js",
   "bin": {
