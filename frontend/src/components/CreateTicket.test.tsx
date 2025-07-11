@@ -6,7 +6,6 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CreateTicket from './CreateTicket.tsx'
 import { useTickets } from '../context/TicketContext'
-import { Ticket } from '../types.ts'
 
 // Mock the useTickets hook
 vi.mock('../context/TicketContext', () => ({
@@ -21,7 +20,7 @@ describe('CreateTicket', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset fetch mock
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
     mockUseTickets.mockReturnValue({
       tickets: [],
       milestones: [],
@@ -34,7 +33,7 @@ describe('CreateTicket', () => {
       refreshTickets: function (): Promise<void> {
         throw new Error('Function not implemented.')
       },
-      createTicket: function (_: Partial<Ticket>): Promise<void> {
+      createTicket: function (): Promise<void> {
         throw new Error('Function not implemented.')
       }
     })
@@ -44,9 +43,9 @@ describe('CreateTicket', () => {
     it('renders the create ticket form with all required elements', () => {
       render(<CreateTicket />)
       
-      expect(screen.getByRole('heading', { name: /Create Ticket/i })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Basic Information/i })).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Enter ticket title')).toBeInTheDocument()
-      expect(screen.getByPlaceholderText('Describe the ticket requirements...')).toBeInTheDocument()
+      expect(screen.getByLabelText(/Description/)).toBeInTheDocument()
       expect(screen.getByLabelText(/Priority/)).toBeInTheDocument()
       expect(screen.getByPlaceholderText('Assigned contributor')).toBeInTheDocument()
       expect(screen.getByLabelText(/Complexity/)).toBeInTheDocument()
@@ -56,13 +55,13 @@ describe('CreateTicket', () => {
       render(<CreateTicket />)
       
       const titleInput = screen.getByPlaceholderText('Enter ticket title') as HTMLInputElement
-      const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...') as HTMLTextAreaElement
+      const descriptionDiv = screen.getByLabelText(/Description/) as HTMLDivElement
       const prioritySelect = screen.getByLabelText(/Priority/) as HTMLSelectElement
       const contributorInput = screen.getByPlaceholderText('Assigned contributor') as HTMLInputElement
       const complexitySelect = screen.getByLabelText(/Complexity/) as HTMLSelectElement
 
       expect(titleInput.value).toBe('')
-      expect(descriptionInput.value).toBe('')
+      expect(descriptionDiv).toBeInTheDocument() // Description uses MilkdownEditor now
       expect(prioritySelect.value).toBe('medium')
       expect(contributorInput.value).toBe('')
       expect(complexitySelect.value).toBe('medium')
@@ -79,19 +78,57 @@ describe('CreateTicket', () => {
       render(<CreateTicket />)
       
       const prioritySelect = screen.getByLabelText(/Priority/)
-      expect(within(prioritySelect).getByText('🟢 Low')).toBeInTheDocument()
-      expect(within(prioritySelect).getByText('⚡ Medium')).toBeInTheDocument()
-      expect(within(prioritySelect).getByText('🔥 High')).toBeInTheDocument()
-      expect(within(prioritySelect).getByText('🚨 Critical')).toBeInTheDocument()
+      expect(within(prioritySelect).getByText('Low')).toBeInTheDocument()
+      expect(within(prioritySelect).getByText('Medium')).toBeInTheDocument()
+      expect(within(prioritySelect).getByText('High')).toBeInTheDocument()
+      expect(within(prioritySelect).getByText('Critical')).toBeInTheDocument()
     })
 
     it('renders complexity options correctly', () => {
       render(<CreateTicket />)
       
       const complexitySelect = screen.getByLabelText(/Complexity/)
-      expect(within(complexitySelect).getByText('🟢 Low')).toBeInTheDocument()
-      expect(within(complexitySelect).getByText('⚡ Medium')).toBeInTheDocument()
-      expect(within(complexitySelect).getByText('🔥 High')).toBeInTheDocument()
+      expect(within(complexitySelect).getByText('Low')).toBeInTheDocument()
+      expect(within(complexitySelect).getByText('Medium')).toBeInTheDocument()
+      expect(within(complexitySelect).getByText('High')).toBeInTheDocument()
+    })
+
+    it('renders dependency multi-select dropdowns with available tickets', async () => {
+      // Mock the useTickets hook to return sample tickets
+      mockUseTickets.mockReturnValue({
+        tickets: [
+          { id: 'ticket-1', title: 'First Ticket', description: 'First ticket description', status: 'open', priority: 'medium', complexity: 'low' },
+          { id: 'ticket-2', title: 'Second Ticket', description: 'Second ticket description', status: 'open', priority: 'high', complexity: 'medium' }
+        ],
+        milestones: [],
+        addTicket: mockAddTicket,
+        updateTicket: vi.fn(),
+        deleteTicket: vi.fn(),
+        moveTicket: vi.fn(),
+        loading: false,
+        error: null,
+        refreshTickets: function (): Promise<void> {
+          throw new Error('Function not implemented.')
+        },
+        createTicket: function (): Promise<void> {
+          throw new Error('Function not implemented.')
+        }
+      })
+
+      render(<CreateTicket />)
+      
+      // Check that multi-select dropdowns are rendered
+      const blocksSelect = screen.getByLabelText(/Blocks \(Tickets\)/i)
+      const blockedBySelect = screen.getByLabelText(/Blocked By \(Tickets\)/i)
+      
+      expect(blocksSelect).toBeInTheDocument()
+      expect(blockedBySelect).toBeInTheDocument()
+      
+      // Check that tickets are available as options (now showing only IDs)
+      expect(within(blocksSelect).getByText('ticket-1')).toBeInTheDocument()
+      expect(within(blocksSelect).getByText('ticket-2')).toBeInTheDocument()
+      expect(within(blockedBySelect).getByText('ticket-1')).toBeInTheDocument()
+      expect(within(blockedBySelect).getByText('ticket-2')).toBeInTheDocument()
     })
   })
 
@@ -101,16 +138,16 @@ describe('CreateTicket', () => {
       render(<CreateTicket />)
       
       const titleInput = screen.getByPlaceholderText('Enter ticket title')
-      const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...')
       const contributorInput = screen.getByPlaceholderText('Assigned contributor')
 
       await user.type(titleInput, 'Test Ticket Title')
-      await user.type(descriptionInput, 'Test description')
       await user.type(contributorInput, 'john.doe')
 
       expect(titleInput).toHaveValue('Test Ticket Title')
-      expect(descriptionInput).toHaveValue('Test description')
       expect(contributorInput).toHaveValue('john.doe')
+      
+      // Check that the MilkdownEditor container is present
+      expect(screen.getByLabelText(/Description/)).toBeInTheDocument()
     }, 10000)
 
     it('updates priority when selection changes', async () => {
@@ -137,7 +174,7 @@ describe('CreateTicket', () => {
   describe('Form Submission', () => {
     it('creates a ticket with correct data when form is submitted', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -147,7 +184,6 @@ describe('CreateTicket', () => {
       
       // Fill out the form
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Test Ticket')
-      await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Test description')
       await user.selectOptions(screen.getByRole('combobox', { name: /priority/i }), 'high')
       await user.type(screen.getByPlaceholderText('Assigned contributor'), 'john.doe')
       await user.selectOptions(screen.getByRole('combobox', { name: /complexity/i }), 'high')
@@ -157,7 +193,7 @@ describe('CreateTicket', () => {
 
       // Wait for the API call
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -170,7 +206,7 @@ describe('CreateTicket', () => {
 
     it('generates unique ticket IDs', async () => {
       // Mock fetch for API calls
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -183,7 +219,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
       
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledTimes(1)
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1)
       })
 
       // Clear the title and add new content
@@ -193,13 +229,13 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledTimes(2)
+        expect(globalThis.fetch).toHaveBeenCalledTimes(2)
       })
     })
 
     it('resets form after successful submission', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -209,11 +245,9 @@ describe('CreateTicket', () => {
       
       // Fill out the form
       const titleInput = screen.getByPlaceholderText('Enter ticket title')
-      const descriptionInput = screen.getByPlaceholderText('Describe the ticket requirements...')
       const contributorInput = screen.getByPlaceholderText('Assigned contributor')
       
       await user.type(titleInput, 'Test Ticket')
-      await user.type(descriptionInput, 'Test description')
       await user.type(contributorInput, 'john.doe')
 
       // Submit the form
@@ -226,7 +260,7 @@ describe('CreateTicket', () => {
 
       // In the current implementation, the form may not reset automatically
       // We'll just verify the API was called successfully
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         'http://localhost:8080/api/ticket',
         expect.objectContaining({
           method: 'POST',
@@ -237,7 +271,7 @@ describe('CreateTicket', () => {
 
     it('shows success message after ticket creation', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -255,7 +289,7 @@ describe('CreateTicket', () => {
 
     it('hides success message after timeout', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -279,9 +313,10 @@ describe('CreateTicket', () => {
 
     it('shows error message when API call fails', async () => {
       // Mock fetch to return an error
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
-        statusText: 'Internal Server Error'
+        statusText: 'Internal Server Error',
+        json: async () => ({ message: 'Failed to create ticket' })
       })
 
       const user = userEvent.setup()
@@ -303,7 +338,6 @@ describe('CreateTicket', () => {
       
       // Fill out the form using placeholder text instead of labels
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Test Ticket')
-      await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Test description')
       await user.selectOptions(screen.getByLabelText(/Priority/), 'high')
       await user.type(screen.getByPlaceholderText('Assigned contributor'), 'john.doe')
 
@@ -312,17 +346,20 @@ describe('CreateTicket', () => {
 
       // Check that form is reset to initial values
       expect(screen.getByPlaceholderText('Enter ticket title')).toHaveValue('')
-      expect(screen.getByPlaceholderText('Describe the ticket requirements...')).toHaveValue('')
       expect(screen.getByLabelText(/Priority/)).toHaveValue('medium')
       expect(screen.getByPlaceholderText('Assigned contributor')).toHaveValue('')
       expect(screen.getByLabelText(/Complexity/)).toHaveValue('medium')
+      
+      // Check that the editor containers are still present
+      expect(screen.getByLabelText(/Description/)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Notes/)).toBeInTheDocument()
     })
   })
 
   describe('Edge Cases', () => {
     it('handles form submission with only required fields', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -335,7 +372,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -348,7 +385,7 @@ describe('CreateTicket', () => {
 
     it('handles form submission with all fields filled', async () => {
       // Mock fetch for API call
-      global.fetch = vi.fn().mockResolvedValue({
+      globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ success: true, message: 'Ticket created successfully' })
       })
@@ -358,7 +395,6 @@ describe('CreateTicket', () => {
       
       // Fill all fields
       await user.type(screen.getByPlaceholderText('Enter ticket title'), 'Complete Ticket')
-      await user.type(screen.getByPlaceholderText('Describe the ticket requirements...'), 'Full description')
       await user.selectOptions(screen.getByLabelText(/Priority/), 'low')
       await user.type(screen.getByPlaceholderText('Assigned contributor'), 'jane.doe')
       await user.selectOptions(screen.getByLabelText(/Complexity/), 'high')
@@ -366,7 +402,7 @@ describe('CreateTicket', () => {
       await user.click(screen.getByRole('button', { name: /Create Ticket/ }))
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
           'http://localhost:8080/api/ticket',
           expect.objectContaining({
             method: 'POST',
@@ -383,7 +419,7 @@ describe('CreateTicket', () => {
       render(<CreateTicket />)
       
       expect(screen.getByLabelText(/Title/)).toBeRequired()
-      expect(screen.getByLabelText(/Description/)).not.toBeRequired()
+      expect(screen.getByLabelText(/Description/)).toBeInTheDocument() // MilkdownEditor container
       expect(screen.getByLabelText(/Priority/)).toBeInTheDocument()
       expect(screen.getByLabelText(/Complexity/)).toBeInTheDocument()
       expect(screen.getByLabelText(/Contributor/)).toBeInTheDocument()
@@ -395,8 +431,59 @@ describe('CreateTicket', () => {
       const createButton = screen.getByRole('button', { name: /Create Ticket/ })
       const resetButton = screen.getByRole('button', { name: /Reset Form/ })
       
-      expect(createButton).toHaveAttribute('type', 'submit')
+      expect(createButton).toHaveAttribute('type', 'button')
       expect(resetButton).toHaveAttribute('type', 'button')
+    })
+  })
+
+  describe('Dependency Management', () => {
+    it('shows clear buttons when dependencies are selected and clears them when clicked', async () => {
+      // Mock the useTickets hook to return sample tickets
+      mockUseTickets.mockReturnValue({
+        tickets: [
+          { id: 'ticket-1', title: 'First Ticket', description: 'First ticket description', status: 'open', priority: 'medium', complexity: 'low' },
+          { id: 'ticket-2', title: 'Second Ticket', description: 'Second ticket description', status: 'open', priority: 'high', complexity: 'medium' }
+        ],
+        milestones: [],
+        addTicket: mockAddTicket,
+        updateTicket: vi.fn(),
+        deleteTicket: vi.fn(),
+        moveTicket: vi.fn(),
+        loading: false,
+        error: null,
+        refreshTickets: function (): Promise<void> {
+          throw new Error('Function not implemented.')
+        },
+        createTicket: function (): Promise<void> {
+          throw new Error('Function not implemented.')
+        }
+      })
+
+      const user = userEvent.setup()
+      render(<CreateTicket />)
+
+      const blocksSelect = screen.getByLabelText(/Blocks \(Tickets\)/i)
+      const blockedBySelect = screen.getByLabelText(/Blocked By \(Tickets\)/i)
+
+      // Select some options
+      await user.selectOptions(blocksSelect, ['ticket-1'])
+      await user.selectOptions(blockedBySelect, ['ticket-2'])
+
+      // Clear buttons should appear when selections are made
+      const clearButtons = screen.getAllByRole('button', { name: /clear/i })
+      expect(clearButtons).toHaveLength(2)
+
+      const blocksClearButton = clearButtons[0] // First clear button for blocks
+      const blockedByClearButton = clearButtons[1] // Second clear button for blocked_by
+
+      expect(blocksClearButton).toBeInTheDocument()
+      expect(blockedByClearButton).toBeInTheDocument()
+
+      // Click clear button for blocks
+      await user.click(blocksClearButton)
+
+      // Verify that only one clear button remains (for blocked_by)
+      expect(screen.getAllByRole('button', { name: /clear/i })).toHaveLength(1)
     })
   })
 })

@@ -29,7 +29,11 @@ Centralized API gateway for microservices with rate limiting, authentication, an
 # Use OpenAPI 3.0 for documentation
 ```
 
-**Risks:** Single point of failure (medium), Configuration complexity (medium), Performance bottlenecks (low)
+### Risks
+
+- Single point of failure (medium)
+- Configuration complexity (medium)
+- Performance bottlenecks (low)
 
 ---
 

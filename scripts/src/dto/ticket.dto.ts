@@ -5,13 +5,13 @@ export class AcceptanceCriterionDto {
     description: 'The acceptance criteria text',
     example: 'User can login with email and password'
   })
-  criteria: string;
+  criteria!: string;
 
   @ApiProperty({
     description: 'Whether this criteria is completed',
     example: false
   })
-  complete: boolean;
+  complete!: boolean;
 }
 
 export class TicketDto {
@@ -19,111 +19,111 @@ export class TicketDto {
     description: 'Unique identifier for the ticket',
     example: 'user-authentication-001'
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Title of the ticket',
     example: 'User Authentication System'
   })
-  title: string;
+  title!: string;
 
   @ApiProperty({
     description: 'Detailed description of the ticket',
     example: 'Implement user authentication with email/password login'
   })
-  description: string;
+  description!: string;
 
   @ApiProperty({
     description: 'Current status of the ticket',
     enum: ['open', 'in_progress', 'closed', 'blocked'],
     example: 'open'
   })
-  status: string;
+  status!: string;
 
   @ApiProperty({
     description: 'Priority level of the ticket',
     enum: ['low', 'medium', 'high', 'critical'],
     example: 'high'
   })
-  priority: string;
+  priority!: string;
 
   @ApiProperty({
     description: 'Complexity level of the ticket',
     enum: ['low', 'medium', 'high'],
     example: 'medium'
   })
-  complexity: string;
+  complexity!: string;
 
   @ApiPropertyOptional({
     description: 'Target persona for this ticket',
     example: 'developer'
   })
-  persona: string | null;
+  persona!: string | null;
 
   @ApiPropertyOptional({
     description: 'Contributor assigned to this ticket',
     example: 'john.doe'
   })
-  contributor: string | null;
+  contributor!: string | null;
 
   @ApiPropertyOptional({
     description: 'AI model associated with this ticket',
     example: 'gpt-4'
   })
-  model: string | null;
+  model!: string | null;
 
   @ApiPropertyOptional({
     description: 'Estimated effort in days',
     example: 3
   })
-  effort_days: number | null;
+  effort_days!: number | null;
 
   @ApiProperty({
     description: 'List of ticket IDs that this ticket blocks',
     type: [String],
     example: ['feature-xyz-002']
   })
-  blocks: string[];
+  blocks!: string[];
 
   @ApiProperty({
     description: 'List of ticket IDs that block this ticket',
     type: [String],
     example: ['infrastructure-001']
   })
-  blocked_by: string[];
+  blocked_by!: string[];
 
   @ApiProperty({
     description: 'List of acceptance criteria for the ticket',
     type: [AcceptanceCriterionDto]
   })
-  acceptance_criteria: AcceptanceCriterionDto[];
+  acceptance_criteria!: AcceptanceCriterionDto[];
 
   @ApiProperty({
     description: 'Tags associated with the ticket',
     type: [String],
     example: ['authentication', 'security', 'backend']
   })
-  tags: string[];
+  tags!: string[];
 
   @ApiProperty({
     description: 'Additional notes for the ticket',
     example: 'Remember to implement rate limiting'
   })
-  notes: string;
+  notes!: string;
 
   @ApiProperty({
     description: 'Identified risks for this ticket',
     type: [String],
     example: ['Security vulnerability', 'Performance impact']
   })
-  risks: string[];
+  risks!: string[];
 
   @ApiProperty({
     description: 'Resources and links related to the ticket',
     type: [String],
     example: ['https://docs.auth0.com/', 'Internal security guidelines']
   })
-  resources: string[];
+  resources!: string[];
 }
 
 export class CreateTicketDto {
@@ -137,13 +137,13 @@ export class CreateTicketDto {
     description: 'Title of the ticket',
     example: 'User Authentication System'
   })
-  title: string;
+  title!: string;
 
   @ApiProperty({
     description: 'Detailed description of the ticket',
     example: 'Implement user authentication with email/password login'
   })
-  description: string;
+  description!: string;
 
   @ApiPropertyOptional({
     description: 'Initial status of the ticket',
@@ -242,10 +242,10 @@ export class UpdateTicketDto extends CreateTicketDto {}
 
 export class TicketResponseDto {
   @ApiProperty({ description: 'Response message', example: 'Ticket created successfully' })
-  message: string;
+  message!: string;
 
   @ApiProperty({ description: 'The ticket data', type: () => TicketDto, nullable: true })
-  ticket: TicketDto | null;
+  ticket!: TicketDto | null;
 
   @ApiPropertyOptional({ description: 'Filename of the ticket file', example: 'user-auth-001.md' })
   filename?: string;
@@ -253,24 +253,24 @@ export class TicketResponseDto {
 
 export class PaginationDto {
   @ApiProperty({ description: 'Number of records to skip', example: 0 })
-  offset: number;
+  offset!: number;
 
   @ApiProperty({ description: 'Maximum number of records to return', example: 10 })
-  limit: number;
+  limit!: number;
 
   @ApiProperty({ description: 'Total number of tickets in the system', example: 150 })
-  total: number;
+  total!: number;
 
   @ApiProperty({ description: 'Total number of tickets after filtering', example: 25 })
-  totalFiltered: number;
+  totalFiltered!: number;
 }
 
 export class TicketsListResponseDto {
   @ApiProperty({ description: 'Response message', example: 'Tickets retrieved successfully' })
-  message: string;
+  message!: string;
 
   @ApiProperty({ description: 'Array of tickets', type: [TicketDto] })
-  tickets: TicketDto[];
+  tickets!: TicketDto[];
 
   @ApiPropertyOptional({ description: 'Pagination metadata', type: PaginationDto })
   pagination?: PaginationDto;
@@ -278,7 +278,7 @@ export class TicketsListResponseDto {
 
 export class ErrorResponseDto {
   @ApiProperty({ description: 'Error message', example: 'Ticket not found' })
-  message: string;
+  message!: string;
 
   @ApiPropertyOptional({ description: 'Detailed error information' })
   error?: string;

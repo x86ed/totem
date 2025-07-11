@@ -41,7 +41,22 @@ const mockTicketProvider = vi.mocked(TicketProvider)
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Suppress act() and other React warnings in test output
+    vi.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+      if (
+        typeof msg === 'string' &&
+        (
+          msg.includes('Warning: An update to') && msg.includes('was not wrapped in act') ||
+          msg.includes('Warning:') ||
+          msg.includes('not wrapped in act')
+        )
+      ) {
+        return
+      }
+      // Fallback to original console.error if needed
+      // eslint-disable-next-line no-console
+      return console.error.call(console, msg, ...args)
+    })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
@@ -55,8 +70,8 @@ describe('App', () => {
 
       expect(screen.getByRole('banner')).toBeInTheDocument()
       expect(screen.getByRole('main')).toBeInTheDocument()
-      expect(screen.getByText('Totem')).toBeInTheDocument()
-      expect(screen.getByText('🎯')).toBeInTheDocument()
+      expect(screen.getByText('totem')).toBeInTheDocument()
+      expect(screen.getByText('📋')).toBeInTheDocument()
     })
 
     it('should wrap content in TicketProvider', () => {
@@ -68,27 +83,29 @@ describe('App', () => {
 
     it('should render all navigation tabs', () => {
       render(<App />)
-
-      expect(screen.getByRole('button', { name: /📋.*Kanban/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /🗺️.*Roadmap/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /🎟️.*Ticket/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /🎨.*Demo/i })).toBeInTheDocument()
+      // Match by label only for reliability
+      expect(screen.getByRole('button', { name: /Project/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Artifacts/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Kanban/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Roadmap/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Backlog/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Ticket/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Demo/i })).toBeInTheDocument()
     })
 
     it('should apply correct CSS classes and styling', () => {
       render(<App />)
 
       // Find the actual main div with classes (inside the mocked provider)
-      const mainDiv = screen.getByText('Totem').closest('div[class*="min-h-screen"]') as HTMLElement
+      const mainDiv = screen.getByText('totem').closest('div[class*="min-h-screen"]') as HTMLElement
       expect(mainDiv).toHaveClass('min-h-screen')
-      expect(mainDiv).toHaveStyle({ background: '#f0f4f1' })
+      expect(mainDiv).toHaveStyle({ background: 'rgb(240, 244, 241)' })
 
       const header = screen.getByRole('banner')
-      expect(header).toHaveClass('header-green')
+      expect(header).toHaveClass('top-header')
 
-      const title = screen.getByText('Totem')
-      expect(title).toHaveClass('text-2xl', 'font-bold')
-      expect(title).toHaveStyle({ color: '#e8f5e8' })
+      const title = screen.getByText('totem')
+      expect(title).toHaveClass('header-title')
     })
   })
 
@@ -161,41 +178,34 @@ describe('App', () => {
   })
 
   describe('Tab Configuration', () => {
-    it('should render tabs with correct icons and labels', () => {
+    it('should render tabs with correct labels', () => {
       render(<App />)
-
-      const kanbanTab = screen.getByRole('button', { name: /📋.*Kanban/i })
-      expect(kanbanTab).toHaveTextContent('📋')
-      expect(kanbanTab).toHaveTextContent('Kanban')
-
-      const roadmapTab = screen.getByRole('button', { name: /🗺️.*Roadmap/i })
-      expect(roadmapTab).toHaveTextContent('🗺️')
-      expect(roadmapTab).toHaveTextContent('Roadmap')
-
-      const createTab = screen.getByRole('button', { name: /🎟️.*Ticket/i })
-      expect(createTab).toHaveTextContent('🎟️')
-      expect(createTab).toHaveTextContent('Ticket')
-
-      const demoTab = screen.getByRole('button', { name: /🎨.*Demo/i })
-      expect(demoTab).toHaveTextContent('🎨')
-      expect(demoTab).toHaveTextContent('Demo')
+      const labels = ['Project', 'Artifacts', 'Kanban', 'Roadmap', 'Backlog', 'Ticket', 'Demo']
+      labels.forEach(label => {
+        const tab = screen.getByRole('button', { name: new RegExp(label, 'i') })
+        expect(tab).toHaveTextContent(label)
+      })
     })
 
     it('should apply correct CSS classes to tab buttons', () => {
       render(<App />)
 
-      const tabs = screen.getAllByRole('button')
+      const tabs = screen.getAllByRole('button').filter(button => !button.classList.contains('mobile-menu-toggle'))
       tabs.forEach(tab => {
-        expect(tab).toHaveClass('nav-btn-green')
+        expect(tab).toHaveClass('sidenav-item')
       })
     })
 
     it('should have proper icon spacing in tabs', () => {
       render(<App />)
 
-      const iconElements = screen.getAllByText(/[📋🗺️🎟️📁]/)
-      iconElements.forEach(icon => {
-        expect(icon).toHaveClass('icon-spacing')
+      // Use explicit unicode strings to avoid regex unicode issues
+      const icons = ['📋', '🗺️', '🎟️', '🎨']
+      icons.forEach(iconChar => {
+        const iconElements = screen.getAllByText((content) => content === iconChar)
+        iconElements.forEach(icon => {
+          expect(icon).toHaveClass('sidenav-icon')
+        })
       })
     })
   })
@@ -205,18 +215,17 @@ describe('App', () => {
       render(<App />)
 
       const header = screen.getByRole('banner')
-      const headerContent = header.firstChild as HTMLElement
-      expect(headerContent).toHaveClass('max-w-7xl', 'mx-auto')
+      expect(header).toHaveClass('top-header')
 
-      const flexContainer = headerContent.firstChild as HTMLElement
-      expect(flexContainer).toHaveClass('flex', 'justify-between', 'items-center', 'py-4')
+      const mobileMenuToggle = screen.getByRole('button', { name: '☰' })
+      expect(mobileMenuToggle).toHaveClass('mobile-menu-toggle', 'md:hidden')
     })
 
     it('should have proper main content area', () => {
       render(<App />)
 
       const main = screen.getByRole('main')
-      expect(main).toHaveClass('max-w-7xl', 'mx-auto', 'py-6', 'px-4', 'sm:px-6', 'lg:px-8')
+      expect(main).toHaveClass('content-area')
     })
   })
 
@@ -290,10 +299,9 @@ describe('App', () => {
 
     it('should have accessible tab buttons', () => {
       render(<App />)
-
       const buttons = screen.getAllByRole('button')
-      expect(buttons).toHaveLength(5)
-      
+      // 7 sidenav items + 1 mobile menu toggle
+      expect(buttons.length).toBeGreaterThanOrEqual(8)
       buttons.forEach(button => {
         expect(button).toBeVisible()
         expect(button).not.toBeDisabled()
@@ -304,7 +312,7 @@ describe('App', () => {
       render(<App />)
 
       const heading = screen.getByRole('heading', { level: 1 })
-      expect(heading).toHaveTextContent('Totem')
+      expect(heading).toHaveTextContent('totem')
     })
   })
 

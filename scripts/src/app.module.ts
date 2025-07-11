@@ -3,10 +3,15 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ApiController } from './controllers/api.controller';
 import { TicketController } from './controllers/ticket.controller';
+import { PersonaController } from './controllers/persona.controller';
+import { ArtifactsController } from './controllers/artifacts.controller';
+import { ContributorController } from './controllers/contributor.controller';
 import { TotemService } from './services/totem.service';
+import { PrefixController } from './controllers/prefix.controller';
+import { LayerController } from './controllers/layer.controller';
 
 @Module({
-  controllers: [ApiController, TicketController],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController],
   providers: [TotemService],
 })
 export class AppModule {
@@ -36,7 +41,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController],
       providers: [TotemService],
     };
   }

@@ -26,7 +26,10 @@ HIPAA-compliant SAML/OAuth integration with Active Directory. 15min session time
 // Implement proper error boundaries
 ```
 
-**Risks:** Patient data exposure (high), AD maintenance downtime (medium)
+### Risks
+
+- Patient data exposure (high)
+- AD maintenance downtime (medium)
 
 ---
 

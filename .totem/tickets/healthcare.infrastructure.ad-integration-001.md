@@ -29,7 +29,10 @@ Configure secure LDAP connection to hospital's Active Directory for centralized 
 # Use service account with minimal privileges
 ```
 
-**Risks:** Network connectivity issues (low), AD server maintenance windows (low)
+### Risks
+
+- Network connectivity issues (low)
+- AD server maintenance windows (low)
 
 ---
 

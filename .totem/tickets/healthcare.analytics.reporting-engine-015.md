@@ -21,6 +21,10 @@ Advanced analytics dashboard with custom report generation, data visualization, 
 - [ ] Real-time analytics dashboard
 - [ ] HIPAA compliance verification
 
-**Risks:** Large dataset performance (high), Complex data relationships (high), Compliance requirements (medium)
+### Risks
+
+- Large dataset performance (high)
+- Complex data relationships (high)
+- Compliance requirements (medium)
 
 ---

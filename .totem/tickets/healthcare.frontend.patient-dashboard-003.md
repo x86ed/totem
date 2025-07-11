@@ -29,7 +29,10 @@ Modern React-based dashboard with real-time data visualization, accessibility co
 // Ensure proper error boundaries for data failures
 ```
 
-**Risks:** Performance issues with real-time updates (medium), Complex state management (high)
+### Risks
+
+- Performance issues with real-time updates (medium)
+- Complex state management (high)
 
 ---
 
