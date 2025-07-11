@@ -9,9 +9,11 @@ import { ContributorController } from './controllers/contributor.controller';
 import { TotemService } from './services/totem.service';
 import { PrefixController } from './controllers/prefix.controller';
 import { LayerController } from './controllers/layer.controller';
+import { ComponentController } from './controllers/component.controller';
+import { FeatureController } from './controllers/feature.controller';
 
 @Module({
-  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController, ComponentController, FeatureController],
   providers: [TotemService],
 })
 export class AppModule {
@@ -41,7 +43,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController, ComponentController, FeatureController],
       providers: [TotemService],
     };
   }

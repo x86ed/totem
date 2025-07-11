@@ -34,7 +34,8 @@ DOKIE
 - **security** - Security features, encryption, monitoring
 - **ui** - User interface components, design system
 - **workflow** - Business processes, automation, orchestration
-
+- **new** - yay
+- **another** - one
 ## Feature
 
 - **login** - User authentication and session management
@@ -57,7 +58,7 @@ DOKIE
 - **validation** - Data validation and verification
 - **cache** - Caching mechanisms and optimization
 - **migration** - Data or system migrations
-
+- **mic check** - one two
 ## Number
 
 a zero padded 3 digit number. Will expand to four digits if numbers get significantly high.

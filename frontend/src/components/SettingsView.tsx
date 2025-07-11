@@ -1,6 +1,129 @@
 import React, { useState, useContext } from 'react';
+import { ComponentContext, ComponentProvider } from '../context/ComponentContext';
 import { LayerContext, LayerProvider } from '../context/LayerContext';
+import { FeatureContext, FeatureProvider } from '../context/FeatureContext';
+import FeatureTypesSection from './FeatureTypesSection';
+
 // LayerTypesSection: Uses LayerContext for CRUD
+// ComponentTypesSection: Uses ComponentContext for CRUD
+const ComponentTypesSection: React.FC = () => {
+  const componentCtx = useContext(ComponentContext);
+  const [input, setInput] = useState('');
+  const [desc, setDesc] = useState('');
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editKey, setEditKey] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const items = componentCtx?.components?.map(c => ({ key: c.key, desc: c.description })) ?? [];
+  const loading = componentCtx?.loading ?? false;
+  const handleAdd = async () => {
+    if (!componentCtx || !input.trim() || items.some(i => i.key === input.trim())) return;
+    await componentCtx.addComponent({ key: input.trim(), description: desc.trim() });
+    setInput('');
+    setDesc('');
+  };
+  const handleUpdate = async (idx: number) => {
+    if (!componentCtx) return;
+    const oldKey = items[idx]?.key;
+    if (oldKey) {
+      await componentCtx.updateComponent(oldKey, { key: editKey, description: editDesc });
+      setEditIdx(null);
+    }
+  };
+  const handleDelete = async (idx: number) => {
+    if (!componentCtx) return;
+    const key = items[idx]?.key;
+    if (key) await componentCtx.deleteComponent(key);
+  };
+  return (
+    <div className="settings-section">
+      <div className="text-lg font-semibold text-yellow-800 mb-3">Component Types</div>
+      <div className="text-sm text-yellow-600 mb-4">Major components or subsystems (e.g. api, ui, database).</div>
+      {loading && <div className="text-yellow-500 mb-2">Loading...</div>}
+      <ul className="mb-3 divide-y divide-yellow-100 bg-yellow-50 rounded-lg border border-yellow-100">
+        {items.map((item, idx) => (
+          <li key={item.key} className="flex items-center px-3 py-2 group hover:bg-yellow-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                {editIdx === idx ? (
+                  <>
+                    <input
+                      className="border border-yellow-300 px-2 py-1 rounded text-sm font-semibold"
+                      value={editKey}
+                      onChange={e => setEditKey(e.target.value)}
+                    />
+                    <button
+                      className="ml-2 text-yellow-600 hover:text-yellow-900 px-2 rounded"
+                      type="button"
+                      onClick={() => handleUpdate(idx)}
+                    >Save</button>
+                    <button
+                      className="ml-1 text-gray-400 hover:text-gray-700 px-2 rounded"
+                      type="button"
+                      onClick={() => setEditIdx(null)}
+                    >Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-yellow-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
+                    <button
+                      className="ml-2 text-yellow-400 hover:text-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                      onClick={() => {
+                        setEditIdx(idx);
+                        setEditKey(item.key);
+                        setEditDesc(item.desc);
+                      }}
+                      title="Edit"
+                      type="button"
+                      aria-label={`Edit ${item.key}`}
+                    >✎</button>
+                    <button
+                      className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                      onClick={() => handleDelete(idx)}
+                      title="Remove"
+                      type="button"
+                      aria-label={`Remove ${item.key}`}
+                    >×</button>
+                  </>
+                )}
+              </div>
+              {editIdx === idx ? (
+                <input
+                  className="border border-yellow-200 px-2 py-1 rounded text-xs mt-1 w-full"
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  placeholder="Description..."
+                />
+              ) : (
+                item.desc && (
+                  <div className="text-yellow-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
+                )
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2 items-center mb-1">
+        <input
+          className="border border-yellow-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-yellow-50 placeholder-yellow-300"
+          value={input}
+          placeholder="Add key..."
+          onChange={e => setInput(e.target.value)}
+        />
+        <input
+          className="border border-yellow-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-200 bg-yellow-50 placeholder-yellow-200"
+          value={desc}
+          placeholder="Description..."
+          onChange={e => setDesc(e.target.value)}
+        />
+        <button
+          className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-yellow-600 hover:to-yellow-700 transition-all duration-150"
+          type="button"
+          onClick={handleAdd}
+        >Add</button>
+      </div>
+    </div>
+  );
+};
 const LayerTypesSection: React.FC = () => {
   const layerCtx = useContext(LayerContext);
   const [input, setInput] = useState('');
@@ -155,20 +278,7 @@ const DEFAULTS = {
     { key: 'Tests', desc: 'Unit, integration, E2E' },
     { key: 'Docs', desc: 'Documentation, guides' }
   ],
-  component: [
-    { key: 'auth', desc: 'Authentication system' },
-    { key: 'user', desc: 'User profiles/accounts' },
-    { key: 'payment', desc: 'Payment/billing' },
-    { key: 'notification', desc: 'Notifications' },
-    { key: 'analytics', desc: 'Analytics/reporting' },
-    { key: 'search', desc: 'Search/indexing' },
-    { key: 'admin', desc: 'Admin tools' },
-    { key: 'api', desc: 'API endpoints' },
-    { key: 'database', desc: 'Database/migrations' },
-    { key: 'security', desc: 'Security features' },
-    { key: 'ui', desc: 'UI/design system' },
-    { key: 'workflow', desc: 'Workflow/automation' }
-  ],
+  // component list is now managed by ComponentContext
   priority: [
     { key: 'Low', desc: 'Not urgent, nice to have' },
     { key: 'Medium', desc: 'Normal priority' },
@@ -269,9 +379,8 @@ const SettingsViewInner: React.FC = () => {
     }
   }, [prefix, loading]);
   const [complexity, setComplexity] = useState(DEFAULTS.complexity);
-  const [feature, setFeature] = useState(DEFAULTS.feature);
   // Layer state is now managed by LayerContext
-  const [component, setComponent] = useState(DEFAULTS.component);
+  // Component state is now managed by ComponentContext
   const [priority, setPriority] = useState(DEFAULTS.priority);
   const [status, setStatus] = useState(DEFAULTS.status);
 
@@ -281,7 +390,7 @@ const SettingsViewInner: React.FC = () => {
         <span className="inline-block bg-green-200 text-green-700 rounded-full px-3 py-1 text-lg mr-2">⚙️</span>
         Project Settings
       </h3>
-      <div style={{background: 'red'}}>
+      <div style={{background: 'red',padding: '1rem 1rem 1rem 1rem', borderRadius: '1rem'}}>
         <section className="settings-section mb-10">
           <div className="bg-gradient-to-br from-cyan-50 to-blue-100 border border-cyan-200 shadow-sm rounded-2xl p-6">
             <label className="section-title">Project Prefix</label>
@@ -312,25 +421,15 @@ const SettingsViewInner: React.FC = () => {
         <div className="settings-grid-2x3">
           {/* Feature Types - Blue */}
           <div className="settings-section">
-            <EditableList
-              label="Feature Types"
-              description="Types of features or domains (e.g. auth, payment, analytics)."
-              items={feature}
-              onChange={setFeature}
-              placeholder="e.g. auth"
-            />
+            <FeatureTypesSection />
           </div>
           {/* Layer Types - Green */}
-          <LayerTypesSection />
+          <div className="settings-section">
+            <LayerTypesSection />
+          </div>
           {/* Component Types - Yellow */}
           <div className="settings-section">
-            <EditableList
-              label="Component Types"
-              description="Major components or subsystems (e.g. api, ui, database)."
-              items={component}
-              onChange={setComponent}
-              placeholder="e.g. api"
-            />
+            <ComponentTypesSection />
           </div>
         </div>
       </div> {/* <-- Properly close the red background div here */}
@@ -373,7 +472,11 @@ const SettingsViewInner: React.FC = () => {
 const SettingsView: React.FC = () => (
   <PrefixProvider>
     <LayerProvider>
-      <SettingsViewInner />
+      <ComponentProvider>
+        <FeatureProvider>
+          <SettingsViewInner />
+        </FeatureProvider>
+      </ComponentProvider>
     </LayerProvider>
   </PrefixProvider>
 );

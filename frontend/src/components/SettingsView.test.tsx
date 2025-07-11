@@ -4,27 +4,25 @@ import SettingsView from './SettingsView';
 
 // Mock fetch for PrefixContext
 import { vi } from 'vitest';
-// @ts-ignore
-const jest = vi;
-import type { RequestInfo, RequestInit } from 'node-fetch';
+// Removed unused node-fetch import
 
 beforeEach(() => {
-  global.fetch = vi.fn((input: RequestInfo, init?: RequestInit) => {
+  global.fetch = vi.fn((input, init) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.includes('/api/prefix') && (!init || init.method === 'GET')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ prefix: 'TEST' })
-      }) as unknown as Response;
+      }) as Promise<Response>;
     }
     if (url.includes('/api/prefix') && init && init.method === 'PUT') {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ prefix: JSON.parse(init.body as string).prefix })
-      }) as unknown as Response;
+      }) as Promise<Response>;
     }
     return Promise.reject('Unknown endpoint');
-  });
+  }) as unknown as typeof global.fetch;
 });
 
 
@@ -35,46 +33,46 @@ const mockLayers = [
 ];
 
 beforeEach(() => {
-  global.fetch = vi.fn((input: RequestInfo, init?: RequestInit) => {
+  global.fetch = vi.fn((input, init) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.includes('/api/prefix') && (!init || init.method === 'GET')) {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ prefix: 'TEST' })
-      }) as unknown as Response;
+      }) as Promise<Response>;
     }
     if (url.includes('/api/prefix') && init && init.method === 'PUT') {
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ prefix: JSON.parse(init.body as string).prefix })
-      }) as unknown as Response;
+      }) as Promise<Response>;
     }
     if (url.includes('/api/layer')) {
       if (!init || init.method === 'GET') {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockLayers)
-        }) as unknown as Response;
+        }) as Promise<Response>;
       }
       if (init && init.method === 'POST') {
         mockLayers.push(JSON.parse(init.body as string));
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as unknown as Response;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as Promise<Response>;
       }
       if (init && init.method === 'PUT') {
         const updated = JSON.parse(init.body as string);
         const idx = mockLayers.findIndex(l => l.key === decodeURIComponent(url.split('/').pop() || ''));
         if (idx >= 0) mockLayers[idx] = updated;
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as unknown as Response;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as Promise<Response>;
       }
       if (init && init.method === 'DELETE') {
         const key = decodeURIComponent(url.split('/').pop() || '');
         const idx = mockLayers.findIndex(l => l.key === key);
         if (idx >= 0) mockLayers.splice(idx, 1);
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as unknown as Response;
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as Promise<Response>;
       }
     }
     return Promise.reject('Unknown endpoint');
-  });
+  }) as unknown as typeof global.fetch;
 });
 
 afterEach(() => {
@@ -136,7 +134,8 @@ describe('SettingsView', () => {
 
   it('shows loading indicator when loading', async () => {
     // Simulate slow fetch
-    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve({ ok: true, json: () => Promise.resolve([]) }), 100)));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global.fetch as any).mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve({ ok: true, json: () => Promise.resolve([]) }), 100)));
     render(<SettingsView />);
     expect(screen.getByText(/Loading.../)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument());
