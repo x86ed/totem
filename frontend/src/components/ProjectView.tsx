@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import ContributorsDirectoryView from './ContributorsDirectoryView'
 import PersonasDirectoryView from './PersonasDirectoryView'
+import SettingsView from './SettingsView'
 
 /**
  * ProjectView - A placeholder for project-level settings, info, or dashboard.
@@ -33,10 +34,7 @@ function ProjectView() {
       </div>
       <div>
         {activeTab === 'settings' && (
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Project Settings</h3>
-            <p className="text-gray-500">Settings for your project will appear here.</p>
-          </div>
+          <SettingsView />
         )}
         {activeTab === 'contributors' && (
           <ContributorsDirectoryView />

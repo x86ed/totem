@@ -36,3 +36,13 @@ Object.defineProperty(window.HTMLCanvasElement.prototype, 'getContext', {
 Object.defineProperty(window.HTMLCanvasElement.prototype, 'toDataURL', {
   value: () => 'data:image/png;base64,mock',
 });
+
+// Provide a global window object if missing (for SSR test environments)
+if (typeof globalThis.window === 'undefined') {
+  // @ts-expect-error: window is not defined in some SSR test environments
+  globalThis.window = globalThis;
+}
+
+if (!globalThis.requestAnimationFrame) {
+  globalThis.requestAnimationFrame = (callback: (time: number) => void): number => Number(setTimeout(() => callback(performance.now()), 0));
+}
