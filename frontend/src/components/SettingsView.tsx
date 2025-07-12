@@ -3,6 +3,7 @@ import { ComponentContext, ComponentProvider } from '../context/ComponentContext
 import { LayerContext, LayerProvider } from '../context/LayerContext';
 import { FeatureContext, FeatureProvider } from '../context/FeatureContext';
 import FeatureTypesSection from './FeatureTypesSection';
+import { PriorityContext, PriorityProvider } from '../context/PriorityContext';
 
 // LayerTypesSection: Uses LayerContext for CRUD
 // ComponentTypesSection: Uses ComponentContext for CRUD
@@ -279,12 +280,6 @@ const DEFAULTS = {
     { key: 'Docs', desc: 'Documentation, guides' }
   ],
   // component list is now managed by ComponentContext
-  priority: [
-    { key: 'Low', desc: 'Not urgent, nice to have' },
-    { key: 'Medium', desc: 'Normal priority' },
-    { key: 'High', desc: 'Important, time sensitive' },
-    { key: 'Critical', desc: 'Urgent, blocks progress' }
-  ],
   status: [
     { key: 'Open', desc: 'Not started' },
     { key: 'In Progress', desc: 'Work in progress' },
@@ -381,7 +376,125 @@ const SettingsViewInner: React.FC = () => {
   const [complexity, setComplexity] = useState(DEFAULTS.complexity);
   // Layer state is now managed by LayerContext
   // Component state is now managed by ComponentContext
-  const [priority, setPriority] = useState(DEFAULTS.priority);
+const PriorityLevelsSection: React.FC = () => {
+  const priorityCtx = useContext(PriorityContext);
+  const [input, setInput] = useState('');
+  const [desc, setDesc] = useState('');
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editKey, setEditKey] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const items = priorityCtx?.priorities?.map((p: { key: string; description: string }) => ({ key: p.key, desc: p.description })) ?? [];
+  const loading = priorityCtx?.loading ?? false;
+
+  const handleAdd = async () => {
+    if (!priorityCtx || !input.trim() || items.some((i: { key: string }) => i.key === input.trim())) return;
+    await priorityCtx.addPriority({ key: input.trim(), description: desc.trim() });
+    setInput('');
+    setDesc('');
+  };
+  const handleUpdate = async (idx: number) => {
+    if (!priorityCtx) return;
+    const oldKey = items[idx]?.key;
+    if (oldKey) {
+      await priorityCtx.updatePriority(oldKey, { key: editKey, description: editDesc });
+      setEditIdx(null);
+    }
+  };
+  const handleDelete = async (idx: number) => {
+    if (!priorityCtx) return;
+    const key = items[idx]?.key;
+    if (key) await priorityCtx.deletePriority(key);
+  };
+  return (
+    <div className="settings-section">
+      <div className="text-lg font-semibold text-purple-800 mb-3">Priority Levels</div>
+      <div className="text-sm text-purple-600 mb-4">Relative urgency or importance: Low, Medium, High, Critical.</div>
+      {loading && <div className="text-purple-500 mb-2">Loading...</div>}
+      <ul className="mb-3 divide-y divide-purple-100 bg-purple-50 rounded-lg border border-purple-100">
+        {items.map((item: { key: string; desc: string }, idx: number) => (
+          <li key={item.key} className="flex items-center px-3 py-2 group hover:bg-purple-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                {editIdx === idx ? (
+                  <>
+                    <input
+                      className="border border-purple-300 px-2 py-1 rounded text-sm font-semibold"
+                      value={editKey}
+                      onChange={e => setEditKey(e.target.value)}
+                    />
+                    <button
+                      className="ml-2 bg-purple-500 hover:bg-purple-700 text-white px-2 py-1 rounded font-semibold"
+                      type="button"
+                      onClick={() => handleUpdate(idx)}
+                    >Save</button>
+                    <button
+                      className="ml-1 text-gray-400 hover:text-gray-700 px-2 rounded"
+                      type="button"
+                      onClick={() => setEditIdx(null)}
+                    >Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-purple-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
+                    <button
+                      className="ml-2 text-purple-400 hover:text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-300 rounded-full px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                      type="button"
+                      onClick={() => {
+                        setEditIdx(idx);
+                        setEditKey(item.key);
+                        setEditDesc(item.desc);
+                      }}
+                      title="Edit"
+                      aria-label={`Edit ${item.key}`}
+                    >✎</button>
+                    <button
+                      className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                      onClick={() => handleDelete(idx)}
+                      title="Remove"
+                      type="button"
+                      aria-label={`Remove ${item.key}`}
+                    >×</button>
+                  </>
+                )}
+              </div>
+              {editIdx === idx ? (
+                <input
+                  className="border border-purple-200 px-2 py-1 rounded text-xs mt-1 w-full"
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  placeholder="Description..."
+                />
+              ) : (
+                item.desc && (
+                  <div className="text-purple-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
+                )
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2 items-center mb-1">
+        <input
+          className="border border-purple-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-purple-400 bg-purple-50 placeholder-purple-300"
+          value={input}
+          placeholder="Add key..."
+          onChange={e => setInput(e.target.value)}
+        />
+        <input
+          className="border border-purple-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-purple-200 bg-purple-50 placeholder-purple-200"
+          value={desc}
+          placeholder="Description..."
+          onChange={e => setDesc(e.target.value)}
+        />
+        <button
+          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-purple-600 hover:to-purple-700 transition-all duration-150"
+          type="button"
+          onClick={handleAdd}
+        >Add</button>
+      </div>
+    </div>
+  );
+};
   const [status, setStatus] = useState(DEFAULTS.status);
 
   return (
@@ -436,13 +549,7 @@ const SettingsViewInner: React.FC = () => {
       <div className="settings-grid-2x3">
         {/* Priority Levels - Purple */}
         <div className="settings-section">
-          <EditableList
-            label="Priority Levels"
-            description="Relative urgency or importance: Low, Medium, High, Critical."
-            items={priority}
-            onChange={setPriority}
-            placeholder="e.g. High"
-          />
+          <PriorityLevelsSection />
         </div>
         {/* Ticket Statuses - Pink */}
         <div className="settings-section">
@@ -474,7 +581,9 @@ const SettingsView: React.FC = () => (
     <LayerProvider>
       <ComponentProvider>
         <FeatureProvider>
-          <SettingsViewInner />
+          <PriorityProvider>
+            <SettingsViewInner />
+          </PriorityProvider>
         </FeatureProvider>
       </ComponentProvider>
     </LayerProvider>
