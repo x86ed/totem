@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
+import { ComplexityContext, ComplexityProvider } from '../context/ComplexityContext';
+import { StatusContext, StatusProvider } from '../context/StatusContext';
 import { ComponentContext, ComponentProvider } from '../context/ComponentContext';
 import { LayerContext, LayerProvider } from '../context/LayerContext';
-import { FeatureContext, FeatureProvider } from '../context/FeatureContext';
 import FeatureTypesSection from './FeatureTypesSection';
 import { PriorityContext, PriorityProvider } from '../context/PriorityContext';
 
@@ -247,48 +248,7 @@ import { PrefixProvider } from '../context/PrefixContext';
 import usePrefix from '../context/usePrefix';
 import './SettingsView.css';
 
-const DEFAULTS = {
-  prefix: 'PROJ',
-  complexity: [
-    { key: 'XS', desc: 'Extra Small (trivial, <1h)' },
-    { key: 'S', desc: 'Small (1-2h)' },
-    { key: 'M', desc: 'Medium (half day)' },
-    { key: 'L', desc: 'Large (1-2 days)' },
-    { key: 'XL', desc: 'Extra Large (multi-day)' },
-    { key: 'XXL', desc: 'Epic (week+)' }
-  ],
-  feature: [
-    { key: 'auth', desc: 'Authentication & authorization' },
-    { key: 'user', desc: 'User management, profiles' },
-    { key: 'payment', desc: 'Payments, billing, transactions' },
-    { key: 'notification', desc: 'Email, SMS, push notifications' },
-    { key: 'analytics', desc: 'Tracking, reporting, metrics' },
-    { key: 'search', desc: 'Search, filtering, indexing' },
-    { key: 'admin', desc: 'Admin panels, management tools' },
-    { key: 'api', desc: 'REST APIs, endpoints' },
-    { key: 'database', desc: 'Data models, migrations' },
-    { key: 'security', desc: 'Security, encryption, monitoring' },
-    { key: 'ui', desc: 'UI components, design system' },
-    { key: 'workflow', desc: 'Business process, automation' }
-  ],
-  layer: [
-    { key: 'Frontend', desc: 'User interface, web apps' },
-    { key: 'Backend', desc: 'Server logic, APIs, DB' },
-    { key: 'GraphQL', desc: 'GraphQL schema, resolvers' },
-    { key: 'Mobile', desc: 'iOS/Android, React Native' },
-    { key: 'Tests', desc: 'Unit, integration, E2E' },
-    { key: 'Docs', desc: 'Documentation, guides' }
-  ],
-  // component list is now managed by ComponentContext
-  status: [
-    { key: 'Open', desc: 'Not started' },
-    { key: 'In Progress', desc: 'Work in progress' },
-    { key: 'Blocked', desc: 'Blocked by something' },
-    { key: 'Review', desc: 'Ready for review' },
-    { key: 'Done', desc: 'Completed' },
-    { key: 'Closed', desc: 'Closed, won\'t do' }
-  ]
-};
+// ...existing code...
 
 type ListItem = { key: string; desc: string };
 type EditableListProps = {
@@ -299,67 +259,7 @@ type EditableListProps = {
   placeholder?: string;
 };
 
-const EditableList: React.FC<EditableListProps> = ({ label, description, items, onChange, placeholder }) => {
-  const [input, setInput] = useState('');
-  const [desc, setDesc] = useState('');
-  return (
-    <div className="h-full">
-      <div className="text-lg font-semibold text-green-800 mb-3">{label}</div>
-      {description && <div className="text-sm text-green-600 mb-4">{description}</div>}
-      <ul className="mb-3 divide-y divide-green-100 bg-green-50 rounded-lg border border-green-100">
-        {items.map((item, idx) => (
-          <li
-            key={item.key}
-            className="flex items-center px-3 py-2 group hover:bg-green-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-green-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
-                <button
-                  className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
-                  onClick={() => onChange(items.filter((_, i) => i !== idx))}
-                  title="Remove"
-                  type="button"
-                  aria-label={`Remove ${item.key}`}
-                >
-                  ×
-                </button>
-              </div>
-              {item.desc && (
-                <div className="text-green-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="flex gap-2 items-center mb-1">
-        <input
-          className="border border-green-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50 placeholder-green-300"
-          value={input}
-          placeholder={placeholder || `Add key...`}
-          onChange={e => setInput(e.target.value)}
-        />
-        <input
-          className="border border-green-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-green-200 bg-green-50 placeholder-green-200"
-          value={desc}
-          placeholder="Description..."
-          onChange={e => setDesc(e.target.value)}
-        />
-        <button
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all duration-150"
-          type="button"
-          onClick={() => {
-            if (input.trim() && !items.some(i => i.key === input.trim())) {
-              onChange([...items, { key: input.trim(), desc: desc.trim() }]);
-              setInput('');
-              setDesc('');
-            }
-          }}
-        >Add        </button>
-      </div>
-    </div>
-  );
-};
+// ...existing code...
 
 const SettingsViewInner: React.FC = () => {
   const { prefix, setPrefix, loading } = usePrefix();
@@ -373,7 +273,34 @@ const SettingsViewInner: React.FC = () => {
       setDirty(false);
     }
   }, [prefix, loading]);
-  const [complexity, setComplexity] = useState(DEFAULTS.complexity);
+  const complexityCtx = React.useContext(ComplexityContext);
+  const [inputComplexity, setInputComplexity] = useState('');
+  const [descComplexity, setDescComplexity] = useState('');
+  const [editComplexityIdx, setEditComplexityIdx] = useState<number | null>(null);
+  const [editComplexityKey, setEditComplexityKey] = useState('');
+  const [editComplexityDesc, setEditComplexityDesc] = useState('');
+  const complexityItems = complexityCtx?.complexities?.map((c: { key: string; description: string }) => ({ key: c.key, desc: c.description })) ?? [];
+  const complexityLoading = complexityCtx?.loading ?? false;
+
+  const handleAddComplexity = async () => {
+    if (!complexityCtx || !inputComplexity.trim() || complexityItems.some((i: { key: string }) => i.key === inputComplexity.trim())) return;
+    await complexityCtx.addComplexity({ key: inputComplexity.trim(), description: descComplexity.trim() });
+    setInputComplexity('');
+    setDescComplexity('');
+  };
+  const handleUpdateComplexity = async (idx: number) => {
+    if (!complexityCtx) return;
+    const oldKey = complexityItems[idx]?.key;
+    if (oldKey) {
+      await complexityCtx.updateComplexity(oldKey, { key: editComplexityKey, description: editComplexityDesc });
+      setEditComplexityIdx(null);
+    }
+  };
+  const handleDeleteComplexity = async (idx: number) => {
+    if (!complexityCtx) return;
+    const key = complexityItems[idx]?.key;
+    if (key) await complexityCtx.deleteComplexity(key);
+  };
   // Layer state is now managed by LayerContext
   // Component state is now managed by ComponentContext
 const PriorityLevelsSection: React.FC = () => {
@@ -495,7 +422,34 @@ const PriorityLevelsSection: React.FC = () => {
     </div>
   );
 };
-  const [status, setStatus] = useState(DEFAULTS.status);
+  const statusCtx = React.useContext(StatusContext);
+  const [inputStatus, setInputStatus] = useState('');
+  const [descStatus, setDescStatus] = useState('');
+  const [editStatusIdx, setEditStatusIdx] = useState<number | null>(null);
+  const [editStatusKey, setEditStatusKey] = useState('');
+  const [editStatusDesc, setEditStatusDesc] = useState('');
+  const statusItems = statusCtx?.statuses?.map((s: { key: string; description: string }) => ({ key: s.key, desc: s.description })) ?? [];
+  const statusLoading = statusCtx?.loading ?? false;
+
+  const handleAddStatus = async () => {
+    if (!statusCtx || !inputStatus.trim() || statusItems.some((i: { key: string }) => i.key === inputStatus.trim())) return;
+    await statusCtx.addStatus({ key: inputStatus.trim(), description: descStatus.trim() });
+    setInputStatus('');
+    setDescStatus('');
+  };
+  const handleUpdateStatus = async (idx: number) => {
+    if (!statusCtx) return;
+    const oldKey = statusItems[idx]?.key;
+    if (oldKey) {
+      await statusCtx.updateStatus(oldKey, { key: editStatusKey, description: editStatusDesc });
+      setEditStatusIdx(null);
+    }
+  };
+  const handleDeleteStatus = async (idx: number) => {
+    if (!statusCtx) return;
+    const key = statusItems[idx]?.key;
+    if (key) await statusCtx.deleteStatus(key);
+  };
 
   return (
     <div className="settings-view max-w-6xl mx-auto p-8 bg-gradient-to-br from-green-50 to-white rounded-2xl shadow-lg border border-green-100">
@@ -553,23 +507,179 @@ const PriorityLevelsSection: React.FC = () => {
         </div>
         {/* Ticket Statuses - Pink */}
         <div className="settings-section">
-          <EditableList
-            label="Ticket Statuses"
-            description="Workflow state: Open, In Progress, Blocked, Review, Done, Closed."
-            items={status}
-            onChange={setStatus}
-            placeholder="e.g. In Progress"
-          />
+          <div className="text-lg font-semibold text-pink-800 mb-3">Ticket Statuses</div>
+          <div className="text-sm text-pink-600 mb-4">Workflow state: Open, In Progress, Blocked, Review, Done, Closed.</div>
+          {statusLoading && <div className="text-pink-500 mb-2">Loading...</div>}
+          <ul className="mb-3 divide-y divide-pink-100 bg-pink-50 rounded-lg border border-pink-100">
+            {statusItems.map((item: { key: string; desc: string }, idx: number) => (
+              <li key={item.key} className="flex items-center px-3 py-2 group hover:bg-pink-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    {editStatusIdx === idx ? (
+                      <>
+                        <input
+                          className="border border-pink-300 px-2 py-1 rounded text-sm font-semibold"
+                          value={editStatusKey}
+                          onChange={e => setEditStatusKey(e.target.value)}
+                        />
+                        <button
+                          className="ml-2 bg-pink-500 hover:bg-pink-700 text-white px-2 py-1 rounded font-semibold"
+                          type="button"
+                          onClick={() => handleUpdateStatus(idx)}
+                        >Save</button>
+                        <button
+                          className="ml-1 text-gray-400 hover:text-gray-700 px-2 rounded"
+                          type="button"
+                          onClick={() => setEditStatusIdx(null)}
+                        >Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-pink-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
+                        <button
+                          className="ml-2 text-pink-400 hover:text-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-300 rounded-full px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                          type="button"
+                          onClick={() => {
+                            setEditStatusIdx(idx);
+                            setEditStatusKey(item.key);
+                            setEditStatusDesc(item.desc);
+                          }}
+                          title="Edit"
+                          aria-label={`Edit ${item.key}`}
+                        >✎</button>
+                        <button
+                          className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                          onClick={() => handleDeleteStatus(idx)}
+                          title="Remove"
+                          type="button"
+                          aria-label={`Remove ${item.key}`}
+                        >×</button>
+                      </>
+                    )}
+                  </div>
+                  {editStatusIdx === idx ? (
+                    <input
+                      className="border border-pink-200 px-2 py-1 rounded text-xs mt-1 w-full"
+                      value={editStatusDesc}
+                      onChange={e => setEditStatusDesc(e.target.value)}
+                      placeholder="Description..."
+                    />
+                  ) : (
+                    item.desc && (
+                      <div className="text-pink-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
+                    )
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2 items-center mb-1">
+            <input
+              className="border border-pink-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50 placeholder-pink-300"
+              value={inputStatus}
+              placeholder="Add key..."
+              onChange={e => setInputStatus(e.target.value)}
+            />
+            <input
+              className="border border-pink-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-pink-200 bg-pink-50 placeholder-pink-200"
+              value={descStatus}
+              placeholder="Description..."
+              onChange={e => setDescStatus(e.target.value)}
+            />
+            <button
+              className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-pink-600 hover:to-pink-700 transition-all duration-150"
+              type="button"
+              onClick={handleAddStatus}
+            >Add</button>
+          </div>
         </div>
         {/* Complexity - Orange */}
         <div className="settings-section">
-          <EditableList
-            label="Complexity (T-Shirt Sizes)"
-            description="Relative effort or size: XS (tiny), S, M, L, XL, XXL (huge)."
-            items={complexity}
-            onChange={setComplexity}
-            placeholder="e.g. XS"
-          />
+          <div className="text-lg font-semibold text-orange-800 mb-3">Complexity (T-Shirt Sizes)</div>
+          <div className="text-sm text-orange-600 mb-4">Relative effort or size: XS (tiny), S, M, L, XL, XXL (huge).</div>
+          {complexityLoading && <div className="text-orange-500 mb-2">Loading...</div>}
+          <ul className="mb-3 divide-y divide-orange-100 bg-orange-50 rounded-lg border border-orange-100">
+            {complexityItems.map((item: { key: string; desc: string }, idx: number) => (
+              <li key={item.key} className="flex items-center px-3 py-2 group hover:bg-orange-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    {editComplexityIdx === idx ? (
+                      <>
+                        <input
+                          className="border border-orange-300 px-2 py-1 rounded text-sm font-semibold"
+                          value={editComplexityKey}
+                          onChange={e => setEditComplexityKey(e.target.value)}
+                        />
+                        <button
+                          className="ml-2 bg-orange-500 hover:bg-orange-700 text-white px-2 py-1 rounded font-semibold"
+                          type="button"
+                          onClick={() => handleUpdateComplexity(idx)}
+                        >Save</button>
+                        <button
+                          className="ml-1 text-gray-400 hover:text-gray-700 px-2 rounded"
+                          type="button"
+                          onClick={() => setEditComplexityIdx(null)}
+                        >Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-orange-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
+                        <button
+                          className="ml-2 text-orange-400 hover:text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-300 rounded-full px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                          type="button"
+                          onClick={() => {
+                            setEditComplexityIdx(idx);
+                            setEditComplexityKey(item.key);
+                            setEditComplexityDesc(item.desc);
+                          }}
+                          title="Edit"
+                          aria-label={`Edit ${item.key}`}
+                        >✎</button>
+                        <button
+                          className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                          onClick={() => handleDeleteComplexity(idx)}
+                          title="Remove"
+                          type="button"
+                          aria-label={`Remove ${item.key}`}
+                        >×</button>
+                      </>
+                    )}
+                  </div>
+                  {editComplexityIdx === idx ? (
+                    <input
+                      className="border border-orange-200 px-2 py-1 rounded text-xs mt-1 w-full"
+                      value={editComplexityDesc}
+                      onChange={e => setEditComplexityDesc(e.target.value)}
+                      placeholder="Description..."
+                    />
+                  ) : (
+                    item.desc && (
+                      <div className="text-orange-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
+                    )
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2 items-center mb-1">
+            <input
+              className="border border-orange-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-orange-50 placeholder-orange-300"
+              value={inputComplexity}
+              placeholder="Add key..."
+              onChange={e => setInputComplexity(e.target.value)}
+            />
+            <input
+              className="border border-orange-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-orange-200 bg-orange-50 placeholder-orange-200"
+              value={descComplexity}
+              placeholder="Description..."
+              onChange={e => setDescComplexity(e.target.value)}
+            />
+            <button
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-orange-600 hover:to-orange-700 transition-all duration-150"
+              type="button"
+              onClick={handleAddComplexity}
+            >Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -582,7 +692,11 @@ const SettingsView: React.FC = () => (
       <ComponentProvider>
         <FeatureProvider>
           <PriorityProvider>
-            <SettingsViewInner />
+            <StatusProvider>
+              <ComplexityProvider>
+                <SettingsViewInner />
+              </ComplexityProvider>
+            </StatusProvider>
           </PriorityProvider>
         </FeatureProvider>
       </ComponentProvider>

@@ -13,9 +13,11 @@ import { LayerController } from './controllers/layer.controller';
 import { ComponentController } from './controllers/component.controller';
 import { FeatureController } from './controllers/feature.controller';
 import { PriorityController } from './controllers/priority.controller';
+import { StatusController } from './controllers/status.controller';
+import { ComplexityController } from './controllers/complexity.controller';
 
 @Module({
-  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController, ComponentController, FeatureController, PriorityController],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController, ComponentController, FeatureController, PriorityController, StatusController, ComplexityController],
   providers: [
     TotemService,
     {
@@ -51,7 +53,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController, ComponentController, FeatureController, PriorityController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController, ComponentController, FeatureController, PriorityController, StatusController, ComplexityController],
       providers: [TotemService],
     };
   }
