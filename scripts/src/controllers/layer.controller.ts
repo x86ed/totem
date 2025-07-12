@@ -114,12 +114,12 @@ export class LayerController {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
     }
     const content = readFileSync(this.ID_MD_PATH, 'utf-8');
-    // Match Layer section robustly (handles \n, \r\n, extra whitespace, and section at end of file)
-    const match = content.match(/(## Layer\s*\r?\n)([\s\S]*?)(\r?\n## Component|## Component|$)/);
+    // Match Layer section robustly (handles any whitespace, blank lines, and section at end of file)
+    const match = content.match(/(## Layer\s*\r?\n+)([\s\S]*?)(\r?\n+## |\r?\n+##|$)/);
     if (!match) throw new HttpException('Layer section not found', HttpStatus.NOT_FOUND);
     const before = content.slice(0, match.index! + match[1].length);
     const after = content.slice(match.index! + match[0].length - match[3].length);
-    let layerLines = match[2].split(/\r?\n/).map(l => l.trim());
+    let layerLines = match[2].split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
     const idx = layerLines.findIndex(l => l.toLowerCase().includes(`**${key.toLowerCase()}**`));
     if (action === 'add') {
       if (idx !== -1) throw new HttpException('Layer already exists', HttpStatus.CONFLICT);

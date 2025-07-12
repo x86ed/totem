@@ -1,4 +1,5 @@
 import { Module, DynamicModule } from '@nestjs/common';
+import { resolve } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ApiController } from './controllers/api.controller';
@@ -11,10 +12,17 @@ import { PrefixController } from './controllers/prefix.controller';
 import { LayerController } from './controllers/layer.controller';
 import { ComponentController } from './controllers/component.controller';
 import { FeatureController } from './controllers/feature.controller';
+import { PriorityController } from './controllers/priority.controller';
 
 @Module({
-  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController, ComponentController, FeatureController],
-  providers: [TotemService],
+  controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, LayerController, ComponentController, FeatureController, PriorityController],
+  providers: [
+    TotemService,
+    {
+      provide: 'COMPONENT_MARKDOWN_PATH',
+      useValue: resolve(process.cwd(), '.totem/projects/conventions/id.md'),
+    },
+  ],
 })
 export class AppModule {
   static forRoot(): DynamicModule {
@@ -43,7 +51,7 @@ export class AppModule {
     return {
       module: AppModule,
       imports,
-      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController, ComponentController, FeatureController],
+      controllers: [ApiController, TicketController, PersonaController, ArtifactsController, ContributorController, PrefixController, LayerController, ComponentController, FeatureController, PriorityController],
       providers: [TotemService],
     };
   }

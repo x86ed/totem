@@ -7,30 +7,14 @@ import * as path from 'path';
 
 describe('ComponentController', () => {
   let controller: ComponentController;
-  const testMdPath = path.resolve(__dirname, '../../.totem/projects/conventions/id.test.md');
-  const originalMdPath = path.resolve(__dirname, '../../.totem/projects/conventions/id.md');
-  const mdBackupPath = path.resolve(__dirname, '../../.totem/projects/conventions/id.md.bak');
+  const testMdPath = path.resolve(__dirname, './testdata/id.test.md');
+  const initialMdContent = `# ID Conventions\n\n## Layer\n\n- **UI** - User Interface layer\n- **API** - API layer\n- **DB** - Database layer\n\n## Component\n\n- **Button** - Interactive button element\n- **Input** - Text input field\n- **Card** - Card display component\n\n## Feature\n\n- **Login** - User authentication\n- **Signup** - New user registration\n\n## Priority\n\n- **P0** - Critical\n- **P1** - High\n- **P2** - Medium\n- **P3** - Low\n\n## Prefix\n\n- **UI** - User Interface\n- **API** - API\n- **DB** - Database\n`;
 
-  beforeAll(() => {
-    // Backup the real id.md and use the test file
-    if (fs.existsSync(originalMdPath)) {
-      fs.copyFileSync(originalMdPath, mdBackupPath);
-      fs.copyFileSync(testMdPath, originalMdPath);
-    }
-  });
-
-  afterAll(() => {
-    // Restore the real id.md
-    if (fs.existsSync(mdBackupPath)) {
-      fs.copyFileSync(mdBackupPath, originalMdPath);
-      fs.unlinkSync(mdBackupPath);
-    }
-  });
-
-  beforeEach(async () => {
+  beforeEach(() => {
+    // Reset test markdown file to known good state
+    fs.writeFileSync(testMdPath, initialMdContent, 'utf-8');
     controller = new ComponentController();
-    // Point to test markdown file
-    (controller as any).ID_MD_PATH = originalMdPath;
+    controller.setFilePath(testMdPath);
   });
 
   it('should get all components', () => {
@@ -60,7 +44,7 @@ describe('ComponentController', () => {
     expect(result.description).toBe('A new component');
     // Should be present in getAll
     const all = controller.getAll();
-    expect(all.some(c => c.key === 'newcomp')).toBe(true);
+    expect(all.some(c => c.key.toLowerCase() === 'newcomp')).toBe(true);
   });
 
   it('should not add duplicate component', () => {

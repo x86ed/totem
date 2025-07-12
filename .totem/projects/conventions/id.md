@@ -8,7 +8,7 @@ Examples:
 
 ## Prefix
 
-DOKIE
+XYZ789
 
 ## Layer
 
@@ -34,11 +34,9 @@ DOKIE
 - **security** - Security features, encryption, monitoring
 - **ui** - User interface components, design system
 - **workflow** - Business processes, automation, orchestration
-- **new** - yay
-- **another** - one
+
 ## Feature
 
-- **login** - User authentication and session management
 - **signup** - User registration and account creation
 - **profile** - User profile management and settings
 - **dashboard** - Main overview and summary interfaces
@@ -59,6 +57,7 @@ DOKIE
 - **cache** - Caching mechanisms and optimization
 - **migration** - Data or system migrations
 - **mic check** - one two
+- **login** - sup pal
 ## Number
 
 a zero padded 3 digit number. Will expand to four digits if numbers get significantly high.

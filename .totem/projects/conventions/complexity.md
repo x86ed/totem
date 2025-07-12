@@ -2,9 +2,9 @@
 
 represents the relative size and effort required for a work item
 
-- `xs` - Trivial change, less than 1 hour of work
-- `s` - Small change, 1-4 hours of work
-- `m` - Medium change, 1-2 days of work
-- `l` - Large change, 3-5 days of work
-- `xl` - Extra large change, 1-2 weeks of work
-- `xxl` - Epic-sized change, requires breaking down into smaller items
+- **xs** - Trivial change, <1 hour of work
+- **s** - Small change, 1-4 hours of work
+- **m** - Medium change, 8-24 hours of work
+- **l** - Large change, 24-40 hours of work
+- **xl** - Extra large change, 40-80 hours of work
+- **xxl** - Epic-sized change, >80 hours of work

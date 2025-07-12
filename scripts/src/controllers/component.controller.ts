@@ -1,14 +1,26 @@
-import { Controller, Get, Put, Post, Delete, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, Param, Body, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+// import { resolve } from 'path';
 
 import { ComponentDto } from '../dto/component.dto';
 
 @ApiTags('component')
 @Controller('api/component')
 export class ComponentController {
-  protected ID_MD_PATH = resolve(process.cwd(), '.totem/projects/conventions/id.md');
+  protected ID_MD_PATH: string;
+  constructor(
+    @Inject('COMPONENT_MARKDOWN_PATH') mdPath: string
+  ) {
+    this.ID_MD_PATH = mdPath;
+  }
+
+  /**
+   * Allows tests to override the markdown file path
+   */
+  setFilePath(path: string) {
+    this.ID_MD_PATH = path;
+  }
 
   /**
    * GET /api/component - Get all component entries
@@ -73,8 +85,8 @@ export class ComponentController {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
     }
     const content = readFileSync(this.ID_MD_PATH, 'utf-8');
-    // Robustly extract the ## Component section, even if there are blank lines or extra whitespace
-    const match = content.match(/(## Component\s*\r?\n)([\s\S]*?)(\r?\n## [^\r\n]+|$)/);
+    // Use the same regex as modifyComponent
+    const match = content.match(/(## Component\s*\r?\n)([\s\S]*?)(\r?\n## |$)/);
     if (!match) return [];
     const section = match[2];
     const lines = section.split(/\r?\n/);
@@ -110,26 +122,52 @@ export class ComponentController {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
     }
     const content = readFileSync(this.ID_MD_PATH, 'utf-8');
-    // Match Component section robustly (handles \n, \r\n, extra whitespace, and section at end of file)
-    const match = content.match(/(## Component\s*\r?\n)([\s\S]*?)(\r?\n## [^\r\n]+|$)/);
+    // Robustly extract the ## Component section
+    const match = content.match(/(## Component\s*\r?\n)([\s\S]*?)(\r?\n## |$)/);
     if (!match) throw new HttpException('Component section not found', HttpStatus.NOT_FOUND);
     const before = content.slice(0, match.index! + match[1].length);
     const after = content.slice(match.index! + match[0].length - match[3].length);
-    let componentLines = match[2].split(/\r?\n/).map(l => l.trim());
-    const idx = componentLines.findIndex(l => l.toLowerCase().includes(`**${key.toLowerCase()}**`));
+    let rawLines = match[2].split(/\r?\n/);
+    // Find index by key (case-insensitive)
+    const idx = rawLines.findIndex(l => {
+      const m = l.match(/\*\*(.+?)\*\*/);
+      return m && m[1].trim().toLowerCase() === key.trim().toLowerCase();
+    });
     if (action === 'add') {
       if (idx !== -1) throw new HttpException('Component already exists', HttpStatus.CONFLICT);
-      componentLines.push(`- **${key}** - ${description}`);
+      rawLines.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Component not found', HttpStatus.NOT_FOUND);
-      componentLines[idx] = `- **${key}** - ${description}`;
+      // Only update the description, preserve the original key and formatting
+      // Match: everything up to the last '**', then replace the description after
+      const line = rawLines[idx];
+      const boldMatch = line.match(/^(.*\*\*[^*]+\*\*)(\s*-\s*|\s+)(.*)$/);
+      if (boldMatch && boldMatch.length >= 4) {
+        // boldMatch[1]: everything up to and including the closing '**'
+        // boldMatch[2]: separator (preserve original formatting)
+        // boldMatch[3]: old description
+        rawLines[idx] = boldMatch[1] + boldMatch[2] + description;
+      } else {
+        // If not matched, do not reconstruct the key, just replace the whole line
+        rawLines[idx] = `- **${key}** - ${description}`;
+      }
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Component not found', HttpStatus.NOT_FOUND);
-      componentLines.splice(idx, 1);
+      rawLines.splice(idx, 1);
     }
-    // Only replace the Component section
-    const newComponentSection = componentLines.filter(l => l).join('\n');
-    const updated = `${before}${newComponentSection}${after}`;
+    // Remove leading/trailing blank lines
+    let componentLines = rawLines;
+    while (componentLines.length && !componentLines[0].trim()) componentLines.shift();
+    while (componentLines.length && !componentLines[componentLines.length - 1].trim()) componentLines.pop();
+    // Rebuild section with exactly one blank line above and below
+    let newSection = '';
+    if (componentLines.length > 0) {
+      newSection = '\n' + componentLines.join('\n') + '\n';
+    } else {
+      newSection = '\n';
+    }
+    // Ensure only one blank line above and below
+    let updated = before.replace(/\n*$/, '\n') + newSection + after.replace(/^\n*/, '\n');
     writeFileSync(this.ID_MD_PATH, updated, 'utf-8');
     const dto = new ComponentDto();
     dto.key = key;

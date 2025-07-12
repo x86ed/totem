@@ -34,14 +34,47 @@ export class PrefixController {
     if (!existsSync(this.ID_MD_PATH)) {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
     }
-    // Validate newPrefix
-    let prefix = (newPrefix || '').replace(/\s+/g, '').replace(/[^A-Za-z0-9_-]/g, '').toUpperCase().slice(0, 6);
+    // Validate newPrefix: must be string
+    if (typeof newPrefix !== 'string') {
+      throw new HttpException('Prefix must be a string', HttpStatus.BAD_REQUEST);
+    }
+    // Reject if any whitespace in original input
+    if (/\s/.test(newPrefix)) {
+      throw new HttpException('Prefix cannot contain whitespace', HttpStatus.BAD_REQUEST);
+    }
+    // Sanitize: remove disallowed chars, uppercase
+    let prefix = newPrefix.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase();
     if (!prefix) {
-      throw new HttpException('Prefix is empty or invalid', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Prefix is empty or contains invalid characters', HttpStatus.BAD_REQUEST);
+    }
+    if (prefix.length > 6) {
+      throw new HttpException('Prefix is too long', HttpStatus.BAD_REQUEST);
     }
     const content = readFileSync(this.ID_MD_PATH, 'utf-8');
-    // Replace the prefix section
-    const updated = content.replace(/(## Prefix[\r\n]+)([\s\S]*?)([\r\n]+## Layer)/, `$1${prefix}$3`);
+    // Find the Prefix section strictly between ## Prefix and next heading
+    const prefixSectionRegex = /(## Prefix\s*\n)([\s\S]*?)(?=^## |^#|$)/m;
+    const match = content.match(prefixSectionRegex);
+    if (!match) {
+      throw new HttpException('Prefix section not found', HttpStatus.NOT_FOUND);
+    }
+    // Split section into lines, preserve blank lines before/after
+    let sectionLines = match[2].split(/\r?\n/);
+    // Find first non-blank line (prefix value)
+    const prefixIdx = sectionLines.findIndex(l => l.trim().length > 0);
+    if (prefixIdx === -1) {
+      // No prefix value, insert in the middle
+      const mid = Math.floor(sectionLines.length / 2);
+      sectionLines.splice(mid, 0, prefix);
+    } else {
+      sectionLines[prefixIdx] = prefix;
+    }
+    // Remove any other non-blank lines (should only be one prefix value)
+    sectionLines = sectionLines.filter((l, i) => i === prefixIdx || l.trim().length === 0);
+    // Rejoin, preserving original blank lines
+    const newSection = sectionLines.join('\n');
+    const before = content.slice(0, match.index! + match[1].length);
+    const after = content.slice(match.index! + match[0].length);
+    const updated = before + newSection + after;
     if (updated === content) {
       throw new HttpException('Failed to update prefix', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -75,8 +108,12 @@ export class PrefixController {
   }
 
   private extractPrefix(md: string): string | null {
-    const prefixMatch = md.match(/## Prefix([\s\S]*?)## Layer/);
-    if (!prefixMatch || !prefixMatch[1]) return null;
-    return prefixMatch[1].trim();
+    // Robustly extract the value after ## Prefix, up to next heading or end of file
+    const prefixSectionRegex = /## Prefix\s*\n([\s\S]*?)(?=^## |^#|$)/m;
+    const match = md.match(prefixSectionRegex);
+    if (!match || !match[1]) return null;
+    // Get first non-empty line as prefix value
+    const lines = match[1].split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    return lines.length ? lines[0] : null;
   }
 }
