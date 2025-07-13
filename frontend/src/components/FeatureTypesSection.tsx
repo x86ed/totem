@@ -32,7 +32,7 @@ const FeatureTypesSection: React.FC = () => {
   };
 
   return (
-    <div className="settings-section">
+    <>
       <div className="text-lg font-semibold text-blue-800 mb-3">Feature Types</div>
       <div className="text-sm text-blue-600 mb-4">Major features or capabilities (e.g. auth, payment, analytics).</div>
       {loading && <div className="text-blue-500 mb-2">Loading...</div>}
@@ -118,7 +118,7 @@ const FeatureTypesSection: React.FC = () => {
           onClick={handleAdd}
         >Add</button>
       </div>
-    </div>
+    </>
   );
 };
 

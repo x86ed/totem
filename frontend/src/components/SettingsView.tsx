@@ -39,7 +39,7 @@ const ComponentTypesSection: React.FC = () => {
     if (key) await componentCtx.deleteComponent(key);
   };
   return (
-    <div className="settings-section">
+    <div className="component-section">
       <div className="text-lg font-semibold text-yellow-800 mb-3">Component Types</div>
       <div className="text-sm text-yellow-600 mb-4">Major components or subsystems (e.g. api, ui, database).</div>
       {loading && <div className="text-yellow-500 mb-2">Loading...</div>}
@@ -157,7 +157,7 @@ const LayerTypesSection: React.FC = () => {
     if (key) await layerCtx.deleteLayer(key);
   };
   return (
-    <div className="settings-section">
+    <>
       <div className="text-lg font-semibold text-green-800 mb-3">Layer Types</div>
       <div className="text-sm text-green-600 mb-4">Project layer: Frontend, Backend, GraphQL, Mobile, Tests, Docs.</div>
       {loading && <div className="text-green-500 mb-2">Loading...</div>}
@@ -243,126 +243,12 @@ const LayerTypesSection: React.FC = () => {
           onClick={handleAdd}
         >Add</button>
       </div>
-    </div>
+    </>
   );
 };
 import { PrefixProvider } from '../context/PrefixContext';
 import usePrefix from '../context/usePrefix';
 import './SettingsView.css';
-
-const DEFAULTS = {
-  prefix: 'PROJ',
-  complexity: [
-    { key: 'XS', desc: 'Extra Small (trivial, <1h)' },
-    { key: 'S', desc: 'Small (1-2h)' },
-    { key: 'M', desc: 'Medium (half day)' },
-    { key: 'L', desc: 'Large (1-2 days)' },
-    { key: 'XL', desc: 'Extra Large (multi-day)' },
-    { key: 'XXL', desc: 'Epic (week+)' }
-  ],
-  feature: [
-    { key: 'auth', desc: 'Authentication & authorization' },
-    { key: 'user', desc: 'User management, profiles' },
-    { key: 'payment', desc: 'Payments, billing, transactions' },
-    { key: 'notification', desc: 'Email, SMS, push notifications' },
-    { key: 'analytics', desc: 'Tracking, reporting, metrics' },
-    { key: 'search', desc: 'Search, filtering, indexing' },
-    { key: 'admin', desc: 'Admin panels, management tools' },
-    { key: 'api', desc: 'REST APIs, endpoints' },
-    { key: 'database', desc: 'Data models, migrations' },
-    { key: 'security', desc: 'Security, encryption, monitoring' },
-    { key: 'ui', desc: 'UI components, design system' },
-    { key: 'workflow', desc: 'Business process, automation' }
-  ],
-  layer: [
-    { key: 'Frontend', desc: 'User interface, web apps' },
-    { key: 'Backend', desc: 'Server logic, APIs, DB' },
-    { key: 'GraphQL', desc: 'GraphQL schema, resolvers' },
-    { key: 'Mobile', desc: 'iOS/Android, React Native' },
-    { key: 'Tests', desc: 'Unit, integration, E2E' },
-    { key: 'Docs', desc: 'Documentation, guides' }
-  ],
-  // component list is now managed by ComponentContext
-  status: [
-    { key: 'Open', desc: 'Not started' },
-    { key: 'In Progress', desc: 'Work in progress' },
-    { key: 'Blocked', desc: 'Blocked by something' },
-    { key: 'Review', desc: 'Ready for review' },
-    { key: 'Done', desc: 'Completed' },
-    { key: 'Closed', desc: 'Closed, won\'t do' }
-  ]
-};
-
-type ListItem = { key: string; desc: string };
-type EditableListProps = {
-  label: string;
-  description?: string;
-  items: ListItem[];
-  onChange: (items: ListItem[]) => void;
-  placeholder?: string;
-};
-
-const EditableList: React.FC<EditableListProps> = ({ label, description, items, onChange, placeholder }) => {
-  const [input, setInput] = useState('');
-  const [desc, setDesc] = useState('');
-  return (
-    <div className="h-full">
-      <div className="text-lg font-semibold text-green-800 mb-3">{label}</div>
-      {description && <div className="text-sm text-green-600 mb-4">{description}</div>}
-      <ul className="mb-3 divide-y divide-green-100 bg-green-50 rounded-lg border border-green-100">
-        {items.map((item, idx) => (
-          <li
-            key={item.key}
-            className="flex items-center px-3 py-2 group hover:bg-green-100 transition-colors duration-100 first:rounded-t-lg last:rounded-b-lg"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-green-900 text-sm font-semibold truncate" title={item.key}>{item.key}</span>
-                <button
-                  className="ml-2 text-red-400 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 rounded-full px-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
-                  onClick={() => onChange(items.filter((_, i) => i !== idx))}
-                  title="Remove"
-                  type="button"
-                  aria-label={`Remove ${item.key}`}
-                >
-                  ×
-                </button>
-              </div>
-              {item.desc && (
-                <div className="text-green-700 text-xs mt-1 pl-1 break-words italic" style={{ wordBreak: 'break-word' }}>{item.desc}</div>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="flex gap-2 items-center mb-1">
-        <input
-          className="border border-green-300 px-3 py-1 rounded-lg text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-green-400 bg-green-50 placeholder-green-300"
-          value={input}
-          placeholder={placeholder || `Add key...`}
-          onChange={e => setInput(e.target.value)}
-        />
-        <input
-          className="border border-green-200 px-3 py-1 rounded-lg text-xs flex-1 focus:outline-none focus:ring-2 focus:ring-green-200 bg-green-50 placeholder-green-200"
-          value={desc}
-          placeholder="Description..."
-          onChange={e => setDesc(e.target.value)}
-        />
-        <button
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1.5 rounded-lg font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all duration-150"
-          type="button"
-          onClick={() => {
-            if (input.trim() && !items.some(i => i.key === input.trim())) {
-              onChange([...items, { key: input.trim(), desc: desc.trim() }]);
-              setInput('');
-              setDesc('');
-            }
-          }}
-        >Add        </button>
-      </div>
-    </div>
-  );
-};
 
 const SettingsViewInner: React.FC = () => {
   const { prefix, setPrefix, loading } = usePrefix();
@@ -387,11 +273,6 @@ const SettingsViewInner: React.FC = () => {
     [complexityCtx?.complexities]
   );
   const complexityLoading = complexityCtx?.loading ?? false;
-
-  React.useEffect(() => {
-    console.log('ComplexityContext:', complexityCtx);
-    console.log('Complexity items:', complexityItems);
-  }, [complexityCtx, complexityItems]);
 
   const handleAddComplexity = async () => {
     if (!complexityCtx || !inputComplexity.trim() || complexityItems.some((i: { key: string }) => i.key === inputComplexity.trim())) return;
@@ -444,7 +325,7 @@ const PriorityLevelsSection: React.FC = () => {
     if (key) await priorityCtx.deletePriority(key);
   };
   return (
-    <div className="settings-section">
+    <>
       <div className="text-lg font-semibold text-purple-800 mb-3">Priority Levels</div>
       <div className="text-sm text-purple-600 mb-4">Relative urgency or importance: Low, Medium, High, Critical.</div>
       {loading && <div className="text-purple-500 mb-2">Loading...</div>}
@@ -530,7 +411,7 @@ const PriorityLevelsSection: React.FC = () => {
           onClick={handleAdd}
         >Add</button>
       </div>
-    </div>
+    </>
   );
 };
   const statusCtx = React.useContext(StatusContext);
@@ -568,9 +449,9 @@ const PriorityLevelsSection: React.FC = () => {
         <span className="inline-block bg-green-200 text-green-700 rounded-full px-3 py-1 text-lg mr-2">⚙️</span>
         Project Settings
       </h3>
-      <div style={{background: 'red',padding: '1rem 1rem 1rem 1rem', borderRadius: '1rem'}}>
-        <section className="settings-section mb-10">
-          <div className="bg-gradient-to-br from-cyan-50 to-blue-100 border border-cyan-200 shadow-sm rounded-2xl p-6">
+      <div className="idSettings" style={{padding: '1rem 1rem 1rem 1rem', borderRadius: '1rem'}}>
+        <section className="settings-section prefix-section mb-10">
+          <div className="p-6">
             <label className="section-title">Project Prefix</label>
             <div className="flex gap-2 items-center">
               <input
@@ -598,20 +479,20 @@ const PriorityLevelsSection: React.FC = () => {
         {/* Two rows of 3 cards each, each with a unique color theme */}
         <div className="settings-grid-2x3">
           {/* Feature Types - Blue */}
-          <div className="settings-section">
+          <div className="settings-section feature-section">
             <FeatureTypesSection />
           </div>
           {/* Layer Types - Green */}
-          <div className="settings-section">
+          <div className="settings-section layer-section">
             <LayerTypesSection />
           </div>
           {/* Component Types - Yellow */}
-          <div className="settings-section">
+          <div className="settings-section component-section">
             <ComponentTypesSection />
           </div>
         </div>
       </div> {/* <-- Properly close the red background div here */}
-      <div className="settings-grid-2x3">
+      <div className="settings-grid-2x3 bottom">
         {/* Priority Levels - Purple */}
         <div className="settings-section">
           <PriorityLevelsSection />

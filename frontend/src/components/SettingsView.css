@@ -1,3 +1,72 @@
+/* Earth tone theme for idSettings and cards */
+
+.idSettings {
+  background: #B7B597;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px 0 rgba(169, 124, 80, 0.08);
+  padding: 1rem;
+}
+
+
+/* Solid color backgrounds for each section */
+.idSettings .settings-section.prefix-section {
+  background: #E2B07B;
+  border: 1px solid #A97C50;
+}
+.idSettings .settings-section.feature-section {
+  background: #B7B597;
+  border: 1px solid #7D8F69;
+}
+.idSettings .settings-section.prefix-section {
+  background: #E2B07B;
+  border: 1px solid #A97C50;
+}
+.idSettings .settings-section.feature-section {
+  background: #B7B597;
+  border: 1px solid #7D8F69;
+}
+.idSettings .settings-section.layer-section {
+  background: #D9CBA3;
+  border: 1px solid #B7B597;
+}
+.idSettings .settings-section.component-section {
+  background: #A97C50;
+  border: 1px solid #4B5D2A;
+}
+.idSettings .settings-section {
+  border-radius: 1rem;
+  box-shadow: 0 1px 8px 0 rgba(125, 143, 105, 0.07);
+  margin-bottom: 1.5rem;
+}
+
+
+.idSettings .settings-section input,
+.idSettings .settings-section button {
+  background: #F6F3E7;
+  color: #4B5D2A;
+  border-color: #B7B597;
+}
+
+
+.idSettings .settings-section input:focus {
+  outline: none;
+  border-color: #7D8F69;
+  box-shadow: 0 0 0 2px #D9CBA3;
+}
+
+
+.idSettings .settings-section button {
+  background: #A97C50;
+  color: #F6F3E7;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 4px 0 rgba(169, 124, 80, 0.08);
+  transition: background 0.2s, color 0.2s;
+}
+.idSettings .settings-section button:hover {
+  background: #7D8F69;
+  color: #F6F3E7;
+}
 /* 2x3 grid for settings cards */
 .settings-grid-2x3 {
   display: grid;
@@ -5,6 +74,10 @@
   gap: 2rem;
   /* margin-bottom: 2.5rem; */
 }
+
+  .settings-grid-2x3.bottom {
+    margin-top: 2.5rem;
+  }
 
 @media (max-width: 900px) {
   .settings-grid-2x3 {
