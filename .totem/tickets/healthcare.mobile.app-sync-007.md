@@ -2,7 +2,7 @@
 id: healthcare.mobile.app-sync-007
 status: open
 priority: low
-complexity: high
+complexity: l
 persona: product-proteus
 blocks: []
 blocked_by: [healthcare.frontend.patient-dashboard-003]

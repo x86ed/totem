@@ -2,7 +2,7 @@
 id: test-swagger-ticket-001
 status: open
 priority: medium
-complexity: medium
+complexity: m
 ```
 
 # Test Swagger Ticket

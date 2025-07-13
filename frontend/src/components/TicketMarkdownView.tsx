@@ -56,7 +56,7 @@ const TicketMarkdownView: React.FC<TicketMarkdownViewProps> = ({
   return (
     <div className="ticket-markdown-view">
       {/* YAML Frontmatter */}
-      <div 
+          <div 
         style={{
           float: 'right',
           marginLeft: '20px',
@@ -96,8 +96,8 @@ model: ${ticket.model}` : ''}${ticket.effort_days ? `
 effort_days: ${ticket.effort_days}` : ''}`}
         </SyntaxHighlighter>
       </div>
-
       {/* Title */}
+      <div style={{maxWidth: '70%'}}>
       <h1 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-green-500 pb-2">
         {ticket.title}
       </h1>
@@ -239,6 +239,7 @@ effort_days: ${ticket.effort_days}` : ''}`}
           </div>
         </div>
       )}
+       </div>
     </div>
   )
 }

@@ -35,32 +35,10 @@ type TicketAction =
   | { type: 'ADD_MILESTONE'; payload: Milestone }
   | { type: 'UPDATE_MILESTONE'; payload: Milestone }
 
-// Initial state with empty data - will be populated from API
+// Initial state is empty; all data is loaded from the ticket API
 const initialState: TicketState = {
   tickets: [],
-  milestones: [
-    {
-      id: 'v0.9',
-      title: 'Beta Release',
-      description: 'Initial beta version with core features',
-      dueDate: '2025-06-30',
-      status: 'completed'
-    },
-    {
-      id: 'v1.0',
-      title: 'Production Release',
-      description: 'First stable release with all essential features',
-      dueDate: '2025-07-15',
-      status: 'active'
-    },
-    {
-      id: 'v1.1',
-      title: 'Enhanced Features',
-      description: 'Additional features and improvements',
-      dueDate: '2025-08-01',
-      status: 'planning'
-    }
-  ],
+  milestones: [],
   loading: false,
   error: null
 }
@@ -153,22 +131,25 @@ export function TicketProvider({ children }: TicketProviderProps) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
-      
+
       // Use relative URL in production, absolute URL in development
-      const apiUrl = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket'
-      const response = await fetch(apiUrl)
+      const apiUrl = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket';
+      const response = await fetch(apiUrl);
       if (!response.ok) {
-        throw new Error(`Failed to fetch tickets: ${response.status}`)
+        throw new Error(`Failed to fetch tickets: ${response.status}`);
       }
-      
-      const data = await response.json()
-      const tickets = data.tickets || []
-      
-      dispatch({ type: 'SET_TICKETS', payload: tickets })
+
+      const data = await response.json();
+      const tickets = data.tickets || [];
+      // If milestones are provided by the API, use them; otherwise, keep empty
+
+      dispatch({ type: 'SET_TICKETS', payload: tickets });
+      // Optionally, add a SET_MILESTONES action if you want to manage milestones from API
+      // dispatch({ type: 'SET_MILESTONES', payload: milestones });
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh tickets' })
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh tickets' });
     }
-  }
+  };
 
   /**
    * Creates a new ticket
@@ -208,12 +189,32 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * Updates an existing ticket
    * @param ticket - The ticket object with updated properties
    */
+  /**
+   * Updates an existing ticket and persists changes to the backend
+   * @param ticket - The ticket object with updated properties
+   */
   const updateTicket = async (ticket: Ticket): Promise<void> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
-      
-      dispatch({ type: 'UPDATE_TICKET', payload: ticket })
+
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket/${ticket.id}` : `/api/ticket/${ticket.id}`;
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(ticket)
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to update ticket: ${response.status}`);
+      }
+
+      // Get the updated ticket from backend response
+      const data = await response.json();
+      const updatedTicket = data.ticket || ticket;
+      dispatch({ type: 'UPDATE_TICKET', payload: updatedTicket })
       dispatch({ type: 'SET_LOADING', payload: false })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update ticket' })

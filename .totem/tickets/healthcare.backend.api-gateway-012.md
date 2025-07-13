@@ -1,8 +1,8 @@
 ```yaml
 id: healthcare.backend.api-gateway-012
-status: planning
+status: planned
 priority: medium
-complexity: medium
+complexity: m
 persona: security-sasha
 blocks: [healthcare.analytics.reporting-engine-015]
 blocked_by: []
@@ -22,7 +22,8 @@ Centralized API gateway for microservices with rate limiting, authentication, an
 - [ ] API documentation generated
 
 ## Implementation Notes
-```yaml
+
+```js
 # Configure rate limits: 1000 req/hour per user
 # Implement JWT token validation
 # Set up CloudWatch monitoring

@@ -2,7 +2,7 @@
 id: healthcare.security.auth-sso-001
 status: open
 priority: high
-complexity: medium
+complexity: m
 persona: security-sasha
 blocks: [patient-dashboard-003]
 blocked_by: [ad-integration-001]

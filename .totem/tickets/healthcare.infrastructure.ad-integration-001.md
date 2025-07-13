@@ -1,8 +1,8 @@
 ```yaml
 id: healthcare.infrastructure.ad-integration-001
-status: completed
+status: done
 priority: high
-complexity: medium
+complexity: m
 persona: security-sasha
 contributor: octocat
 blocks: [healthcare.security.auth-sso-001]

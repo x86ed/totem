@@ -924,12 +924,87 @@ export class TicketController {
           ticket: null
         }, HttpStatus.NOT_FOUND);
       }
-      const updatedTicketData = {
-        ...ticketData,
-        id: existingTicket.id
-      };
-      const markdownContent = this.generateTicketMarkdown(updatedTicketData);
-      writeFileSync(filePath, markdownContent, 'utf-8');
+      // Parse the original file
+      const originalContent = readFileSync(filePath, 'utf-8');
+      const yamlMatch = originalContent.match(/^```yaml\n([\s\S]*?)\n```/);
+      if (!yamlMatch) {
+        throw new HttpException({
+          message: `No YAML frontmatter found in ticket ${id}`,
+          error: 'Missing YAML frontmatter',
+          ticket: null
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const originalYaml = parse(yamlMatch[1]);
+
+      // Merge only the provided fields into YAML
+      const updatedYaml = { ...originalYaml, ...ticketData, id: existingTicket.id };
+      const newYamlBlock = '```yaml\n' + stringify(updatedYaml).trim() + '\n```';
+
+      // Now handle markdown block update
+      // Find the markdown block after YAML
+      const markdownStart = originalContent.indexOf('```yaml');
+      const markdownEnd = originalContent.indexOf('```', markdownStart + 7);
+      let originalMarkdown = '';
+      if (markdownEnd !== -1) {
+        originalMarkdown = originalContent.slice(markdownEnd + 3).trimStart();
+      }
+
+      // If any markdown fields are present in ticketData, update them
+      // Explicitly check for each markdown field to avoid TS index error
+      const hasMarkdownUpdate = (
+        ticketData.title !== undefined ||
+        ticketData.description !== undefined ||
+        ticketData.acceptance_criteria !== undefined ||
+        ticketData.notes !== undefined ||
+        ticketData.resources !== undefined ||
+        ticketData.risks !== undefined ||
+        ticketData.contributor !== undefined
+      );
+
+      let newMarkdownBlock = originalMarkdown;
+      if (hasMarkdownUpdate) {
+        // Merge originalTicket and ticketData for markdown generation
+        const mergedData = { ...existingTicket, ...ticketData, id: existingTicket.id };
+        // Use generateTicketMarkdown but skip YAML block
+        let markdown = '';
+        markdown += `# ${mergedData.title}\n\n`;
+        markdown += `${mergedData.description}\n\n`;
+        if (mergedData.acceptance_criteria && mergedData.acceptance_criteria.length > 0) {
+          markdown += '## Acceptance Criteria\n\n';
+          mergedData.acceptance_criteria.forEach((criteria: any) => {
+            const checkbox = criteria.complete ? '[x]' : '[ ]';
+            markdown += `- ${checkbox} ${criteria.criteria}\n`;
+          });
+          markdown += '\n';
+        }
+        if (mergedData.notes && mergedData.notes.trim()) {
+          markdown += '## Implementation Notes\n\n';
+          markdown += `${mergedData.notes}\n\n`;
+        }
+        if (mergedData.resources && mergedData.resources.length > 0) {
+          markdown += '## Resources\n\n';
+          mergedData.resources.forEach((resource: string) => {
+            if (resource.trim()) {
+              markdown += `- ${resource}\n`;
+            }
+          });
+          markdown += '\n';
+        }
+        if (mergedData.risks && mergedData.risks.length > 0) {
+          markdown += `**Risks:** ${mergedData.risks.join(', ')}\n\n`;
+        }
+        if (mergedData.contributor) {
+          markdown += '---\n\n';
+          markdown += `[${mergedData.contributor}]: .totem/contributors/${mergedData.contributor}.md\n`;
+        }
+        newMarkdownBlock = markdown.trim() + '\n';
+      }
+
+      // Compose new file content
+      const newContent = newYamlBlock + '\n\n' + newMarkdownBlock;
+
+      // Write the updated file
+      writeFileSync(filePath, newContent, 'utf-8');
       const updatedTicket = this.parseTicketMarkdown(filePath);
       return {
         message: `Ticket ${id} updated successfully`,

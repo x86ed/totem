@@ -15,7 +15,7 @@ export interface Ticket {
   /** Detailed description of what needs to be done or the issue to be resolved */
   description: string;
   /** Current workflow status of the ticket */
-  status: 'open' | 'in-progress' | 'closed' | 'blocked' | 'review' | 'todo' | 'done';
+  status: string;
   /** Priority level indicating urgency and importance */
   priority: 'low' | 'medium' | 'high' | 'critical';
   /** Complexity level of the ticket */

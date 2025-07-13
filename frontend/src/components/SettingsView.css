@@ -25,6 +25,11 @@
   background: #B7B597;
   border: 1px solid #7D8F69;
 }
+.idSettings .settings-section.feature-section {
+  background: #8C6849; /* Rich brown for earth tone contrast */
+  border: 1px solid #A97C50;
+  color: #fff;
+}
 .idSettings .settings-section.layer-section {
   background: #D9CBA3;
   border: 1px solid #B7B597;

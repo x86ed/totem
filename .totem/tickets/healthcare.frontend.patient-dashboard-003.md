@@ -2,7 +2,7 @@
 id: healthcare.frontend.patient-dashboard-003
 status: in-progress
 priority: medium
-complexity: high
+complexity: l
 persona: product-proteus
 blocks: [healthcare.mobile.app-sync-007]
 blocked_by: [healthcare.security.auth-sso-001]

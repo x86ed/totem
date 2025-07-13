@@ -459,26 +459,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                   priority: loadedTicket.priority || 'medium',
                   complexity: loadedTicket.complexity || 'medium'
                 }}
-                isEditable={true}
-                onTicketUpdate={(updatedFields) => {
-                  if (loadedTicket) {
-                    const updatedTicket: ApiTicket = {
-                      ...loadedTicket,
-                      ...updatedFields,
-                      id: loadedTicket.id,
-                      title: loadedTicket.title,
-                      description: typeof updatedFields.description === 'string' ? updatedFields.description : loadedTicket.description,
-                      status: typeof updatedFields.status === 'string' ? updatedFields.status as ApiTicket['status'] : loadedTicket.status || 'open',
-                      priority: typeof updatedFields.priority === 'string' ? updatedFields.priority as ApiTicket['priority'] : loadedTicket.priority || 'medium',
-                      complexity: typeof updatedFields.complexity === 'string' ? updatedFields.complexity as ApiTicket['complexity'] : loadedTicket.complexity || 'medium'
-                    }
-                    setLoadedTicket(updatedTicket)
-                    // Optionally save changes immediately or on a timer
-                    // You could add debounced auto-save here
-                  }
-                }}
+                isEditable={false}
               />
-              
               {/* Buttons for view mode */}
               <div 
                 style={{
@@ -502,7 +484,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 >
                   Edit Ticket
                 </button>
-                
                 <button 
                   type="button"
                   onClick={goToCreateMode}
@@ -512,415 +493,419 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 </button>
               </div>
             </>
-          ) : (            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-              {/* Main form content */}
-              <div style={{ flex: '1' }}>
-                <form onSubmit={handleSubmit} className={`space-y-6 ${isViewing ? 'view-mode' : ''}`}>
-                  {/* Basic Information */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                    
-                    <div className="grid grid-cols-1 gap-6">
-                      <div>
-                        <label htmlFor="title" className="form-label">
-                          Title *
-                        </label>
-                        <input
-                          id="title"
-                          type="text"
-                          name="title"
-                          value={formData.title}
-                          onChange={handleChange}
-                          required
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="Enter ticket title"
-                        />
-                      </div>
+          ) : (
+            !isViewing ? (
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                {/* Main form content */}
+                <div style={{ flex: '1' }} >
+                  <form onSubmit={handleSubmit} className={`space-y-6`}>
+                    {/* Basic Information */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                      <div className="grid grid-cols-1 gap-6" >
+                        <div >
+                          <label htmlFor="title" className="form-label">
+                            Title *
+                          </label>
+                          <input
+                            id="title"
+                            type="text"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                            className={`input-green`}
+                            placeholder="Enter ticket title"
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label id="description-label" className="form-label">
+                            Description
+                          </label>
+                          <MilkdownEditor
+                            id="description"
+                            value={formData.description}
+                            onChange={handleEditorChange('description')}
+                            placeholder="Describe the ticket requirements..."
+                            minHeight="120px"
 
-                      <div>
-                        <label id="description-label" className="form-label">
-                          Description
-                        </label>
-                        <MilkdownEditor
-                          id="description"
-                          value={formData.description}
-                          onChange={handleEditorChange('description')}
-                          placeholder="Describe the ticket requirements..."
-                          readOnly={isViewing}
-                          minHeight="120px"
-                          className={isViewing ? 'opacity-75' : ''}
-                          aria-labelledby="description-label"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* Assignment & Collaboration */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment & Collaboration</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <label htmlFor="persona" className="form-label">
-                          Persona
-                        </label>
-                        <input
-                          id="persona"
-                          type="text"
-                          name="persona"
-                          value={formData.persona}
-                          onChange={handleChange}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="Target persona"
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="contributor" className="form-label">
-                          Contributor
-                        </label>
-                        <input
-                          id="contributor"
-                          type="text"
-                          name="contributor"
-                          value={formData.contributor}
-                          onChange={handleChange}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="Assigned contributor"
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="model" className="form-label">
-                          AI Model
-                        </label>
-                        <input
-                          id="model"
-                          type="text"
-                          name="model"
-                          value={formData.model}
-                          onChange={handleChange}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="Associated AI model"
-                        />
+                            aria-labelledby="description-label"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Content & Metadata */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Content & Metadata</h3>
-                    
+                    {/* Assignment & Collaboration */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment & Collaboration</h3>
+                      <div className="grid grid-cols-1 gap-6">
+                        <div>
+                          <label htmlFor="persona" className="form-label">
+                            Persona
+                          </label>
+                          <input
+                            id="persona"
+                            type="text"
+                            name="persona"
+                            value={formData.persona}
+                            onChange={handleChange}
+                            className={`input-green`}
+                            placeholder="Target persona"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="contributor" className="form-label">
+                            Contributor
+                          </label>
+                          <input
+                            id="contributor"
+                            type="text"
+                            name="contributor"
+                            value={formData.contributor}
+                            onChange={handleChange}
+                            className={`input-green`}
+                            placeholder="Assigned contributor"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="model" className="form-label">
+                            AI Model
+                          </label>
+                          <input
+                            id="model"
+                            type="text"
+                            name="model"
+                            value={formData.model}
+                            onChange={handleChange}
+                            className={`input-green`}
+                            placeholder="Associated AI model"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Content & Metadata */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Content & Metadata</h3>
+                      <div className="space-y-6">
+                        <div>
+                          <label htmlFor="acceptance_criteria" className="form-label">
+                            Acceptance Criteria
+                          </label>
+                          <textarea
+                            id="acceptance_criteria"
+                            name="acceptance_criteria"
+                            value={formData.acceptance_criteria}
+                            onChange={handleChange}
+                            rows={4}
+                            className={`input-green`}
+                            placeholder="One criteria per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each acceptance criterion on a new line</p>
+                        </div>
+                        <div>
+                          <label htmlFor="tags" className="form-label">
+                            Tags
+                          </label>
+                          <input
+                            id="tags"
+                            type="text"
+                            name="tags"
+                            value={formData.tags}
+                            onChange={handleChange}
+                            className={`input-green`}
+                            placeholder="authentication, security, backend"
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Comma-separated list of tags</p>
+                        </div>
+                        <div>
+                          <label id="notes-label" className="form-label">
+                            Notes
+                          </label>
+                          <MilkdownEditor
+                            id="notes"
+                            value={formData.notes}
+                            onChange={handleEditorChange('notes')}
+                            placeholder="Additional notes..."
+                            minHeight="100px"
+                            className={''}
+                            aria-labelledby="notes-label"
+                            
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="risks" className="form-label">
+                            Risks
+                          </label>
+                          <textarea
+                            id="risks"
+                            name="risks"
+                            value={formData.risks}
+                            onChange={handleChange}
+                            rows={3}
+                            className={`input-green`}
+                            placeholder="One risk per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each risk on a new line</p>
+                        </div>
+                        <div>
+                          <label htmlFor="resources" className="form-label">
+                            Resources
+                          </label>
+                          <textarea
+                            id="resources"
+                            name="resources"
+                            value={formData.resources}
+                            onChange={handleChange}
+                            rows={3}
+                            className={`input-green`}
+                            placeholder="One resource/link per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each resource URL or description on a new line</p>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                {/* Sidebar with Status & Priority and Dependencies */}
+                <div 
+                  style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '20px',
+                    position: 'sticky',
+                    top: '20px',
+                    height: 'fit-content',
+                    zIndex: 20
+                  }}
+                >
+                  {/* Status & Priority Block */}
+                  <div 
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#1f2937',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+                      height: 'fit-content'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
                     <div className="space-y-6">
                       <div>
-                        <label htmlFor="acceptance_criteria" className="form-label">
-                          Acceptance Criteria
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+                          Status
                         </label>
-                        <textarea
-                          id="acceptance_criteria"
-                          name="acceptance_criteria"
-                          value={formData.acceptance_criteria}
+                        <select
+                          id="status"
+                          name="status"
+                          value={formData.status}
                           onChange={handleChange}
-                          rows={4}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="One criteria per line..."
-                        />
-                        <p className="text-sm text-gray-500 mt-1">Enter each acceptance criterion on a new line</p>
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="open">Open</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="closed">Closed</option>
+                          <option value="blocked">Blocked</option>
+                        </select>
                       </div>
-
                       <div>
-                        <label htmlFor="tags" className="form-label">
-                          Tags
+                        <label htmlFor="priority" className="block text-sm font-medium text-gray-300 mb-2">
+                          Priority
+                        </label>
+                        <select
+                          id="priority"
+                          name="priority"
+                          value={formData.priority}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="critical">Critical</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="complexity" className="block text-sm font-medium text-gray-300 mb-2">
+                          Complexity
+                        </label>
+                        <select
+                          id="complexity"
+                          name="complexity"
+                          value={formData.complexity}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="effort_days" className="block text-sm font-medium text-gray-300 mb-2">
+                          Effort (Days)
                         </label>
                         <input
-                          id="tags"
-                          type="text"
-                          name="tags"
-                          value={formData.tags}
+                          id="effort_days"
+                          type="number"
+                          name="effort_days"
+                          value={formData.effort_days}
                           onChange={handleChange}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="authentication, security, backend"
+                          min="0"
+                          step="0.5"
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="e.g., 2.5"
                         />
-                        <p className="text-sm text-gray-500 mt-1">Comma-separated list of tags</p>
-                      </div>
-
-                      <div>
-                        <label id="notes-label" className="form-label">
-                          Notes
-                        </label>
-                        <MilkdownEditor
-                          id="notes"
-                          value={formData.notes}
-                          onChange={handleEditorChange('notes')}
-                          placeholder="Additional notes..."
-                          readOnly={isViewing}
-                          minHeight="100px"
-                          className={isViewing ? 'opacity-75' : ''}
-                          aria-labelledby="notes-label"
-                        />
-                      </div>
-
-                      <div>
-                        <label htmlFor="risks" className="form-label">
-                          Risks
-                        </label>
-                        <textarea
-                          id="risks"
-                          name="risks"
-                          value={formData.risks}
-                          onChange={handleChange}
-                          rows={3}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="One risk per line..."
-                        />
-                        <p className="text-sm text-gray-500 mt-1">Enter each risk on a new line</p>
-                      </div>
-
-                      <div>
-                        <label htmlFor="resources" className="form-label">
-                          Resources
-                        </label>
-                        <textarea
-                          id="resources"
-                          name="resources"
-                          value={formData.resources}
-                          onChange={handleChange}
-                          rows={3}
-                          readOnly={isViewing}
-                          className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                          placeholder="One resource/link per line..."
-                        />
-                        <p className="text-sm text-gray-500 mt-1">Enter each resource URL or description on a new line</p>
                       </div>
                     </div>
                   </div>
-                </form>
-              </div>
-
-              {/* Sidebar with Status & Priority and Dependencies */}
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '20px',
-                  position: 'sticky',
-                  top: '20px',
-                  height: 'fit-content',
-                  zIndex: 20
-                }}
-              >
-                {/* Status & Priority Block */}
-                <div 
-                  style={{
-                    width: '320px',
-                    backgroundColor: '#1f2937',
-                    color: 'white',
-                    padding: '24px',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
-                    height: 'fit-content'
-                  }}
-                >
-                  <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
-                        Status
-                      </label>
-                      <select
-                        id="status"
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        disabled={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="open">Open</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="closed">Closed</option>
-                        <option value="blocked">Blocked</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="priority" className="block text-sm font-medium text-gray-300 mb-2">
-                        Priority
-                      </label>
-                      <select
-                        id="priority"
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleChange}
-                        disabled={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="complexity" className="block text-sm font-medium text-gray-300 mb-2">
-                        Complexity
-                      </label>
-                      <select
-                        id="complexity"
-                        name="complexity"
-                        value={formData.complexity}
-                        onChange={handleChange}
-                        disabled={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="effort_days" className="block text-sm font-medium text-gray-300 mb-2">
-                        Effort (Days)
-                      </label>
-                      <input
-                        id="effort_days"
-                        type="number"
-                        name="effort_days"
-                        value={formData.effort_days}
-                        onChange={handleChange}
-                        min="0"
-                        step="0.5"
-                        readOnly={isViewing}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="e.g., 2.5"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dependencies Block */}
-                <div 
-                  style={{
-                    width: '320px',
-                    backgroundColor: '#8B4513',
-                    color: 'white',
-                    padding: '24px',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
-                    height: 'fit-content'
-                  }}
-                >
-                  <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Dependencies</h3>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="blocks" className="block text-sm font-medium text-orange-100">
-                          Blocks (Tickets)
-                        </label>
-                        {formData.blocks.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, blocks: [] }))}
-                            className="text-xs text-red-300 hover:text-red-200 underline"
-                            disabled={isViewing}
-                          >
-                            Clear
-                          </button>
-                        )}
+                  {/* Dependencies Block */}
+                  <div 
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#8B4513',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
+                      height: 'fit-content'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Dependencies</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label htmlFor="blocks" className="block text-sm font-medium text-orange-100">
+                            Blocks (Tickets)
+                          </label>
+                          {formData.blocks.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, blocks: [] }))}
+                              className="text-xs text-red-300 hover:text-red-200 underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <select
+                          id="blocks"
+                          name="blocks"
+                          multiple
+                          value={formData.blocks}
+                          onChange={handleMultiSelectChange('blocks')}
+                          className="dependencies-dropdown"
+                          style={{ 
+                            minHeight: formData.blocks.length > 0 ? '80px' : '40px',
+                            maxHeight: '120px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            backgroundColor: '#A0522D',
+                            border: '1px solid #CD853F',
+                            borderRadius: '6px',
+                            color: 'white'
+                          }}
+                        >
+                          {tickets
+                            .filter(ticket => ticket.id !== currentTicketId)
+                            .map(ticket => (
+                              <option key={ticket.id} value={ticket.id}>
+                                {ticket.id}
+                              </option>
+                            ))
+                          }
+                        </select>
+                        <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
                       </div>
-                      <select
-                        id="blocks"
-                        name="blocks"
-                        multiple
-                        value={formData.blocks}
-                        onChange={handleMultiSelectChange('blocks')}
-                        disabled={isViewing}
-                        className="dependencies-dropdown"
-                        style={{ 
-                          minHeight: formData.blocks.length > 0 ? '80px' : '40px',
-                          maxHeight: '120px',
-                          width: '100%',
-                          padding: '8px 12px',
-                          backgroundColor: '#A0522D',
-                          border: '1px solid #CD853F',
-                          borderRadius: '6px',
-                          color: 'white'
-                        }}
-                      >
-                        {tickets
-                          .filter(ticket => ticket.id !== currentTicketId)
-                          .map(ticket => (
-                            <option key={ticket.id} value={ticket.id}>
-                              {ticket.id}
-                            </option>
-                          ))
-                        }
-                      </select>
-                      <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="blocked_by" className="block text-sm font-medium text-orange-100">
-                          Blocked By (Tickets)
-                        </label>
-                        {formData.blocked_by.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, blocked_by: [] }))}
-                            className="text-xs text-red-300 hover:text-red-200 underline"
-                            disabled={isViewing}
-                          >
-                            Clear
-                          </button>
-                        )}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label htmlFor="blocked_by" className="block text-sm font-medium text-orange-100">
+                            Blocked By (Tickets)
+                          </label>
+                          {formData.blocked_by.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, blocked_by: [] }))}
+                              className="text-xs text-red-300 hover:text-red-200 underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <select
+                          id="blocked_by"
+                          name="blocked_by"
+                          multiple
+                          value={formData.blocked_by}
+                          onChange={handleMultiSelectChange('blocked_by')}
+                          className="dependencies-dropdown"
+                          style={{ 
+                            minHeight: formData.blocked_by.length > 0 ? '80px' : '40px',
+                            maxHeight: '120px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            backgroundColor: '#A0522D',
+                            border: '1px solid #CD853F',
+                            borderRadius: '6px',
+                            color: 'white'
+                          }}
+                        >
+                          {tickets
+                            .filter(ticket => ticket.id !== currentTicketId)
+                            .map(ticket => (
+                              <option key={ticket.id} value={ticket.id}>
+                                {ticket.id}
+                              </option>
+                            ))
+                          }
+                        </select>
+                        <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
                       </div>
-                      <select
-                        id="blocked_by"
-                        name="blocked_by"
-                        multiple
-                        value={formData.blocked_by}
-                        onChange={handleMultiSelectChange('blocked_by')}
-                        disabled={isViewing}
-                        className="dependencies-dropdown"
-                        style={{ 
-                          minHeight: formData.blocked_by.length > 0 ? '80px' : '40px',
-                          maxHeight: '120px',
-                          width: '100%',
-                          padding: '8px 12px',
-                          backgroundColor: '#A0522D',
-                          border: '1px solid #CD853F',
-                          borderRadius: '6px',
-                          color: 'white'
-                        }}
-                      >
-                        {tickets
-                          .filter(ticket => ticket.id !== currentTicketId)
-                          .map(ticket => (
-                            <option key={ticket.id} value={ticket.id}>
-                              {ticket.id}
-                            </option>
-                          ))
-                        }
-                      </select>
-                      <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+          ) : null
           )}
 
           {/* Action buttons - only show in form mode */}
