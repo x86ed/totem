@@ -195,19 +195,22 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * @param ticket - The ticket object with updated properties
    */
   const updateTicket = async (ticket: Ticket): Promise<void> => {
-    console.log('Updating ticket:', ticket)
+    console.log('[DEBUG] Updating ticket (input):', ticket)
+    console.log('[DEBUG] Description before stringify:', ticket.description)
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
 
       // Use relative URL in production, absolute URL in development
       const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket/${ticket.id}` : `/api/ticket/${ticket.id}`;
+      const ticketString = JSON.stringify(ticket)
+      console.log('[DEBUG] JSON.stringify(ticket):', ticketString)
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(ticket)
+        body: ticketString
       });
       if (!response.ok) {
         throw new Error(`Failed to update ticket: ${response.status}`);

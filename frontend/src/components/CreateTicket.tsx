@@ -327,6 +327,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
    * Handles changes to Milkdown editor fields
    */
   const handleEditorChange = (fieldName: string) => (value: string): void => {
+    if (fieldName === 'description') {
+      // Debug: log description changes
+      console.log('[DEBUG] handleEditorChange(description):', value)
+    }
+    if (fieldName === 'notes') {
+      // Debug: log notes changes
+      console.log('[DEBUG] handleEditorChange(notes):', value)
+    }
     setFormData(prev => ({
       ...prev,
       [fieldName]: value
@@ -526,7 +534,10 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                               id="description"
                               key={currentTicketId || 'new'}
                               value={formData.description}
-                              onChange={handleEditorChange('description')}
+                              onChange={value => {
+                                console.log('[DEBUG] MilkdownEditor onChange (description):', value)
+                                handleEditorChange('description')(value)
+                              }}
                               placeholder="a description..."
                               minHeight="100px" 
                               className={'milk-desc'}
@@ -641,7 +652,10 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                             id="notes"
                             key={currentTicketId || 'new'}
                             value={formData.notes ?? ''}
-                            onChange={handleEditorChange('notes')}
+                            onChange={value => {
+                              console.log('[DEBUG] MilkdownEditor onChange (notes):', value)
+                              handleEditorChange('notes')(value)
+                            }}
                             placeholder="Additional notes..."
                             minHeight="100px"
                             className={''}

@@ -91,11 +91,11 @@ export class TicketController {
       ticket.blocks && ticket.blocks.length > 0 ? `blocks: [${ticket.blocks.join(', ')}]` : '',
       ticket.blocked_by && ticket.blocked_by.length > 0 ? `blocked_by: [${ticket.blocked_by.join(', ')}]` : '',
       '```',
-      ''
+      '\n'
     ].filter(Boolean).join('\n');
 
     // Title
-    const titleBlock = `# ${ticket.title}\n`;
+    const titleBlock = `\n# ${ticket.title}\n`;
 
     // Description
     const descriptionBlock = ticket.description ? `\n${ticket.description}\n` : '\n';
@@ -859,7 +859,7 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
     }
   }
 
-  @ApiOperation({ summary: 'Update a ticket', description: 'Update an existing ticket with new data' })
+   @ApiOperation({ summary: 'Update a ticket', description: 'Update an existing ticket with new data' })
   @ApiParam({ name: 'id', description: 'Ticket ID to update', example: 'user-authentication-001' })
   @ApiBody({ type: UpdateTicketDto, description: 'Updated ticket data' })
   @ApiResponse({ status: 200, description: 'Ticket updated successfully', type: TicketResponseDto })
@@ -926,6 +926,7 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
           ticket: ticketData as any,
         };
       }
+      // Use the controller's validateTicketData method
       const validation = this.validateTicketData(ticketData);
       if (!validation.valid) {
         throw new HttpException({
@@ -984,85 +985,24 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
         }, HttpStatus.NOT_FOUND);
       }
       // Parse the original file
-      const originalContent = readFileSync(filePath, 'utf-8');
-      const yamlMatch = originalContent.match(/^```yaml\n([\s\S]*?)\n```/);
-      if (!yamlMatch) {
+      const oldData = this.parseTicketMarkdown(filePath);
+      if (!oldData) {
         throw new HttpException({
-          message: `No YAML frontmatter found in ticket ${id}`,
-          error: 'Missing YAML frontmatter',
+          message: `Error updating ticket ${id}`,
+          error: 'Failed to parse original markdown file',
           ticket: null
         }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      const originalYaml = parse(yamlMatch[1]);
-
-      // Merge only the provided fields into YAML
-      const updatedYaml = { ...originalYaml, ...ticketData, id: existingTicket.id };
-      const newYamlBlock = '```yaml\n' + stringify(updatedYaml).trim() + '\n```';
-
-      // Now handle markdown block update
-      // Find the markdown block after YAML
-      const markdownStart = originalContent.indexOf('```yaml');
-      const markdownEnd = originalContent.indexOf('```', markdownStart + 7);
-      let originalMarkdown = '';
-      if (markdownEnd !== -1) {
-        originalMarkdown = originalContent.slice(markdownEnd + 3).trimStart();
-      }
-
-      // If any markdown fields are present in ticketData, update them
-      // Explicitly check for each markdown field to avoid TS index error
-      const hasMarkdownUpdate = (
-        ticketData.title !== undefined ||
-        ticketData.description !== undefined ||
-        ticketData.acceptance_criteria !== undefined ||
-        ticketData.notes !== undefined ||
-        ticketData.resources !== undefined ||
-        ticketData.risks !== undefined ||
-        ticketData.contributor !== undefined
-      );
-
-      let newMarkdownBlock = originalMarkdown;
-      if (hasMarkdownUpdate) {
-        // Merge originalTicket and ticketData for markdown generation
-        const mergedData = { ...existingTicket, ...ticketData, id: existingTicket.id };
-        // Use generateTicketMarkdown but skip YAML block
-        let markdown = '';
-        markdown += `# ${mergedData.title}\n\n`;
-        markdown += `${mergedData.description}\n\n`;
-        if (mergedData.acceptance_criteria && mergedData.acceptance_criteria.length > 0) {
-          markdown += '## Acceptance Criteria\n\n';
-          mergedData.acceptance_criteria.forEach((criteria: any) => {
-            const checkbox = criteria.complete ? '[x]' : '[ ]';
-            markdown += `- ${checkbox} ${criteria.criteria}\n`;
-          });
-          markdown += '\n';
-        }
-        if (mergedData.notes && mergedData.notes.trim()) {
-          markdown += '## Implementation Notes\n\n';
-          markdown += `${mergedData.notes}\n\n`;
-        }
-        if (mergedData.resources && mergedData.resources.length > 0) {
-          markdown += '## Resources\n\n';
-          mergedData.resources.forEach((resource: string) => {
-            if (resource.trim()) {
-              markdown += `- ${resource}\n`;
-            }
-          });
-          markdown += '\n';
-        }
-        if (mergedData.risks && mergedData.risks.length > 0) {
-          markdown += `**Risks:** ${mergedData.risks.join(', ')}\n\n`;
-        }
-        if (mergedData.contributor) {
-          markdown += '---\n\n';
-          markdown += `[${mergedData.contributor}]: .totem/contributors/${mergedData.contributor}.md\n`;
-        }
-        newMarkdownBlock = markdown.trim() + '\n';
-      }
-
+      const update = Object.assign({}, oldData, ticketData);
       // Compose new file content
-      const newContent = newYamlBlock + '\n\n' + newMarkdownBlock;
-
-      // Write the updated file
+      const newContent = this.generateParsedTicketMarkdown ? this.generateParsedTicketMarkdown(update) : '';
+      if (!newContent) {
+        throw new HttpException({
+          message: `Error generating markdown for ticket ${id}`,
+          error: 'Markdown generation failed',
+          ticket: null
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
       writeFileSync(filePath, newContent, 'utf-8');
       const updatedTicket = this.parseTicketMarkdown(filePath);
       return {

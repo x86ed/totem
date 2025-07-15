@@ -13,6 +13,7 @@ blocked_by: [healthcare.security.auth-sso-001]
 Modern React-based dashboard with real-time data visualization, accessibility compliance, and mobile responsiveness.
 
 ## Acceptance Criteria
+
 - [x] Wireframes approved by UX team
 - [x] Component library integration
 - [ ] Real-time vitals display
