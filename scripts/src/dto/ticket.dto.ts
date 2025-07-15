@@ -72,12 +72,6 @@ export class TicketDto {
   })
   model!: string | null;
 
-  @ApiPropertyOptional({
-    description: 'Estimated effort in days',
-    example: 3
-  })
-  effort_days!: number | null;
-
   @ApiProperty({
     description: 'List of ticket IDs that this ticket blocks',
     type: [String],

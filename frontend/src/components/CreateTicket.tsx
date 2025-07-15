@@ -1,7 +1,7 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react'
+import React, { useState, FormEvent, ChangeEvent, useEffect} from 'react'
 import { useTickets } from '../context/TicketContext'
 import TicketMarkdownView from './TicketMarkdownView'
-import MilkdownEditor from './MilkdownEditor'
+import { MilkdownEditor } from './MilkdownEditor'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -110,26 +110,12 @@ interface CreateTicketProps {
  * <CreateTicket mode="view" ticketId="ticket-123" />
  * ```
  */
-const CreateTicket: React.FC<CreateTicketProps> = ({ 
-  mode = 'create', 
-  ticketId = null, 
-  onNavigate 
+const CreateTicket: React.FC<CreateTicketProps> = ({
+  mode = 'create',
+  ticketId = null,
+  onNavigate
 }) => {
-  // Get tickets from context for blocks/blocked_by dropdowns
-  const { tickets } = useTickets()
-  
-  const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
-  const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
-  const [currentTicketId, setCurrentTicketId] = useState<string | null>(ticketId)
-  const [loadedTicket, setLoadedTicket] = useState<ApiTicket | null>(null)
-
-  // Update state when props change
-  useEffect(() => {
-    setIsEditing(mode === 'edit')
-    setIsViewing(mode === 'view')
-    setCurrentTicketId(ticketId)
-  }, [mode, ticketId])
-
+  // Form data state
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -148,6 +134,22 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     risks: '',
     resources: ''
   })
+
+  // ...existing code...
+  // Get tickets and actions from context for blocks/blocked_by dropdowns and CRUD
+  const { tickets, updateTicket, addTicket } = useTickets()
+  
+  const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
+  const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
+  const [currentTicketId, setCurrentTicketId] = useState<string | null>(ticketId)
+  const [loadedTicket, setLoadedTicket] = useState<ApiTicket | null>(null)
+
+  // Update state when props change
+  useEffect(() => {
+    setIsEditing(mode === 'edit')
+    setIsViewing(mode === 'view')
+    setCurrentTicketId(ticketId)
+  }, [mode, ticketId])
   
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
   const [showError, setShowError] = useState<boolean>(false)
@@ -423,18 +425,10 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 }}
                 title="Go back to previous page"
               >
-                ←
+                &#8592;
               </button>
-            ) : (
-              <div></div>
-            )}
-            {currentTicketId && (
-              <h2 style={{ color: '#111827', margin: 0, lineHeight: '1.75rem' }}>
-                {currentTicketId}
-              </h2>
-            )}
+            ) : null}
           </div>
-
           {showSuccess && (
             <div className="success-message">
               <span className="success-text">
@@ -442,13 +436,11 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
               </span>
             </div>
           )}
-
           {showError && (
             <div className="error-message">
               <span className="error-text">{errorMessage}</span>
             </div>
           )}
-
           {isViewing && loadedTicket && loadedTicket.id ? (
             <>
               <TicketMarkdownView 
@@ -530,15 +522,16 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           <label id="description-label" className="form-label">
                             Description
                           </label>
-                          <MilkdownEditor
-                            id="description"
-                            value={formData.description}
-                            onChange={handleEditorChange('description')}
-                            placeholder="Describe the ticket requirements..."
-                            minHeight="120px"
-
-                            aria-labelledby="description-label"
-                          />
+                            <MilkdownEditor
+                              id="description"
+                              key={currentTicketId || 'new'}
+                              value={formData.description}
+                              onChange={handleEditorChange('description')}
+                              placeholder="a description..."
+                              minHeight="100px" 
+                              className={'milk-desc'}
+                              aria-labelledby="description-label"
+                            />
                         </div>
                       </div>
                     </div>
@@ -646,13 +639,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           </label>
                           <MilkdownEditor
                             id="notes"
-                            value={formData.notes}
+                            key={currentTicketId || 'new'}
+                            value={formData.notes ?? ''}
                             onChange={handleEditorChange('notes')}
                             placeholder="Additional notes..."
                             minHeight="100px"
                             className={''}
                             aria-labelledby="notes-label"
-                            
                           />
                         </div>
                         <div>
@@ -925,17 +918,54 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
             >
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn-primary-green"
                 disabled={loading}
-                onClick={(e) => {
-                  e.preventDefault()
-                  // Get the form element and manually call submit
-                  const form = document.querySelector('form')
-                  if (form) {
-                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true })
-                    form.dispatchEvent(submitEvent)
+                onClick={async (e) => {
+                  e.preventDefault();
+                  // Convert acceptance_criteria string to array of objects
+                  const acceptanceCriteriaArr = formData.acceptance_criteria
+                    ? formData.acceptance_criteria.split('\n').filter(s => s.trim()).map(criteria => ({ criteria: criteria.trim(), complete: false }))
+                    : [];
+                  // Convert tags string to array
+                  const tagsArr = formData.tags
+                    ? formData.tags.split(',').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  // Convert risks and resources string to array
+                  const risksArr = formData.risks
+                    ? formData.risks.split('\n').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  const resourcesArr = formData.resources
+                    ? formData.resources.split('\n').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  // Convert effort_days to number or undefined
+                  const effortDaysVal = formData.effort_days === '' ? undefined : Number(formData.effort_days);
+                  if (isEditing && currentTicketId) {
+                    // Update existing ticket
+                    await updateTicket({
+                      ...formData,
+                      id: currentTicketId,
+                      acceptance_criteria: acceptanceCriteriaArr,
+                      tags: tagsArr,
+                      risks: risksArr,
+                      resources: resourcesArr,
+                      effort_days: effortDaysVal
+                    });
+                    setShowSuccess(true);
+                    setTimeout(() => setShowSuccess(false), 3000);
+                  } else {
+                    // Create new ticket
+                    await addTicket({
+                      ...formData,
+                      acceptance_criteria: acceptanceCriteriaArr,
+                      tags: tagsArr,
+                      risks: risksArr,
+                      resources: resourcesArr,
+                      effort_days: effortDaysVal
+                    });
+                    setShowSuccess(true);
+                    setTimeout(() => setShowSuccess(false), 3000);
                   }
                 }}
               >

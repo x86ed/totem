@@ -156,6 +156,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * @param ticket - The ticket object to create
    */
   const createTicket = async (ticket: Partial<Ticket>): Promise<void> => {
+    console.log('Creating ticket:', ticket)
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
@@ -194,6 +195,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * @param ticket - The ticket object with updated properties
    */
   const updateTicket = async (ticket: Ticket): Promise<void> => {
+    console.log('Updating ticket:', ticket)
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })

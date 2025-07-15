@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
-import { CreateTicketDto, UpdateTicketDto, TicketResponseDto, TicketsListResponseDto, ErrorResponseDto } from '../dto/ticket.dto';
+import { CreateTicketDto, UpdateTicketDto, TicketResponseDto, TicketsListResponseDto, ErrorResponseDto, TicketDto } from '../dto/ticket.dto';
 import { readFileSync, existsSync, readdirSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { parse, stringify } from 'yaml';
@@ -61,43 +61,113 @@ interface PaginatedResponse extends TicketsListResponseDto {
   };
 }
 
+interface YAMLHeader {
+  id: string;
+  status: 'open' | 'in_progress' | 'closed' | 'blocked';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  complexity:  'xs'|'s' | 'm' | 'l' | 'xl' | 'xxl';
+  persona: string;
+  contributor: string;
+  blocks: string[];
+  blocked_by: string[];
+}
+
 @ApiTags('tickets')
 @Controller('api/ticket')
 export class TicketController {
+  /**
+   * Generates a markdown string from a TicketDto object, matching the layout of the ticket markdown file.
+   */
+  private generateParsedTicketMarkdown(ticket: TicketDto): string {
+    // YAML frontmatter
+    const yamlBlock = [
+      '```yaml',
+      `id: ${ticket.id}`,
+      `status: ${ticket.status}`,
+      `priority: ${ticket.priority}`,
+      `complexity: ${ticket.complexity}`,
+      ticket.persona ? `persona: ${ticket.persona}` : '',
+      ticket.contributor ? `contributor: ${ticket.contributor}` : '',
+      ticket.blocks && ticket.blocks.length > 0 ? `blocks: [${ticket.blocks.join(', ')}]` : '',
+      ticket.blocked_by && ticket.blocked_by.length > 0 ? `blocked_by: [${ticket.blocked_by.join(', ')}]` : '',
+      '```',
+      ''
+    ].filter(Boolean).join('\n');
+
+    // Title
+    const titleBlock = `# ${ticket.title}\n`;
+
+    // Description
+    const descriptionBlock = ticket.description ? `\n${ticket.description}\n` : '\n';
+
+    // Acceptance Criteria
+    let criteriaBlock = '\n## Acceptance Criteria\n\n';
+    if (ticket.acceptance_criteria && ticket.acceptance_criteria.length > 0) {
+      criteriaBlock += ticket.acceptance_criteria.map(c => {
+        const checkbox = c.complete ? '[x]' : '[ ]';
+        return `- ${checkbox} ${c.criteria}`;
+      }).join('\n');
+      criteriaBlock += '\n';
+    }
+
+    // Implementation Notes
+    let notesBlock = '';
+    if (ticket.notes && ticket.notes.trim()) {
+      notesBlock = '\n## Implementation Notes\n';
+      notesBlock += `\n${ticket.notes}\n`;
+    }
+
+    // Risks
+    let risksBlock = '';
+    if (ticket.risks && ticket.risks.length > 0) {
+      risksBlock = '\n### Risks\n\n';
+      risksBlock += ticket.risks.map(risk => `- ${risk}`).join('\n');
+      risksBlock += '\n';
+    }
+
+    // Separator
+    const separatorBlock = '\n---\n';
+
+    // Resources (reference links)
+    let resourcesBlock = '';
+    if (ticket.resources && ticket.resources.length > 0) {
+      resourcesBlock = '\n' + ticket.resources.join('\n') + '\n';
+    }
+
+    // Compose all blocks
+    return [
+      yamlBlock,
+      titleBlock,
+      descriptionBlock,
+      criteriaBlock,
+      notesBlock,
+      risksBlock,
+      separatorBlock,
+      resourcesBlock
+    ].join('').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
 
   private readonly TICKETS_DIR = process.env.TICKETS_DIR || '.totem/tickets';
 
-  private parseTicketMarkdown(filePath: string): any {
+private parseTicketMarkdown(filePath: string): TicketDto | null {
     try {
       const content = readFileSync(filePath, 'utf-8');
       const yamlMatch = content.match(/^```yaml\n([\s\S]*?)\n```/);
       if (!yamlMatch) {
         throw new Error('No YAML frontmatter found');
       }
-      const yamlData = parse(yamlMatch[1]) as any;
+      const yamlData = parse(yamlMatch[1]) as YAMLHeader & { model?: string };
 
       // Extract title
       const titleMatch = content.match(/^# (.+)$/m);
       const title = titleMatch ? titleMatch[1] : yamlData.id;
 
-      // Extract description - everything between the title and the first ## header
-      const descriptionMatch = content.match(/^# .+\n\n([\s\S]*?)(?:\n## |$)/m);
+      // Extract description - all text between the ticket title (# title name\n) and (## Acceptance Criteria)
       let description = '';
-      if (descriptionMatch) {
-        description = descriptionMatch[1].trim();
-      }
-
-      // If description is empty or very short, try to get content after "## Overview" or "## Detailed Description"
-      if (!description || description.length < 50) {
-        const overviewMatch = content.match(/## Overview\n\n([\s\S]*?)(?:\n## |$)/);
-        const detailedMatch = content.match(/## Detailed Description\n\n([\s\S]*?)(?:\n## |$)/);
-        if (overviewMatch && detailedMatch) {
-          description = overviewMatch[1].trim() + '\n\n' + detailedMatch[1].trim();
-        } else if (overviewMatch) {
-          description = overviewMatch[1].trim();
-        } else if (detailedMatch) {
-          description = detailedMatch[1].trim();
-        }
+      const descRegex = /^# .+\n([\s\S]*?)(?=^## Acceptance Criteria)/m;
+      const descMatch = content.match(descRegex);
+      if (descMatch) {
+        description = descMatch[1].trim();
       }
       
       // Parse acceptance criteria
@@ -144,8 +214,8 @@ export class TicketController {
         risks.push(...riskItems.map(risk => risk.trim()));
       }
       
-      // Also try to find a ## Risks section
-      const risksSectionMatch = content.match(/## Risks\n\n([\s\S]*?)(?:\n## |$)/);
+      // Also try to find a ## Risks section ending with '---'
+      const risksSectionMatch = content.match(/## Risks\n\n([\s\S]*?)(?:\n---|$)/);
       if (risksSectionMatch) {
         const riskLines = risksSectionMatch[1].split('\n').filter(line => 
           line.trim().startsWith('-') || line.trim().startsWith('*')
@@ -156,50 +226,27 @@ export class TicketController {
       // Parse resources from dedicated sections
       const resources: string[] = [];
       
-      // Look for ## Resources section first
-      const resourcesSectionMatch = content.match(/## Resources\n\n([\s\S]*?)(?:\n## |$)/);
+      // Look for resources section from '---\n' to end of file
+      const resourcesSectionMatch = content.match(/---\n([\s\S]*)$/);
       if (resourcesSectionMatch) {
-        const resourceLines = resourcesSectionMatch[1].split('\n').filter(line => 
-          line.trim().startsWith('-') || line.trim().startsWith('*') || 
-          line.trim().match(/^https?:\/\//) || line.trim().match(/^\[.*\]\(.*\)/)
-        );
-        resources.push(...resourceLines.map(line => 
-          line.replace(/^[-*]\s*/, '').trim()
-        ));
-      }
-      
-      // Also look for embedded links in description or other sections
-      const linkMatches = content.match(/\[([^\]]+)\]\(([^)]+)\)/g);
-      if (linkMatches) {
-        linkMatches.forEach(link => {
-          const linkMatch = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
-          if (linkMatch && linkMatch[2].startsWith('http')) {
-            resources.push(`${linkMatch[1]}: ${linkMatch[2]}`);
-          }
+        // Only include embedded links in the format [alias]: ./filepath or [alias]: ://url
+        const resourceLines = resourcesSectionMatch[1].split('\n').filter(line => {
+          const trimmed = line.trim();
+          return /^\[[^\]]+\]:\s*(\.\/[^\s]+|https?:\/\/[^\s]+)/.test(trimmed);
         });
-      }
-      
-      // Extract URLs from text content
-      const urlMatches = content.match(/https?:\/\/[^\s)]+/g);
-      if (urlMatches) {
-        urlMatches.forEach(url => {
-          if (!resources.some(r => r.includes(url))) {
-            resources.push(url);
-          }
-        });
+        resources.push(...resourceLines.map(line => line.trim()));
       }
 
       return {
         id: yamlData.id,
-        status: yamlData.status || 'open',
-        priority: yamlData.priority || 'medium',
-        complexity: yamlData.complexity || 'medium',
+        status: yamlData.status ? String(yamlData.status) : 'open',
+        priority: yamlData.priority ? String(yamlData.priority) : 'medium',
+        complexity: yamlData.complexity ? String(yamlData.complexity) : 'medium',
         persona: yamlData.persona || null,
         contributor: yamlData.contributor || null,
-        model: yamlData.model || null,
-        effort_days: yamlData.effort_days || null,
         blocks: yamlData.blocks || [],
         blocked_by: yamlData.blocked_by || [],
+        model: yamlData.model ?? null,
         title,
         description,
         acceptance_criteria,
@@ -265,7 +312,7 @@ export class TicketController {
     return maxNumber + 1;
   }
 
-  private generateTicketMarkdown(data: any): string {
+  private generateTicketMarkdown(data: TicketDto): string {
     const yamlData = {
       id: data.id,
       status: data.status || 'open',
@@ -275,7 +322,6 @@ export class TicketController {
       ...(data.contributor && { contributor: data.contributor }), // Include contributor if present
       ...(data.contributor && { contributor: data.contributor }),
       ...(data.model && { model: data.model }),
-      ...(data.effort_days && { effort_days: data.effort_days }),
       ...(data.blocks && data.blocks.length > 0 && { blocks: data.blocks }),
       ...(data.blocked_by && data.blocked_by.length > 0 && { blocked_by: data.blocked_by })
     };
@@ -450,7 +496,7 @@ export class TicketController {
         tickets = this.applyPagination(tickets, queryParams.offset, queryParams.limit);
 
         return {
-          message: 'Get all tickets',
+          message: 'Get filtered tickets',
           tickets,
           pagination: {
             offset: queryParams.offset,
@@ -778,9 +824,22 @@ export class TicketController {
       }
       const finalTicketData = {
         ...ticketData,
-        id: fullId
+        id: fullId,
+        status: ticketData.status ? String(ticketData.status) : 'open',
+        priority: ticketData.priority ? String(ticketData.priority) : 'medium',
+        complexity: ticketData.complexity ? String(ticketData.complexity) : 'medium',
+        persona: ticketData.persona ?? null,
+        contributor: ticketData.contributor ?? null,
+        model: ticketData.model ?? null,
+        blocks: Array.isArray(ticketData.blocks) ? ticketData.blocks : [],
+        blocked_by: Array.isArray(ticketData.blocked_by) ? ticketData.blocked_by : [],
+        acceptance_criteria: Array.isArray(ticketData.acceptance_criteria) ? ticketData.acceptance_criteria : [],
+        tags: Array.isArray(ticketData.tags) ? ticketData.tags : [],
+        notes: typeof ticketData.notes === 'string' ? ticketData.notes : '',
+        risks: Array.isArray(ticketData.risks) ? ticketData.risks : [],
+        resources: Array.isArray(ticketData.resources) ? ticketData.resources : [],
       };
-      const markdownContent = this.generateTicketMarkdown(finalTicketData);
+      const markdownContent = this.generateParsedTicketMarkdown(finalTicketData);
       writeFileSync(filePath, markdownContent, 'utf-8');
       const createdTicket = this.parseTicketMarkdown(filePath);
       return {
