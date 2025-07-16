@@ -3,7 +3,7 @@ id: healthcare.mobile.app-sync-007
 status: open
 priority: low
 complexity: l
-persona: product-proteus
+persona: Product-Proteus
 blocks: []
 blocked_by: [healthcare.frontend.patient-dashboard-003]
 ```
@@ -261,5 +261,5 @@ Here's where you post your complete teardown of why this is a bad idea.
 
 ---
 
-[product-proteus]: ./personas/product-proteus.md
+[Product-Proteus]: ./personas/product-proteus.md
 [healthcare.frontend.patient-dashboard-003]: ./tickets/healthcare.frontend.patient-dashboard-003.md

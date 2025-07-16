@@ -3,7 +3,7 @@ id: healthcare.security.auth-sso-001
 status: open
 priority: high
 complexity: m
-persona: security-sasha
+persona: Security-Sasha
 blocks: [patient-dashboard-003]
 blocked_by: [ad-integration-001]
 ```
@@ -33,6 +33,6 @@ HIPAA-compliant SAML/OAuth integration with Active Directory. 15min session time
 
 ---
 
-[security-sasha]: ./personas/security-sasha.md
+[Security-Sasha]: ./personas/security-sasha.md
 [patient-dashboard-003]: ./tickets/healthcare.frontend.patient-dashboard-003.md
 [ad-integration-001]: ./tickets/healthcare.infrastructure.ad-integration-001.md

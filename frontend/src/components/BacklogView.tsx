@@ -1,7 +1,13 @@
 import { useState } from 'react'
+import { useContributors } from '../context/ContributorContext'
+import { useContext } from 'react'
+import { ComplexityContext } from '../context/ComplexityContext'
+import { usePersonas } from '../context/PersonaContext'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
 import { TotemIcon } from './TotemIcon'
+import { StatusContext } from '../context/StatusContext'
+import { PriorityContext } from '../context/PriorityContext'
 
 interface BacklogViewProps {
   onNavigateToTicket?: (mode: 'edit' | 'view', id: string) => void
@@ -17,21 +23,25 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const status = useContext(StatusContext)
   const [priorityFilter, setPriorityFilter] = useState<string>('')
+  const priority = useContext(PriorityContext);
   const [complexityFilter, setComplexityFilter] = useState<string>('')
+  const complexities = useContext(ComplexityContext)
   const [personaFilter, setPersonaFilter] = useState<string>('')
+  const { personas } = usePersonas();
   const [contributorFilter, setContributorFilter] = useState<string>('')
+  const { contributors } = useContributors();
 
   // Apply filters
   const filteredTickets = tickets.filter(ticket => {
-    const matchesStatus = !statusFilter || ticket.status?.toLowerCase() === statusFilter.toLowerCase()
-    const matchesPriority = !priorityFilter || ticket.priority?.toLowerCase() === priorityFilter.toLowerCase()
-    const matchesComplexity = !complexityFilter || ticket.complexity?.toLowerCase() === complexityFilter.toLowerCase()
-    const matchesPersona = !personaFilter || ticket.persona?.toLowerCase().includes(personaFilter.toLowerCase())
-    const matchesContributor = !contributorFilter || ticket.contributor?.toLowerCase().includes(contributorFilter.toLowerCase())
-    
-    return matchesStatus && matchesPriority && matchesComplexity && matchesPersona && matchesContributor
-  })
+    const matchesStatus = !statusFilter || ticket.status?.toLowerCase() === statusFilter.toLowerCase();
+    const matchesPriority = !priorityFilter || ticket.priority?.toLowerCase() === priorityFilter.toLowerCase();
+    const matchesComplexity = !complexityFilter || ticket.complexity?.toLowerCase() === complexityFilter.toLowerCase();
+    const matchesPersona = !personaFilter || ticket.persona === personaFilter;
+    const matchesContributor = !contributorFilter || ticket.contributor === contributorFilter;
+    return matchesStatus && matchesPriority && matchesComplexity && matchesPersona && matchesContributor;
+  });
 
   const clearAllFilters = () => {
     setStatusFilter('')
@@ -117,10 +127,12 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
 
   const getComplexityColor = (complexity?: string) => {
     switch (complexity?.toLowerCase()) {
-      case 'high': return 'complexity-high'
-      case 'medium': return 'complexity-medium'
-      case 'low': return 'complexity-low'
-      default: return 'complexity-default'
+      case 'xxl': return 'complexity-high'
+      case 'xl': return 'complexity-high'
+      case 'l': return 'complexity-medium'
+      case 's': return 'complexity-low'
+      case 'xs': return 'complexity-low'
+      default: return 'complexity-medium'
     }
   }
 
@@ -203,11 +215,9 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
             >
               <option value="">All</option>
-              <option value="open">Open</option>
-              <option value="in-progress">In Progress</option>
-              <option value="planning">Planning</option>
-              <option value="completed">Completed</option>
-              <option value="blocked">Blocked</option>
+              {status?.statuses.map((status) => (
+                <option key={status.key} value={status.key.toLowerCase()}>{status.key.toUpperCase()}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -218,44 +228,49 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
             >
               <option value="">All</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              {priority?.priorities.map((priority) => (
+                <option key={priority.key} value={priority.key.toLowerCase()}>{priority.key.toUpperCase()}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Complexity</label>
-            <select
-              value={complexityFilter}
-              onChange={(e) => setComplexityFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            >
-              <option value="">All</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+              <select
+                value={complexityFilter}
+                onChange={(e) => setComplexityFilter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+              >
+                <option value="">All</option>
+                {complexities?.complexities.map((item) => (
+                  <option key={item.key} value={item.key}>{item.key}</option>
+                ))}
+              </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Persona</label>
-            <input
-              type="text"
-              placeholder="Filter by persona..."
+            <select
               value={personaFilter}
               onChange={(e) => setPersonaFilter(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            />
+            >
+              <option value="">All</option>
+              {personas.map((persona: import('../types').Persona) => (
+                <option key={persona.name} value={persona.name}>{persona.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Contributor</label>
-            <input
-              type="text"
-              placeholder="Filter by contributor..."
+            <select
               value={contributorFilter}
               onChange={(e) => setContributorFilter(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            />
+            >
+              <option value="">All</option>
+              {contributors.map((contributor: { name: string }) => (
+                <option key={contributor.name} value={contributor.name}>{contributor.name}</option>
+              ))}
+            </select>
           </div>
         </div>
         {hasActiveFilters && (

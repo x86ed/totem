@@ -3,8 +3,8 @@ id: healthcare.infrastructure.ad-integration-001
 status: done
 priority: high
 complexity: m
-persona: security-sasha
-contributor: octocat
+persona: Security-Sasha
+contributor: Octocat
 blocks: [healthcare.security.auth-sso-001]
 blocked_by: []
 ```
@@ -36,6 +36,6 @@ Configure secure LDAP connection to hospital's Active Directory for centralized 
 
 ---
 
-[security-sasha]: ./personas/security-sasha.md
+[Security-Sasha]: ./personas/security-sasha.md
 [healthcare.security.auth-sso-001]: ./tickets/healthcare.security.auth-sso-001.md
-[octocat]: .totem/contributors/octocat.md
+[Octocat]: .totem/contributors/octocat.md

@@ -9,8 +9,12 @@ import ArtifactsView from './components/ArtifactsView'
 import { TicketProvider } from './context/TicketContext'
 import { ArtifactsProvider } from './context/ArtifactsContext'
 import { PersonaProvider } from './context/PersonaContext'
+import { ContributorProvider } from './context/ContributorContext'
 import { TabConfig } from './types'
 import './App.css'
+import { ComplexityProvider } from './context/ComplexityContext'
+import { PriorityProvider } from './context/PriorityContext'
+import { StatusProvider } from './context/StatusContext'
 
 /**
  * Main application component that provides the overall layout and navigation
@@ -126,6 +130,10 @@ function App() {
     <TicketProvider>
       <ArtifactsProvider>
         <PersonaProvider>
+          <ContributorProvider>
+          <ComplexityProvider>
+          <PriorityProvider>
+          <StatusProvider>
           <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
             {/* Sidenav */}
             <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
@@ -197,6 +205,10 @@ function App() {
               </main>
             </div>
           </div>
+          </StatusProvider>
+          </PriorityProvider>
+          </ComplexityProvider>
+          </ContributorProvider>
         </PersonaProvider>
       </ArtifactsProvider>
     </TicketProvider>

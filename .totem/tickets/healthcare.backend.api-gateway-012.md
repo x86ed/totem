@@ -3,7 +3,7 @@ id: healthcare.backend.api-gateway-012
 status: planned
 priority: medium
 complexity: m
-persona: security-sasha
+persona: Security-Sasha
 blocks: [healthcare.analytics.reporting-engine-015]
 blocked_by: []
 ```
@@ -38,5 +38,5 @@ Centralized API gateway for microservices with rate limiting, authentication, an
 
 ---
 
-[security-sasha]: ./personas/security-sasha.md
+[Security-Sasha]: ./personas/security-sasha.md
 [healthcare.analytics.reporting-engine-015]: ./tickets/healthcare.analytics.reporting-engine-015.md

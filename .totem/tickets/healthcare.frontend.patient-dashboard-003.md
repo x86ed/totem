@@ -3,7 +3,7 @@ id: healthcare.frontend.patient-dashboard-003
 status: in-progress
 priority: medium
 complexity: l
-persona: product-proteus
+persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-007]
 blocked_by: [healthcare.security.auth-sso-001]
 ```
@@ -37,6 +37,6 @@ Modern React-based dashboard with real-time data visualization, accessibility co
 
 ---
 
-[product-proteus]: ./personas/product-proteus.md
+[Product-Proteus]: ./personas/product-proteus.md
 [healthcare.security.auth-sso-001]: ./tickets/healthcare.security.auth-sso-001.md
 [healthcare.mobile.app-sync-007]: ./tickets/healthcare.mobile.app-sync-007.md
