@@ -92,6 +92,10 @@ export interface Milestone {
  * 
  * @interface TicketContextType
  */
+
+import type React from 'react';
+import type { TicketPagination, TicketFilters, TicketSort } from './context/TicketContext';
+
 export interface TicketContextType {
   /** Array of all tickets in the system */
   tickets: Ticket[];
@@ -101,8 +105,13 @@ export interface TicketContextType {
   loading: boolean;
   /** Error message if any operations failed */
   error: string | null;
-  /** Function to refresh tickets from the API */
-  refreshTickets: () => Promise<void>;
+  /** Function to refresh tickets from the API (with optional params for pagination/filter/sort) */
+  refreshTickets: (params?: {
+    offset?: number;
+    limit?: number;
+    filters?: TicketFilters;
+    sort?: TicketSort;
+  }) => Promise<void>;
   /** Function to add a new ticket */
   addTicket: (ticket: Partial<Ticket>) => Promise<void>;
   /** Function to create a new ticket */
@@ -113,6 +122,16 @@ export interface TicketContextType {
   deleteTicket: (ticketId: string) => Promise<void>;
   /** Function to move a ticket between statuses */
   moveTicket?: (ticketId: string, newStatus: string) => Promise<void>;
+
+  /** Pagination info for the current ticket list */
+  pagination: TicketPagination;
+  setPagination: React.Dispatch<React.SetStateAction<TicketPagination>>;
+  /** Current filters for the ticket list */
+  filters: TicketFilters;
+  setFilters: React.Dispatch<React.SetStateAction<TicketFilters>>;
+  /** Current sort for the ticket list */
+  sort: TicketSort;
+  setSort: React.Dispatch<React.SetStateAction<TicketSort>>;
 }
 
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
 import type { Ticket, Milestone, TicketContextType } from '../types'
 
 /**
@@ -41,6 +41,28 @@ const initialState: TicketState = {
   milestones: [],
   loading: false,
   error: null
+}
+
+// Pagination and filter types
+export interface TicketPagination {
+  offset: number;
+  limit: number;
+  total: number;
+  totalFiltered: number;
+}
+
+export interface TicketFilters {
+  id?: string;
+  status?: string;
+  priority?: string;
+  complexity?: string;
+  persona?: string;
+  contributor?: string;
+}
+
+export interface TicketSort {
+  field: string;
+  order: 'asc' | 'desc';
 }
 
 /**
@@ -116,24 +138,52 @@ interface TicketProviderProps {
  * @param props.children - Child components that will have access to the ticket context
  * @returns Provider component with ticket context
  */
+
 export function TicketProvider({ children }: TicketProviderProps) {
-  const [state, dispatch] = useReducer(ticketReducer, initialState)
+  const [state, dispatch] = useReducer(ticketReducer, initialState);
+  const [pagination, setPagination] = useState<TicketPagination>({ offset: 0, limit: 20, total: 0, totalFiltered: 0 });
+  const [filters, setFilters] = useState<TicketFilters>({});
+  const [sort, setSort] = useState<TicketSort>({ field: 'id', order: 'asc' });
 
   // Load tickets when the provider mounts
   useEffect(() => {
-    refreshTickets()
-  }, [])
+    refreshTickets({ offset: 0, limit: 20, filters: {}, sort: { field: 'id', order: 'asc' } });
+    // eslint-disable-next-line
+  }, []);
 
   /**
-   * Refreshes tickets from the API
+   * Refreshes tickets from the API with optional pagination, filters, and sort
    */
-  const refreshTickets = async (): Promise<void> => {
+  const refreshTickets = async (params?: {
+    offset?: number;
+    limit?: number;
+    filters?: TicketFilters;
+    sort?: TicketSort;
+  }): Promise<void> => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true })
-      dispatch({ type: 'SET_ERROR', payload: null })
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const offset = params?.offset ?? pagination.offset;
+      const limit = params?.limit ?? pagination.limit;
+      const f = params?.filters ?? filters;
+      const s = params?.sort ?? sort;
+
+      // Build query string
+      const query = new URLSearchParams();
+      query.append('offset', String(offset));
+      query.append('limit', String(limit));
+      if (f.id) query.append('id', f.id);
+      if (f.status) query.append('status', f.status);
+      if (f.priority) query.append('priority', f.priority);
+      if (f.complexity) query.append('complexity', f.complexity);
+      if (f.persona) query.append('persona', f.persona);
+      if (f.contributor) query.append('contributor', f.contributor);
+      if (s.field) query.append('sortBy', s.field);
+      if (s.order) query.append('sortOrder', s.order);
 
       // Use relative URL in production, absolute URL in development
-      const apiUrl = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket';
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${query}` : `/api/ticket?${query}`;
       const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch tickets: ${response.status}`);
@@ -141,9 +191,12 @@ export function TicketProvider({ children }: TicketProviderProps) {
 
       const data = await response.json();
       const tickets = data.tickets || [];
-      // If milestones are provided by the API, use them; otherwise, keep empty
+      const pag = data.pagination || { offset, limit, total: tickets.length, totalFiltered: tickets.length };
 
       dispatch({ type: 'SET_TICKETS', payload: tickets });
+      setPagination(pag);
+      setFilters(f);
+      setSort(s);
       // Optionally, add a SET_MILESTONES action if you want to manage milestones from API
       // dispatch({ type: 'SET_MILESTONES', payload: milestones });
     } catch (error) {
@@ -274,6 +327,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
     await createTicket(ticket)
   }
 
+
   const value: TicketContextType = {
     tickets: state.tickets,
     milestones: state.milestones,
@@ -283,14 +337,20 @@ export function TicketProvider({ children }: TicketProviderProps) {
     addTicket,
     createTicket,
     updateTicket,
-    deleteTicket
-  }
+    deleteTicket,
+    pagination,
+    setPagination,
+    filters,
+    setFilters,
+    sort,
+    setSort,
+  };
 
   return (
     <TicketContext.Provider value={value}>
       {children}
     </TicketContext.Provider>
-  )
+  );
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useContributors } from '../context/ContributorContext'
 import { useContext } from 'react'
 import { ComplexityContext } from '../context/ComplexityContext'
@@ -8,6 +8,7 @@ import { Ticket } from '../types'
 import { TotemIcon } from './TotemIcon'
 import { StatusContext } from '../context/StatusContext'
 import { PriorityContext } from '../context/PriorityContext'
+import CollapsibleFilterBar from './CollapsibleFilterBar'
 
 interface BacklogViewProps {
   onNavigateToTicket?: (mode: 'edit' | 'view', id: string) => void
@@ -16,79 +17,96 @@ interface BacklogViewProps {
 type SortField = 'id' | 'status' | 'priority' | 'complexity' | 'title' | 'persona' | 'contributor'
 type SortOrder = 'asc' | 'desc'
 
+
+
 function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
-  const { tickets, loading, error } = useTickets()
-  const [sortField, setSortField] = useState<SortField>('id')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
+  const { tickets, loading, error, refreshTickets, pagination, setPagination, filters, setFilters, sort, setSort } = useTickets();
+  const [sortField, setSortField] = useState<SortField>(sort.field as SortField || 'id');
+  const [sortOrder, setSortOrder] = useState<SortOrder>(sort.order as SortOrder || 'asc');
+
+  // Pagination state
+  const [page, setPage] = useState(() => Math.floor((pagination.offset || 0) / (pagination.limit || 20)) + 1);
+  const [pageSize, setPageSize] = useState(pagination.limit || 20);
 
   // Filter states
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const status = useContext(StatusContext)
-  const [priorityFilter, setPriorityFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>(filters.status || '');
+  const status = useContext(StatusContext);
+  const [priorityFilter, setPriorityFilter] = useState<string>(filters.priority || '');
   const priority = useContext(PriorityContext);
-  const [complexityFilter, setComplexityFilter] = useState<string>('')
-  const complexities = useContext(ComplexityContext)
-  const [personaFilter, setPersonaFilter] = useState<string>('')
+  const [complexityFilter, setComplexityFilter] = useState<string>(filters.complexity || '');
+  const complexities = useContext(ComplexityContext);
+  const [personaFilter, setPersonaFilter] = useState<string>(filters.persona || '');
   const { personas } = usePersonas();
-  const [contributorFilter, setContributorFilter] = useState<string>('')
+  const [contributorFilter, setContributorFilter] = useState<string>(filters.contributor || '');
   const { contributors } = useContributors();
 
-  // Apply filters
-  const filteredTickets = tickets.filter(ticket => {
-    const matchesStatus = !statusFilter || ticket.status?.toLowerCase() === statusFilter.toLowerCase();
-    const matchesPriority = !priorityFilter || ticket.priority?.toLowerCase() === priorityFilter.toLowerCase();
-    const matchesComplexity = !complexityFilter || ticket.complexity?.toLowerCase() === complexityFilter.toLowerCase();
-    const matchesPersona = !personaFilter || ticket.persona === personaFilter;
-    const matchesContributor = !contributorFilter || ticket.contributor === contributorFilter;
-    return matchesStatus && matchesPriority && matchesComplexity && matchesPersona && matchesContributor;
-  });
+  // Sync context state when local state changes
+  useEffect(() => {
+    setFilters({
+      status: statusFilter || undefined,
+      priority: priorityFilter || undefined,
+      complexity: complexityFilter || undefined,
+      persona: personaFilter || undefined,
+      contributor: contributorFilter || undefined,
+    });
+  }, [statusFilter, priorityFilter, complexityFilter, personaFilter, contributorFilter, setFilters]);
+
+  useEffect(() => {
+    setPagination({
+      ...pagination,
+      offset: (page - 1) * pageSize,
+      limit: pageSize,
+    });
+  }, [page, pageSize, setPagination]);
+
+  useEffect(() => {
+    setSort({ field: sortField, order: sortOrder });
+  }, [sortField, sortOrder, setSort]);
+
+  // Effect: fetch tickets when filters, page, pageSize, or sort changes
+  useEffect(() => {
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
+    refreshTickets({
+      offset,
+      limit,
+      filters: {
+        status: statusFilter || undefined,
+        priority: priorityFilter || undefined,
+        complexity: complexityFilter || undefined,
+        persona: personaFilter || undefined,
+        contributor: contributorFilter || undefined,
+      },
+      sort: { field: sortField, order: sortOrder },
+    });
+    // eslint-disable-next-line
+  }, [statusFilter, priorityFilter, complexityFilter, personaFilter, contributorFilter, page, pageSize, sortField, sortOrder]);
 
   const clearAllFilters = () => {
-    setStatusFilter('')
-    setPriorityFilter('')
-    setComplexityFilter('')
-    setPersonaFilter('')
-    setContributorFilter('')
-  }
+    setStatusFilter('');
+    setPriorityFilter('');
+    setComplexityFilter('');
+    setPersonaFilter('');
+    setContributorFilter('');
+    setPage(1);
+    setFilters({});
+  };
 
-  const hasActiveFilters = statusFilter || priorityFilter || complexityFilter || personaFilter || contributorFilter
+  const hasActiveFilters = statusFilter || priorityFilter || complexityFilter || personaFilter || contributorFilter;
 
-  const sortedTickets = [...filteredTickets].sort((a, b) => {
-    let valueA: string | number
-    let valueB: string | number
 
-    if (sortField === 'priority') {
-      const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 }
-      valueA = priorityOrder[a.priority?.toLowerCase() as keyof typeof priorityOrder] || 0
-      valueB = priorityOrder[b.priority?.toLowerCase() as keyof typeof priorityOrder] || 0
-    } else if (sortField === 'complexity') {
-      const complexityOrder = { 'high': 3, 'medium': 2, 'low': 1 }
-      valueA = complexityOrder[a.complexity?.toLowerCase() as keyof typeof complexityOrder] || 0
-      valueB = complexityOrder[b.complexity?.toLowerCase() as keyof typeof complexityOrder] || 0
-    } else {
-      valueA = String(a[sortField] || '').toLowerCase()
-      valueB = String(b[sortField] || '').toLowerCase()
-    }
-
-    if (sortOrder === 'desc') {
-      return typeof valueA === 'number' && typeof valueB === 'number' 
-        ? valueB - valueA 
-        : String(valueB).localeCompare(String(valueA))
-    } else {
-      return typeof valueA === 'number' && typeof valueB === 'number' 
-        ? valueA - valueB 
-        : String(valueA).localeCompare(String(valueB))
-    }
-  })
+  // No client-side sorting or filtering; tickets are already filtered/sorted from server
+  const sortedTickets = tickets;
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortField(field)
-      setSortOrder(field === 'priority' ? 'desc' : 'asc')
+      setSortField(field);
+      setSortOrder(field === 'priority' ? 'desc' : 'asc');
     }
-  }
+    setSort({ field, order: sortOrder === 'asc' ? 'desc' : 'asc' });
+  };
 
   const handleRowClick = (ticket: Ticket) => {
     if (onNavigateToTicket && ticket.id) {
@@ -199,91 +217,36 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Backlog</h2>
           <div className="bg-green-600 rounded px-3 py-1 text-sm font-medium">
-            {filteredTickets.length} {filteredTickets.length !== tickets.length ? 'filtered' : 'total'}
+            {pagination?.totalFiltered ?? sortedTickets.length} total
           </div>
         </div>
       </div>
 
-      {/* Filter Controls */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            >
-              <option value="">All</option>
-              {status?.statuses.map((status) => (
-                <option key={status.key} value={status.key.toLowerCase()}>{status.key.toUpperCase()}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            >
-              <option value="">All</option>
-              {priority?.priorities.map((priority) => (
-                <option key={priority.key} value={priority.key.toLowerCase()}>{priority.key.toUpperCase()}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Complexity</label>
-              <select
-                value={complexityFilter}
-                onChange={(e) => setComplexityFilter(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-              >
-                <option value="">All</option>
-                {complexities?.complexities.map((item) => (
-                  <option key={item.key} value={item.key}>{item.key}</option>
-                ))}
-              </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Persona</label>
-            <select
-              value={personaFilter}
-              onChange={(e) => setPersonaFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            >
-              <option value="">All</option>
-              {personas.map((persona: import('../types').Persona) => (
-                <option key={persona.name} value={persona.name}>{persona.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Contributor</label>
-            <select
-              value={contributorFilter}
-              onChange={(e) => setContributorFilter(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-            >
-              <option value="">All</option>
-              {contributors.map((contributor: { name: string }) => (
-                <option key={contributor.name} value={contributor.name}>{contributor.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {hasActiveFilters && (
-          <div className="mt-3">
-            <button
-              onClick={clearAllFilters}
-              className="text-sm text-green-600 hover:text-green-800 font-medium"
-            >
-              Clear All Filters
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Collapsible Filter & Pagination Bar */}
+      <CollapsibleFilterBar
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        status={status}
+        priorityFilter={priorityFilter}
+        setPriorityFilter={setPriorityFilter}
+        priority={priority}
+        complexityFilter={complexityFilter}
+        setComplexityFilter={setComplexityFilter}
+        complexities={complexities}
+        personaFilter={personaFilter}
+        setPersonaFilter={setPersonaFilter}
+        personas={personas}
+        contributorFilter={contributorFilter}
+        setContributorFilter={setContributorFilter}
+        contributors={contributors}
+        hasActiveFilters={hasActiveFilters}
+        clearAllFilters={clearAllFilters}
+        page={page}
+        setPage={setPage}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        totalFiltered={pagination?.totalFiltered ?? sortedTickets.length}
+      />
 
       {/* Table */}
       <div className="overflow-hidden">
@@ -377,14 +340,17 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
           </tbody>
         </table>
       </div>
-      
+
+
+      {/* Pagination is now part of the filter bar above */}
+
       {/* Footer */}
       <div className="bg-green-700 px-6 py-3 border-t border-green-600">
         <div className="flex items-center justify-between text-sm text-white">
           <div className="flex items-center space-x-4">
             <span>
               Showing {sortedTickets.length} tickets
-              {filteredTickets.length !== tickets.length && ` (filtered from ${tickets.length})`}
+              {pagination && pagination.totalFiltered !== undefined && ` (filtered from ${pagination.total || pagination.totalFiltered})`}
             </span>
             <span>
               Sorted by {sortField} ({sortOrder})
