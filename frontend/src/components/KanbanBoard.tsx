@@ -139,35 +139,16 @@ function KanbanBoard() {
               </div>
               <div className="space-y-3">
                 {columnTickets.map((ticket) => (
-                  <div
+                  <TicketCard
                     key={ticket.id}
-                    className="relative group ticket-green"
-                    draggable
-                    onDragStart={() => handleDragStart(ticket.id)}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <TicketCard ticket={ticket} />
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex space-x-1">
-                        {columns.map((targetColumn) => (
-                          targetColumn.id === ticket.status ? null : (
-                            <button
-                              key={targetColumn.id}
-                              onClick={() => handleMoveTicket(ticket.id, targetColumn.id)}
-                              className="bg-white border rounded p-1 text-xs hover:bg-gray-50 shadow-sm"
-                              style={{ 
-                                borderColor: '#c8d5c8',
-                                background: '#fafbfa'
-                              }}
-                              title={`Move to ${targetColumn.title}`}
-                            >
-                              {getColumnIcon(targetColumn.id)}
-                            </button>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                    ticket={ticket}
+                    columns={columns}
+                    currentColumnId={column.id}
+                    handleDragStart={handleDragStart}
+                    handleDragEnd={handleDragEnd}
+                    handleMoveTicket={handleMoveTicket}
+                    getColumnIcon={getColumnIcon}
+                  />
                 ))}
                 {columnTickets.length === 0 && (
                   <div className="text-center py-8" style={{ color: '#5a6e5a' }}>

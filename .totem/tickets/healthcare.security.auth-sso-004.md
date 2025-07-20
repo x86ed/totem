@@ -1,14 +1,13 @@
 ```yaml
 id: healthcare.security.auth-sso-004
-status: open
+status: in-progress
 priority: low
 complexity: l
 persona: Security-Sasha
-blocks: [patient-dashboard-006]
-blocked_by: []
-scheduling:
-  start_time: -1
-  end_time: -1
+blocks:
+  - patient-dashboard-006
+start_time: -1
+end_time: -1
 ```
 
 # SSO Session Timeout Banner

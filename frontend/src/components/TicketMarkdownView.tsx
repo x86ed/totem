@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTickets } from '../context/TicketContext'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -52,6 +53,27 @@ const TicketMarkdownView: React.FC<TicketMarkdownViewProps> = ({
       onTicketUpdate({ notes: newNotes })
     }
   }
+
+  const { updateTicket } = useTickets();
+
+  const [criteriaState, setCriteriaState] = useState(ticket.acceptance_criteria || []);
+
+  React.useEffect(() => {
+    setCriteriaState(ticket.acceptance_criteria || []);
+  }, [ticket.acceptance_criteria]);
+
+  const handleCriteriaToggle = (index: number) => {
+    if (!criteriaState) return;
+    const updatedCriteria = criteriaState.map((ac, i) =>
+      i === index ? { ...ac, complete: !ac.complete } : ac
+    );
+    setCriteriaState(updatedCriteria);
+    updateTicket({
+      ...ticket,
+      description: ticket.description || '',
+      acceptance_criteria: updatedCriteria
+    });
+  };
 
   return (
     <div className="ticket-markdown-view">
@@ -134,17 +156,17 @@ effort_days: ${ticket.effort_days}` : ''}`}
       )}
 
       {/* Acceptance Criteria */}
-      {ticket.acceptance_criteria && ticket.acceptance_criteria.length > 0 && (
+      {criteriaState && criteriaState.length > 0 && (
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Acceptance Criteria</h2>
           <ul className="list-disc pl-6 mb-4 space-y-2">
-            {ticket.acceptance_criteria.map((ac, index) => (
+            {criteriaState.map((ac, index) => (
               <li key={index} className="text-gray-700">
-                <input 
-                  type="checkbox" 
-                  checked={ac.complete} 
-                  readOnly 
-                  className="mr-2" 
+                <input
+                  type="checkbox"
+                  checked={ac.complete}
+                  onChange={() => handleCriteriaToggle(index)}
+                  className="mr-2"
                 />
                 {ac.criteria}
               </li>

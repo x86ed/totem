@@ -1,14 +1,15 @@
 ```yaml
 id: Release.deployment.workflow-053
-status: open
+status: in-progress
 priority: medium
 complexity: l
 persona: Automation-Artemis
-blocks: [Release.mobile.workflow-060]
-blocked_by: [healthcare.backend.api-gateway-019]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocks:
+  - Release.mobile.workflow-060
+blocked_by:
+  - healthcare.backend.api-gateway-019
+start_time: -1
+end_time: -1
 ```
 
 # Major release

@@ -5,10 +5,10 @@ priority: high
 complexity: m
 persona: Security-Sasha
 contributor: Octocat
-blocks: [healthcare.security.auth-sso-001]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocks:
+  - healthcare.security.auth-sso-001
+start_time: -1
+end_time: -1
 ```
 
 # Active Directory Integration Setup

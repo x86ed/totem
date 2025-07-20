@@ -1,5 +1,5 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-002
+id: healthcare.frontend.patient-dashboard-004
 contributor: Radical Edward
 status: open
 priority: high

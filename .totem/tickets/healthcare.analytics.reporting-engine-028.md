@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-028
-status: open
+status: blocked
 priority: high
 complexity: h
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-025]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-025
+start_time: -1
+end_time: -1
 ```
 
 # Clinical Outcomes Dashboard

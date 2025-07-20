@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-019
-status: open
+status: planned
 priority: low
 complexity: m
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-016]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-016
+start_time: -1
+end_time: -1
 ```
 
 # Scheduled Report Delivery

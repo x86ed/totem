@@ -1,5 +1,5 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-010
+id: healthcare.frontend.patient-dashboard-012
 contributor: The Laughing Man
 status: open
 priority: high

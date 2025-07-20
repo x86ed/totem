@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-024
-status: open
+status: blocked
 priority: high
 complexity: h
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-021]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-021
+start_time: -1
+end_time: -1
 ```
 
 # Financial Analytics Module

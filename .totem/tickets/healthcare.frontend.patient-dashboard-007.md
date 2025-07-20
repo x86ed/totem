@@ -1,5 +1,5 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-005
+id: healthcare.frontend.patient-dashboard-007
 contributor: Octocat
 status: open
 priority: high

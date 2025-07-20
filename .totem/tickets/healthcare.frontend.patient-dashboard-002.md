@@ -1,15 +1,16 @@
 ```yaml
 id: healthcare.frontend.patient-dashboard-002
-contributor: The Laughing Man
-status: open
+status: in-progress
 priority: high
 complexity: m
 persona: Product-Proteus
-blocks: [healthcare.mobile.app-sync-008]
-blocked_by: [healthcare.security.auth-sso-002]
-scheduling:
-  start_time: -1
-  end_time: -1
+contributor: The Laughing Man
+blocks:
+  - healthcare.mobile.app-sync-008
+blocked_by:
+  - healthcare.security.auth-sso-002
+start_time: -1
+end_time: -1
 ```
 
 # Patient Dashboard Notifications

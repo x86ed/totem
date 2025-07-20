@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-021
-status: blocked
+status: done
 priority: medium
 complexity: m
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-018]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-018
+start_time: -1
+end_time: -1
 ```
 
 # Cohort Analysis Tool

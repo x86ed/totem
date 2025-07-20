@@ -1,5 +1,5 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-006
+id: healthcare.frontend.patient-dashboard-008
 contributor: Acid Burn
 status: open
 priority: medium

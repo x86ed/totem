@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-022
-status: open
+status: in-progress
 priority: low
 complexity: l
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-019]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-019
+start_time: -1
+end_time: -1
 ```
 
 # KPI Benchmarking Reports

@@ -18,7 +18,7 @@ Advanced analytics dashboard with custom report generation, data visualization, 
 ## Acceptance Criteria
 
 - [ ] one
-- [ ] two
+- [x] two
 - [ ] three
 
 ## Implementation Notes

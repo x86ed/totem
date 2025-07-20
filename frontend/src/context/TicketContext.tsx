@@ -44,6 +44,8 @@ const initialState: TicketState = {
 }
 
 // Pagination and filter types
+
+export { TicketContext };
 export interface TicketPagination {
   offset: number;
   limit: number;

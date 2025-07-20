@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-026
-status: open
+status: planned
 priority: medium
 complexity: m
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-023]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-023
+start_time: -1
+end_time: -1
 ```
 
 # Population Health Analytics

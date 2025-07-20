@@ -1,6 +1,6 @@
 
 ```yaml
-id: healthcare.frontend.patient-dashboard-010
+id: healthcare.frontend.patient-dashboard-008
 status: open
 priority: low
 complexity: m

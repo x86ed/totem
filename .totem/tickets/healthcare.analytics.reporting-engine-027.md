@@ -1,13 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-027
-status: planned
+status: review
 priority: low
 complexity: l
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-024]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocked_by:
+  - healthcare.backend.api-gateway-024
+start_time: -1
+end_time: -1
 ```
 
 # Data Lineage Tracking

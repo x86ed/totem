@@ -1,14 +1,15 @@
 ```yaml
 id: healthcare.security.auth-sso-003
-status: open
+status: todo
 priority: medium
 complexity: m
 persona: Security-Sasha
-blocks: [patient-dashboard-005]
-blocked_by: [ad-integration-003]
-scheduling:
-  start_time: -1
-  end_time: -1
+blocks:
+  - patient-dashboard-005
+blocked_by:
+  - ad-integration-003
+start_time: -1
+end_time: -1
 ```
 
 # Multi-Factor Authentication (MFA) for Staff Portal

@@ -1,5 +1,5 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-004
+id: healthcare.frontend.patient-dashboard-006
 contributor: Zero Cool
 status: open
 priority: low

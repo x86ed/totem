@@ -1,14 +1,13 @@
 ```yaml
 id: healthcare.backend.api-gateway-012
-status: planned
+status: open
 priority: medium
 complexity: m
 persona: Security-Sasha
-blocks: [healthcare.analytics.reporting-engine-015]
-blocked_by: []
-scheduling:
-  start_time: -1
-  end_time: -1
+blocks:
+  - healthcare.analytics.reporting-engine-015
+start_time: -1
+end_time: -1
 ```
 
 # API Gateway Implementation
@@ -16,13 +15,6 @@ scheduling:
 Centralized API gateway for microservices with rate limiting, authentication, and monitoring capabilities.
 
 ## Acceptance Criteria
-- [ ] Kong or AWS API Gateway setup
-- [ ] Rate limiting configured
-- [ ] API key management
-- [ ] Request/response logging
-- [ ] Health check endpoints
-- [ ] Load balancing configuration
-- [ ] API documentation generated
 
 ## Implementation Notes
 
