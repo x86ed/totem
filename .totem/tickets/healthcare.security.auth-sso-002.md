@@ -6,6 +6,9 @@ complexity: l
 persona: Security-Sasha
 blocks: [patient-dashboard-004]
 blocked_by: [ad-integration-002]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # OAuth2 Integration for Mobile App

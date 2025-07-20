@@ -139,6 +139,7 @@ interface TicketProviderProps {
  * @returns Provider component with ticket context
  */
 
+
 export function TicketProvider({ children }: TicketProviderProps) {
   const [state, dispatch] = useReducer(ticketReducer, initialState);
   const [pagination, setPagination] = useState<TicketPagination>({ offset: 0, limit: 20, total: 0, totalFiltered: 0 });
@@ -150,6 +151,84 @@ export function TicketProvider({ children }: TicketProviderProps) {
     refreshTickets({ offset: 0, limit: 20, filters: {}, sort: { field: 'id', order: 'asc' } });
     // eslint-disable-next-line
   }, []);
+
+  /**
+   * Loads all tickets from the API in batches and sets them in state
+   * @param batchSize - Number of tickets to fetch per request (default 100)
+   * @param filtersOverride - Optional filters to use
+   * @param sortOverride - Optional sort to use
+   */
+  const loadAllTickets = async (
+    filtersOverride?: TicketFilters,
+    sortOverride?: TicketSort
+  ): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      const f = filtersOverride ?? filters;
+      const s = sortOverride ?? sort;
+      const limit = 20;
+      let offset = 0;
+      let total = 0;
+      let allTickets: Ticket[] = [];
+
+      // First request to get total
+      const query = new URLSearchParams();
+      query.append('offset', String(offset));
+      query.append('limit', String(limit));
+      if (f.id) query.append('id', f.id);
+      if (f.status) query.append('status', f.status);
+      if (f.priority) query.append('priority', f.priority);
+      if (f.complexity) query.append('complexity', f.complexity);
+      if (f.persona) query.append('persona', f.persona);
+      if (f.contributor) query.append('contributor', f.contributor);
+      if (s.field) query.append('sortBy', s.field);
+      if (s.order) query.append('sortOrder', s.order);
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${query}` : `/api/ticket?${query}`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tickets: ${response.status}`);
+      }
+      const data = await response.json();
+      const tickets = data.tickets || [];
+      total = data.pagination?.total ?? tickets.length;
+      allTickets = allTickets.concat(tickets);
+      offset += limit;
+
+      // Fetch remaining pages if needed
+      while (allTickets.length < total) {
+        const pageQuery = new URLSearchParams();
+        pageQuery.append('offset', String(offset));
+        pageQuery.append('limit', String(limit));
+        if (f.id) pageQuery.append('id', f.id);
+        if (f.status) pageQuery.append('status', f.status);
+        if (f.priority) pageQuery.append('priority', f.priority);
+        if (f.complexity) pageQuery.append('complexity', f.complexity);
+        if (f.persona) pageQuery.append('persona', f.persona);
+        if (f.contributor) pageQuery.append('contributor', f.contributor);
+        if (s.field) pageQuery.append('sortBy', s.field);
+        if (s.order) pageQuery.append('sortOrder', s.order);
+        const pageUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${pageQuery}` : `/api/ticket?${pageQuery}`;
+        const pageResponse = await fetch(pageUrl);
+        if (!pageResponse.ok) {
+          throw new Error(`Failed to fetch tickets: ${pageResponse.status}`);
+        }
+        const pageData = await pageResponse.json();
+        const pageTickets = pageData.tickets || [];
+        allTickets = allTickets.concat(pageTickets);
+        offset += limit;
+      }
+
+      dispatch({ type: 'SET_TICKETS', payload: allTickets });
+      setPagination(prev => ({ ...prev, total: allTickets.length, totalFiltered: allTickets.length, offset: 0, limit: allTickets.length }));
+      setFilters(f);
+      setSort(s);
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load all tickets' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
 
   /**
    * Refreshes tickets from the API with optional pagination, filters, and sort
@@ -344,6 +423,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
     setFilters,
     sort,
     setSort,
+    loadAllTickets, // Expose the new function
   };
 
   return (

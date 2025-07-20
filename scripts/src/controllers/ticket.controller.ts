@@ -70,6 +70,8 @@ interface YAMLHeader {
   contributor: string;
   blocks: string[];
   blocked_by: string[];
+  start_time?: number;
+  end_time?: number;
 }
 
 @ApiTags('tickets')
@@ -79,20 +81,25 @@ export class TicketController {
    * Generates a markdown string from a TicketDto object, matching the layout of the ticket markdown file.
    */
   private generateParsedTicketMarkdown(ticket: TicketDto): string {
-    // YAML frontmatter
+    // YAML frontmatter with scheduling
+    const yamlObj: any = {
+      id: ticket.id,
+      status: ticket.status,
+      priority: ticket.priority,
+      complexity: ticket.complexity,
+      ...(ticket.persona && { persona: ticket.persona }),
+      ...(ticket.contributor && { contributor: ticket.contributor }),
+      ...(ticket.blocks && ticket.blocks.length > 0 && { blocks: ticket.blocks }),
+      ...(ticket.blocked_by && ticket.blocked_by.length > 0 && { blocked_by: ticket.blocked_by }),
+      ...(typeof ticket.start_time !== 'undefined' && { start_time: ticket.start_time }),
+      ...(typeof ticket.end_time !== 'undefined' && { end_time: ticket.end_time }),
+    };
     const yamlBlock = [
       '```yaml',
-      `id: ${ticket.id}`,
-      `status: ${ticket.status}`,
-      `priority: ${ticket.priority}`,
-      `complexity: ${ticket.complexity}`,
-      ticket.persona ? `persona: ${ticket.persona}` : '',
-      ticket.contributor ? `contributor: ${ticket.contributor}` : '',
-      ticket.blocks && ticket.blocks.length > 0 ? `blocks: [${ticket.blocks.join(', ')}]` : '',
-      ticket.blocked_by && ticket.blocked_by.length > 0 ? `blocked_by: [${ticket.blocked_by.join(', ')}]` : '',
+      stringify(yamlObj).trim(),
       '```',
       '\n'
-    ].filter(Boolean).join('\n');
+    ].join('\n');
 
     // Title
     const titleBlock = `\n# ${ticket.title}\n`;
@@ -237,7 +244,7 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
         resources.push(...resourceLines.map(line => line.trim()));
       }
 
-      return {
+      const ticket: TicketDto = {
         id: yamlData.id,
         status: yamlData.status ? String(yamlData.status) : 'open',
         priority: yamlData.priority ? String(yamlData.priority) : 'medium',
@@ -247,6 +254,8 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
         blocks: yamlData.blocks || [],
         blocked_by: yamlData.blocked_by || [],
         model: yamlData.model ?? null,
+        start_time: typeof yamlData.start_time !== 'undefined' ? yamlData.start_time : -1,
+        end_time: typeof yamlData.end_time !== 'undefined' ? yamlData.end_time : -1,
         title,
         description,
         acceptance_criteria,
@@ -255,6 +264,7 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
         risks,
         resources
       };
+      return ticket;
     } catch (error) {
       console.error(`Error parsing ticket file ${filePath}:`, error);
       return null;

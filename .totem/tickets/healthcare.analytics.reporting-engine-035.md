@@ -5,6 +5,9 @@ priority: medium
 complexity: m
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-032]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Patient Engagement Analytics

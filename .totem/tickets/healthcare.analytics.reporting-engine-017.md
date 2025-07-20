@@ -1,10 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-017
-status: open
+status: in-progress
 priority: high
 complexity: h
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-014]
+blocked_by:
+  - healthcare.backend.api-gateway-014
+start_time: -1
+end_time: -1
 ```
 
 # Predictive Readmission Reports

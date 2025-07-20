@@ -5,6 +5,9 @@ priority: high
 complexity: h
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-028]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Data Retention Policy Reports

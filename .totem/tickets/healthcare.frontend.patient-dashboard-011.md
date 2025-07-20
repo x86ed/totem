@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-011
+id: healthcare.frontend.patient-dashboard-009
+contributor: Clippy
 status: open
 priority: low
 complexity: l
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-015]
 blocked_by: [healthcare.security.auth-sso-006]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard User Feedback Widget
 
 Add a feedback widget for users to submit comments and bug reports directly from the dashboard.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Feedback form UI
 - [ ] Submit feedback to backend
 - [ ] Confirmation message on submit

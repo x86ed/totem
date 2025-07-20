@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-005
+id: healthcare.frontend.patient-dashboard-007
 status: open
 priority: high
 complexity: h
 persona: Security-Sasha
-blocks: [patient-dashboard-007]
-blocked_by: [ad-integration-004]
+blocks: []
+blocked_by: [healthcare.infrastructure.ad-integration-004]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO Audit Log Export
 
@@ -36,5 +41,4 @@ Enable export of SSO audit logs in CSV and JSON formats. Only accessible to admi
 ---
 
 [Security-Sasha]: ./personas/security-sasha.md
-[patient-dashboard-007]: ./tickets/healthcare.frontend.patient-dashboard-007.md
-[ad-integration-004]: ./tickets/healthcare.infrastructure.ad-integration-004.md
+[healthcare.infrastructure.ad-integration-004]: ./tickets/healthcare.infrastructure.ad-integration-004.md

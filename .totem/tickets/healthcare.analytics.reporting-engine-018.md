@@ -5,6 +5,9 @@ priority: medium
 complexity: l
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-015]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Custom Report Builder

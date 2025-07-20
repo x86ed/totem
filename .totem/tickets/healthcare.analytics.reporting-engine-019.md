@@ -5,6 +5,9 @@ priority: low
 complexity: m
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-016]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Scheduled Report Delivery

@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-010
+id: healthcare.frontend.patient-dashboard-008
+contributor: Radical Edward
 status: open
 priority: medium
-complexity: m
+complexity: xs
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-014]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Offline Mode
 
 Support offline access to dashboard data with local caching and sync when online.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Local cache for dashboard data
 - [ ] Sync changes when online
 - [ ] Offline mode indicator

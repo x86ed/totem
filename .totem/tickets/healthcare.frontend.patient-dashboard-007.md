@@ -1,11 +1,15 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-007
+id: healthcare.frontend.patient-dashboard-005
+contributor: Octocat
 status: open
 priority: high
 complexity: h
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-011]
 blocked_by: [healthcare.security.auth-sso-004]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Data Export
@@ -13,7 +17,6 @@ blocked_by: [healthcare.security.auth-sso-004]
 Enable export of dashboard data (labs, vitals, appointments) to CSV and PDF. Only available to patients.
 
 ## Acceptance Criteria
-
 - [ ] Export to CSV and PDF
 - [ ] Access control for patients only
 - [ ] 95% test coverage

@@ -8,7 +8,7 @@ Examples:
 
 ## Prefix
 
-XYZ789
+DEMO
 
 ## Layer
 
@@ -18,7 +18,7 @@ XYZ789
 - **Mobile** - iOS/Android applications, React Native components
 - **Tests** - Unit tests, integration tests, end-to-end testing
 - **Docs** - Documentation, specifications, user guides
-- **derp** - uhhh
+- **CICD** - Pipelines and deployment
 
 ## Component
 
@@ -56,8 +56,7 @@ XYZ789
 - **validation** - Data validation and verification
 - **cache** - Caching mechanisms and optimization
 - **migration** - Data or system migrations
-- **mic check** - one two
-- **login** - sup pal
+- **Release** - a new release of code
 ## Number
 
 a zero padded 3 digit number. Will expand to four digits if numbers get significantly high.

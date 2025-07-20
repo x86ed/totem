@@ -15,6 +15,11 @@ export class AcceptanceCriterionDto {
 }
 
 export class TicketDto {
+  @ApiPropertyOptional({ description: 'Start time (timestamp or -1)', example: -1 })
+  start_time?: number;
+
+  @ApiPropertyOptional({ description: 'End time (timestamp or -1)', example: -1 })
+  end_time?: number;
   @ApiProperty({
     description: 'Unique identifier for the ticket',
     example: 'user-authentication-001'
@@ -31,6 +36,7 @@ export class TicketDto {
     description: 'Detailed description of the ticket',
     example: 'Implement user authentication with email/password login'
   })
+
   description!: string;
 
   @ApiProperty({
@@ -121,6 +127,11 @@ export class TicketDto {
 }
 
 export class CreateTicketDto {
+  @ApiPropertyOptional({ description: 'Start time (timestamp or -1)', example: -1 })
+  start_time?: number;
+
+  @ApiPropertyOptional({ description: 'End time (timestamp or -1)', example: -1 })
+  end_time?: number;
   @ApiPropertyOptional({
     description: 'Custom ID for the ticket (auto-generated if not provided)',
     example: 'user-auth-system-001'

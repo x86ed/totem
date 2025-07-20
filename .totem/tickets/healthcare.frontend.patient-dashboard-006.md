@@ -1,11 +1,15 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-006
+id: healthcare.frontend.patient-dashboard-004
+contributor: Zero Cool
 status: open
 priority: low
 complexity: m
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-010]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Language Localization
@@ -13,7 +17,6 @@ blocked_by: []
 Support multiple languages for all dashboard UI and content. Must be switchable at runtime.
 
 ## Acceptance Criteria
-
 - [ ] Language selector component
 - [ ] All UI strings translatable
 - [ ] RTL language support

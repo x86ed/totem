@@ -1,11 +1,15 @@
 ```yaml
 id: healthcare.mobile.app-sync-009
+contributor: The Laughing Man
 status: open
 priority: high
 complexity: xl
 persona: Product-Proteus
 blocks: []
 blocked_by: [healthcare.frontend.patient-dashboard-003]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Mobile App Imaging & Document Sync

@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-012
-status: open
+id: healthcare.frontend.patient-dashboard-014
+status: done
 priority: medium
 complexity: m
 persona: Security-Sasha
-blocks: [patient-dashboard-014]
-blocked_by: [ad-integration-007]
+blocks: []
+blocked_by: [healthcare.infrastructure.ad-integration-007]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO API Access Tokens
 
@@ -34,5 +39,4 @@ Issue scoped API access tokens for third-party integrations via SSO.
 ---
 
 [Security-Sasha]: ./personas/security-sasha.md
-[patient-dashboard-014]: ./tickets/healthcare.frontend.patient-dashboard-014.md
-[ad-integration-007]: ./tickets/healthcare.infrastructure.ad-integration-007.md
+[healthcare.infrastructure.ad-integration-007]: ./tickets/healthcare.infrastructure.ad-integration-007.md

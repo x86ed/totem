@@ -17,9 +17,9 @@ export interface Ticket {
   /** Current workflow status of the ticket */
   status: string;
   /** Priority level indicating urgency and importance */
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: string;
   /** Complexity level of the ticket */
-  complexity: 'low' | 'medium' | 'high';
+  complexity: string;
   /** Target persona for this ticket */
   persona?: string;
   /** Contributor assigned to the ticket */
@@ -51,6 +51,12 @@ export interface Ticket {
   effort_days?: number;
   /** Creation date of the ticket */
   created?: string;
+
+  /** Scheduling: start time as timestamp (ms since epoch, or -1 for unset) */
+  start_time?: number;
+
+  /** Scheduling: end time as timestamp (ms since epoch, or -1 for unset) */
+  end_time?: number;
 }
 
 /**
@@ -132,6 +138,9 @@ export interface TicketContextType {
   /** Current sort for the ticket list */
   sort: TicketSort;
   setSort: React.Dispatch<React.SetStateAction<TicketSort>>;
+
+  /** Loads all tickets from the API in batches and sets them in state */
+  loadAllTickets: (filtersOverride?: TicketFilters, sortOverride?: TicketSort) => Promise<void>;
 }
 
 

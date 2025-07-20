@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-015
+id: healthcare.frontend.patient-dashboard-013
+contributor: Zero Cool
 status: open
 priority: medium
 complexity: m
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-019]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Billing & Payments
 
 Integrate billing summary and payment options into the dashboard. Support online payments and download of invoices.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Billing summary component
 - [ ] Online payment integration
 - [ ] Download invoice as PDF

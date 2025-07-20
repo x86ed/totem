@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-013
+id: healthcare.frontend.patient-dashboard-011
+contributor: Octocat
 status: open
 priority: medium
 complexity: m
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-017]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Appointment Calendar
 
 Integrate a calendar view for upcoming and past appointments. Sync with backend scheduling API.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Calendar component
 - [ ] Sync with scheduling API
 - [ ] Color-coded appointment types

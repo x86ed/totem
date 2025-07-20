@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-012
+id: healthcare.frontend.patient-dashboard-010
+contributor: The Laughing Man
 status: open
 priority: high
 complexity: h
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-016]
 blocked_by: [healthcare.security.auth-sso-007]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Security Alerts
 
 Display security alerts and recommendations to users based on account activity and risk.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Security alert component
 - [ ] Risk-based alert logic
 - [ ] 95% test coverage

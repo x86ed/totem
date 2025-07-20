@@ -1,7 +1,12 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect} from 'react'
+import React, { useState, FormEvent, ChangeEvent, useEffect, useContext} from 'react'
 import { useTickets } from '../context/TicketContext'
 import TicketMarkdownView from './TicketMarkdownView'
 import { MilkdownEditor } from './MilkdownEditor'
+import { StatusContext } from '../context/StatusContext'
+import { PriorityContext } from '../context/PriorityContext'
+import { ComplexityContext } from '../context/ComplexityContext'
+import { usePersonas } from '../context/PersonaContext'
+import { useContributors } from '../context/ContributorContext'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -11,9 +16,9 @@ interface ApiTicket {
   id?: string
   title: string
   description: string
-  status?: 'open' | 'in_progress' | 'closed' | 'blocked'
-  priority?: 'low' | 'medium' | 'high' | 'critical'
-  complexity?: 'low' | 'medium' | 'high'
+  status?: string
+  priority?: string
+  complexity?: string
   persona?: string
   contributor?: string
   model?: string
@@ -25,6 +30,8 @@ interface ApiTicket {
   notes?: string
   risks?: string[]
   resources?: string[]
+  start_time?: number;
+  end_time?: number;
 }
 
 /**
@@ -37,15 +44,19 @@ interface FormData {
   /** Optional description providing details about the ticket */
   description: string
   /** Status of the ticket */
-  status: 'open' | 'in_progress' | 'closed' | 'blocked'
+  status: string
   /** Priority level of the ticket */
-  priority: 'low' | 'medium' | 'high' | 'critical'
+  priority: string
   /** Complexity level of the ticket */
-  complexity: 'low' | 'medium' | 'high'
+  complexity: string
   /** Target persona for this ticket */
   persona: string
   /** Contributor assigned to this ticket */
   contributor: string
+  /** Assignee of the ticket */
+  assignee?: string
+  /** Collaborators (comma separated string) */
+  collaborators?: string
   /** AI model associated with this ticket */
   model: string
   /** Estimated effort in days */
@@ -64,6 +75,10 @@ interface FormData {
   risks: string
   /** Resources and links related to the ticket */
   resources: string
+  /** Scheduling: start time as timestamp (ms since epoch, or -1 for unset) */
+  start_time?: number;
+  /** Scheduling: end time as timestamp (ms since epoch, or -1 for unset) */
+  end_time?: number;
 }
 
 /**
@@ -135,9 +150,24 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     resources: ''
   })
 
-  // ...existing code...
   // Get tickets and actions from context for blocks/blocked_by dropdowns and CRUD
   const { tickets, updateTicket, addTicket } = useTickets()
+  const statusContext = useContext(StatusContext);
+  const statuses = statusContext?.statuses || [];
+  const statusLoading = statusContext?.loading || false;
+
+  const priorityContext = useContext(PriorityContext);
+  const priorities = priorityContext?.priorities || [];
+  const priorityLoading = priorityContext?.loading || false;
+
+  const complexityContext = useContext(ComplexityContext);
+  const complexities = complexityContext?.complexities || [];
+  const complexityLoading = complexityContext?.loading || false;
+
+  // Persona context
+  const { personas, loading: personaLoading } = usePersonas();
+  // Contributor context
+  const { contributors, loading: contributorLoading } = useContributors();
   
   const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
   const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
@@ -305,11 +335,28 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
    * Handles changes to form inputs
    */
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'effort_days' ? (value === '' ? '' : value) : value
-    }))
+    const { name, value } = e.target;
+    setFormData(prev => {
+      let updated = {
+        ...prev,
+        [name]: name === 'effort_days' ? (value === '' ? '' : value) : value
+      };
+      if (
+        name === 'status' &&
+        value === 'in-progress' &&
+        (prev.start_time === undefined || prev.start_time === null || prev.start_time < 0)
+      ) {
+        updated.start_time = Date.now();
+      }
+      if (
+        name === 'status' &&
+        value === 'done' &&
+        (prev.end_time === undefined || prev.end_time === null || prev.end_time < 0)
+      ) {
+        updated.end_time = Date.now();
+      }
+      return updated;
+    });
   }
 
   /**
@@ -351,7 +398,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       description: '',
       status: 'open',
       priority: 'medium',
-      complexity: 'medium',
+      complexity: 'l',
       persona: '',
       contributor: '',
       model: '',
@@ -546,54 +593,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                         </div>
                       </div>
                     </div>
-                    {/* Assignment & Collaboration */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment & Collaboration</h3>
-                      <div className="grid grid-cols-1 gap-6">
-                        <div>
-                          <label htmlFor="persona" className="form-label">
-                            Persona
-                          </label>
-                          <input
-                            id="persona"
-                            type="text"
-                            name="persona"
-                            value={formData.persona}
-                            onChange={handleChange}
-                            className={`input-green`}
-                            placeholder="Target persona"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="contributor" className="form-label">
-                            Contributor
-                          </label>
-                          <input
-                            id="contributor"
-                            type="text"
-                            name="contributor"
-                            value={formData.contributor}
-                            onChange={handleChange}
-                            className={`input-green`}
-                            placeholder="Assigned contributor"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="model" className="form-label">
-                            AI Model
-                          </label>
-                          <input
-                            id="model"
-                            type="text"
-                            name="model"
-                            value={formData.model}
-                            onChange={handleChange}
-                            className={`input-green`}
-                            placeholder="Associated AI model"
-                          />
-                        </div>
-                      </div>
-                    </div>
                     {/* Content & Metadata */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Content & Metadata</h3>
@@ -749,10 +748,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           onChange={handleChange}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         >
-                          <option value="open">Open</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="closed">Closed</option>
-                          <option value="blocked">Blocked</option>
+                          {statusLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            statuses.map((s: { key: string; description: string }) => (
+                              <option key={s.key} value={s.key}>{s.key}</option>
+                            ))
+                          )}
                         </select>
                       </div>
                       <div>
@@ -766,10 +768,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           onChange={handleChange}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
-                          <option value="critical">Critical</option>
+                          {priorityLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            priorities.map((p: { key: string; description: string }) => (
+                              <option key={p.key} value={p.key}>{p.key}</option>
+                            ))
+                          )}
                         </select>
                       </div>
                       <div>
@@ -783,9 +788,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           onChange={handleChange}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         >
-                          <option value="low">Low</option>
-                          <option value="medium">Medium</option>
-                          <option value="high">High</option>
+                          {complexityLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            complexities.map((c: { key: string; description: string }) => (
+                              <option key={c.key} value={c.key}>{c.key}</option>
+                            ))
+                          )}
                         </select>
                       </div>
                       <div>
@@ -803,6 +812,70 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           placeholder="e.g., 2.5"
                         />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Assignment & Collaboration Block */}
+                  <div
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#223344',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(34, 51, 68, 0.18)',
+                      height: 'fit-content',
+                      marginTop: '20px'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Assignment & Collaboration</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="persona" className="block text-sm font-medium text-gray-300 mb-2">
+                          Persona
+                        </label>
+                        <select
+                          id="persona"
+                          name="persona"
+                          value={formData.persona}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {personaLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            <>
+                              <option value="">Select persona</option>
+                              {personas.map((p) => (
+                                <option key={p.name} value={p.name}>{p.name}</option>
+                              ))}
+                            </>
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="contributor" className="block text-sm font-medium text-gray-300 mb-2">
+                          Contributor
+                        </label>
+                        <select
+                          id="contributor"
+                          name="contributor"
+                          value={formData.contributor}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {contributorLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            <>
+                              <option value="">Select contributor</option>
+                              {contributors.map((c) => (
+                                <option key={c.name} value={c.name}>{c.name}</option>
+                              ))}
+                            </>
+                          )}
+                        </select>
                       </div>
                     </div>
                   </div>

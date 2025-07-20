@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-009
+id: healthcare.frontend.patient-dashboard-007
+contributor: The Laughing Man
 status: open
 priority: high
 complexity: m
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-013]
 blocked_by: [healthcare.security.auth-sso-005]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Custom Widgets
 
 Allow users to add, remove, and rearrange dashboard widgets. Persist layout per user.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Widget add/remove UI
 - [ ] Drag-and-drop rearrange
 - [ ] Layout persistence

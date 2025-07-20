@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-009
+id: healthcare.frontend.patient-dashboard-011
 status: open
 priority: high
 complexity: h
 persona: Security-Sasha
-blocks: [patient-dashboard-011]
-blocked_by: [ad-integration-006]
+blocks: []
+blocked_by: [healthcare.infrastructure.ad-integration-006]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO Brute Force Protection
 
@@ -34,5 +39,4 @@ Implement rate limiting and lockout for repeated failed SSO login attempts.
 ---
 
 [Security-Sasha]: ./personas/security-sasha.md
-[patient-dashboard-011]: ./tickets/healthcare.frontend.patient-dashboard-011.md
-[ad-integration-006]: ./tickets/healthcare.infrastructure.ad-integration-006.md
+[healthcare.infrastructure.ad-integration-006]: ./tickets/healthcare.infrastructure.ad-integration-006.md

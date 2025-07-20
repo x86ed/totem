@@ -1,11 +1,15 @@
 ```yaml
 id: healthcare.mobile.app-sync-008
+contributor: Radical Edward
 status: open
 priority: medium
 complexity: m
 persona: Product-Proteus
 blocks: []
 blocked_by: [healthcare.frontend.patient-dashboard-003]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Mobile App Secure Messaging & Alerts

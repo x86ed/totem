@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-011
+id: healthcare.frontend.patient-dashboard-013
 status: open
 priority: low
 complexity: l
 persona: Security-Sasha
-blocks: [patient-dashboard-013]
+blocks: []
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO User Self-Service Portal
 

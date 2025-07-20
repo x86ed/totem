@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-003
+id: healthcare.frontend.patient-dashboard-001
+contributor: Acid Burn
 status: in-progress
 priority: medium
 complexity: l
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-007]
 blocked_by: [healthcare.security.auth-sso-001]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Patient Dashboard Redesign
 
 Modern React-based dashboard with real-time data visualization, accessibility compliance, and mobile responsiveness.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [x] Wireframes approved by UX team
 - [x] Component library integration
 - [ ] Real-time vitals display

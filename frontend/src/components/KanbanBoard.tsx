@@ -12,7 +12,7 @@ interface Column {
 }
 
 function KanbanBoard() {
-  const { tickets, updateTicket } = useTickets();
+  const { tickets, updateTicket, loadAllTickets, loading } = useTickets();
   const statusCtx = useContext(StatusContext);
   // Dynamically generate default columns from StatusContext if available, otherwise fallback
   let defaultColumns: Column[] = [];
@@ -40,6 +40,12 @@ function KanbanBoard() {
     ];
   }
   const columns: Column[] = defaultColumns;
+
+  // Load all tickets on mount
+  React.useEffect(() => {
+    loadAllTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   // Drag state
@@ -85,10 +91,19 @@ function KanbanBoard() {
     }
   };
 
+
   if (!columns || columns.length === 0) {
     return (
       <div className="page-container">
         <div className="text-center py-12 text-gray-500">No status columns available. Please configure statuses in project settings.</div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="text-center py-12 text-gray-500">Loading tickets…</div>
       </div>
     );
   }

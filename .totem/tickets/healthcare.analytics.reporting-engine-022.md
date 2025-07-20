@@ -5,6 +5,9 @@ priority: low
 complexity: l
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-019]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # KPI Benchmarking Reports

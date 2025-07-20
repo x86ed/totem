@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-010
+id: healthcare.frontend.patient-dashboard-012
 status: open
 priority: medium
 complexity: m
 persona: Security-Sasha
-blocks: [patient-dashboard-012]
+blocks: []
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO Consent Management
 

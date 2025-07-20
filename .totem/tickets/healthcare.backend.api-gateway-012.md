@@ -6,6 +6,9 @@ complexity: m
 persona: Security-Sasha
 blocks: [healthcare.analytics.reporting-engine-015]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # API Gateway Implementation

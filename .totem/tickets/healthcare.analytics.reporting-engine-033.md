@@ -1,7 +1,7 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-033
 status: open
-priority: low
+priority: backlog
 complexity: l
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-030]

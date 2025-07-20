@@ -5,6 +5,9 @@ priority: medium
 complexity: m
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-013]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Real-Time Patient Flow Analytics

@@ -1,12 +1,17 @@
+
 ```yaml
-id: healthcare.security.auth-sso-007
+id: healthcare.frontend.patient-dashboard-009
 status: open
 priority: medium
 complexity: l
 persona: Security-Sasha
-blocks: [patient-dashboard-009]
-blocked_by: [ad-integration-005]
+blocks: []
+blocked_by: [healthcare.infrastructure.ad-integration-005]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
+
 
 # SSO Password Policy Enforcement
 
@@ -34,5 +39,4 @@ Enforce password complexity and rotation policy for all SSO users.
 ---
 
 [Security-Sasha]: ./personas/security-sasha.md
-[patient-dashboard-009]: ./tickets/healthcare.frontend.patient-dashboard-009.md
-[ad-integration-005]: ./tickets/healthcare.infrastructure.ad-integration-005.md
+[healthcare.infrastructure.ad-integration-005]: ./tickets/healthcare.infrastructure.ad-integration-005.md

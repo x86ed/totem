@@ -6,6 +6,9 @@ complexity: m
 persona: Security-Sasha
 blocks: [patient-dashboard-005]
 blocked_by: [ad-integration-003]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Multi-Factor Authentication (MFA) for Staff Portal

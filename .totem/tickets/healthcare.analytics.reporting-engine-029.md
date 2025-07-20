@@ -1,10 +1,13 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-029
 status: open
-priority: medium
-complexity: m
+priority: critical
+complexity: xs
 persona: Product-Proteus
 blocked_by: [healthcare.backend.api-gateway-026]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Data Access Audit Reports

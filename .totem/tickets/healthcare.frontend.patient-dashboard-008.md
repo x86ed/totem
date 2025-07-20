@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-008
+id: healthcare.frontend.patient-dashboard-006
+contributor: Acid Burn
 status: open
 priority: medium
-complexity: l
+complexity: s
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-012]
 blocked_by: []
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Accessibility Enhancements
 
 Improve accessibility for screen readers, keyboard navigation, and color contrast.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Screen reader support
 - [ ] Keyboard navigation for all controls
 - [ ] Color contrast meets WCAG 2.1 AA

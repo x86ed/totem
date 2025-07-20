@@ -1,19 +1,23 @@
 ```yaml
-id: healthcare.frontend.patient-dashboard-005
+id: healthcare.frontend.patient-dashboard-003
+contributor: Clippy
 status: open
 priority: medium
-complexity: l
+complexity: xxl
 persona: Product-Proteus
 blocks: [healthcare.mobile.app-sync-009]
 blocked_by: [healthcare.security.auth-sso-003]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Dashboard Theme Customization
 
 Allow users to select light/dark mode and custom color themes. Persist preferences across devices.
 
-## Acceptance Criteria
 
+## Acceptance Criteria
 - [ ] Theme selector component
 - [ ] Preference persistence (localStorage & cloud)
 - [ ] WCAG 2.1 AA color contrast

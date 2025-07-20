@@ -6,6 +6,9 @@ complexity: m
 persona: Security-Sasha
 contributor: Octocat
 blocks: [healthcare.security.auth-sso-001]
+scheduling:
+  start_time: -1
+  end_time: -1
 ```
 
 # Active Directory Integration Setup
