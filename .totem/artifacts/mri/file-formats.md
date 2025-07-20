@@ -1,6 +1,6 @@
 # MRI Imaging File Formats
 
-This document describes how MRI (Magnetic Resonance Imaging) machines store imaging data, and the most common file formats used in clinical and research settings.
+This document describes how MRI (Magnetic Resonance Imaging) machines store imaging data, and the most common file formats used in clinical and research settings!
 
 ## Overview
 
@@ -79,3 +79,4 @@ MRI scanners generate large volumes of imaging data, which must be stored in sta
 * [NIfTI Format](https://nifti.nimh.nih.gov/)
 
 * [dcm2niix Converter](https://github.com/rordenlab/dcm2niix)
+

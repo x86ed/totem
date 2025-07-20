@@ -1,3 +1,4 @@
+import Avatar from 'boring-avatars';
 import React, { useState, useEffect } from 'react';
 
 // Types for Contributor (should match ContributorDto)
@@ -64,11 +65,21 @@ export interface Contributor {
 
 const API_BASE = import.meta.env?.DEV ? 'http://localhost:8080/api/contributor' : '/api/contributor';
 
-function ContributorsDirectoryView() {
+interface ContributorsDirectoryViewProps {
+  selectedContributor?: string | null;
+  onSelectContributor?: (name: string) => void;
+}
+
+function ContributorsDirectoryView({ selectedContributor, onSelectContributor }: ContributorsDirectoryViewProps) {
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(selectedContributor || null);
+
+  // Sync prop to state
+  useEffect(() => {
+    setSelected(selectedContributor || null);
+  }, [selectedContributor]);
 
   useEffect(() => {
     setLoading(true);
@@ -89,7 +100,15 @@ function ContributorsDirectoryView() {
   }, []);
 
   const sorted = [...contributors].sort((a, b) => a.name.localeCompare(b.name));
-  const selectedContributor = sorted.find(c => c.name === selected) || sorted[0];
+  const selectedContrib = sorted.find(c => c.name === selected) || sorted[0];
+
+  // When a contributor is clicked, update state and notify parent for deeplink
+  const handleSelect = (name: string) => {
+    setSelected(name);
+    if (onSelectContributor) {
+      onSelectContributor(name);
+    }
+  };
 
   return (
     <div style={{ display: 'flex', gap: 32 }}>
@@ -104,137 +123,138 @@ function ContributorsDirectoryView() {
               style={{
                 padding: '6px 10px',
                 borderRadius: 6,
-                background: contrib.name === selectedContributor?.name ? '#e0e7ff' : undefined,
-                color: contrib.name === selectedContributor?.name ? '#1d4ed8' : undefined,
-                fontWeight: contrib.name === selectedContributor?.name ? 600 : 400,
+                background: contrib.name === selectedContrib?.name ? '#e0e7ff' : undefined,
+                color: contrib.name === selectedContrib?.name ? '#1d4ed8' : undefined,
+                fontWeight: contrib.name === selectedContrib?.name ? 600 : 400,
                 cursor: 'pointer',
                 marginBottom: 2
               }}
-              onClick={() => setSelected(contrib.name)}
+              onClick={() => handleSelect(contrib.name)}
             >
+              <Avatar name={contrib.name}   colors={["#0a0310","#49007e","#ff005b","#ff7d10","#ffb238"]} variant="pixel" style={{ width: "2em", verticalAlign: "middle", margin: ".25em"}} square/>
               {contrib.name}
             </li>
           ))}
         </ul>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        {selectedContributor ? (
+        {selectedContrib ? (
           <div className="site-font">
-            <h3 className="text-xl font-semibold mb-2">{selectedContributor.name}</h3>
-            {selectedContributor.gitProfile && (
+            <h3 className="text-xl font-semibold mb-2">{selectedContrib.name}</h3>
+            {selectedContrib.gitProfile && (
               <div className="mb-2">
                 <strong>Git Profile:</strong>
                 <ul>
-                  {selectedContributor.gitProfile.username && <li>Username: {selectedContributor.gitProfile.username}</li>}
-                  {selectedContributor.gitProfile.fullName && <li>Full Name: {selectedContributor.gitProfile.fullName}</li>}
-                  {selectedContributor.gitProfile.email && <li>Email: {selectedContributor.gitProfile.email}</li>}
-                  {selectedContributor.gitProfile.github && <li>GitHub: {selectedContributor.gitProfile.github}</li>}
-                  {selectedContributor.gitProfile.location && <li>Location: {selectedContributor.gitProfile.location}</li>}
-                  {selectedContributor.gitProfile.joined && <li>Joined: {selectedContributor.gitProfile.joined}</li>}
+                  {selectedContrib.gitProfile.username && <li>Username: {selectedContrib.gitProfile.username}</li>}
+                  {selectedContrib.gitProfile.fullName && <li>Full Name: {selectedContrib.gitProfile.fullName}</li>}
+                  {selectedContrib.gitProfile.email && <li>Email: {selectedContrib.gitProfile.email}</li>}
+                  {selectedContrib.gitProfile.github && <li>GitHub: {selectedContrib.gitProfile.github}</li>}
+                  {selectedContrib.gitProfile.location && <li>Location: {selectedContrib.gitProfile.location}</li>}
+                  {selectedContrib.gitProfile.joined && <li>Joined: {selectedContrib.gitProfile.joined}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.roleAndResponsibilities && (
+            {selectedContrib.roleAndResponsibilities && (
               <div className="mb-2">
                 <strong>Role & Responsibilities:</strong>
                 <ul>
-                  {selectedContributor.roleAndResponsibilities.position && <li>Position: {selectedContributor.roleAndResponsibilities.position}</li>}
-                  {selectedContributor.roleAndResponsibilities.team && <li>Team: {selectedContributor.roleAndResponsibilities.team}</li>}
-                  {selectedContributor.roleAndResponsibilities.focusAreas && (
+                  {selectedContrib.roleAndResponsibilities.position && <li>Position: {selectedContrib.roleAndResponsibilities.position}</li>}
+                  {selectedContrib.roleAndResponsibilities.team && <li>Team: {selectedContrib.roleAndResponsibilities.team}</li>}
+                  {selectedContrib.roleAndResponsibilities.focusAreas && (
                     <li>Focus Areas:
                       <ul>
-                        {selectedContributor.roleAndResponsibilities.focusAreas.map(fa => <li key={fa}>{fa}</li>)}
+                        {selectedContrib.roleAndResponsibilities.focusAreas.map(fa => <li key={fa}>{fa}</li>)}
                       </ul>
                     </li>
                   )}
                 </ul>
               </div>
             )}
-            {selectedContributor.availability && (
+            {selectedContrib.availability && (
               <div className="mb-2">
                 <strong>Availability:</strong>
                 <ul>
-                  {selectedContributor.availability.primaryTimezone && <li>Primary Timezone: {selectedContributor.availability.primaryTimezone}</li>}
-                  {selectedContributor.availability.workingHours && <li>Working Hours: {selectedContributor.availability.workingHours}</li>}
-                  {selectedContributor.availability.bestContactTime && <li>Best Contact Time: {selectedContributor.availability.bestContactTime}</li>}
-                  {selectedContributor.availability.responseTime && <li>Response Time: {selectedContributor.availability.responseTime}</li>}
+                  {selectedContrib.availability.primaryTimezone && <li>Primary Timezone: {selectedContrib.availability.primaryTimezone}</li>}
+                  {selectedContrib.availability.workingHours && <li>Working Hours: {selectedContrib.availability.workingHours}</li>}
+                  {selectedContrib.availability.bestContactTime && <li>Best Contact Time: {selectedContrib.availability.bestContactTime}</li>}
+                  {selectedContrib.availability.responseTime && <li>Response Time: {selectedContrib.availability.responseTime}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.codingPreferences && (
+            {selectedContrib.codingPreferences && (
               <div className="mb-2">
                 <strong>Coding Preferences:</strong>
                 <ul>
-                  {selectedContributor.codingPreferences.primary && <li>Primary: {selectedContributor.codingPreferences.primary.join(', ')}</li>}
-                  {selectedContributor.codingPreferences.frontend && <li>Frontend: {selectedContributor.codingPreferences.frontend}</li>}
-                  {selectedContributor.codingPreferences.backend && <li>Backend: {selectedContributor.codingPreferences.backend}</li>}
-                  {selectedContributor.codingPreferences.databases && <li>Databases: {selectedContributor.codingPreferences.databases}</li>}
-                  {selectedContributor.codingPreferences.tools && <li>Tools: {selectedContributor.codingPreferences.tools}</li>}
+                  {selectedContrib.codingPreferences.primary && <li>Primary: {selectedContrib.codingPreferences.primary.join(', ')}</li>}
+                  {selectedContrib.codingPreferences.frontend && <li>Frontend: {selectedContrib.codingPreferences.frontend}</li>}
+                  {selectedContrib.codingPreferences.backend && <li>Backend: {selectedContrib.codingPreferences.backend}</li>}
+                  {selectedContrib.codingPreferences.databases && <li>Databases: {selectedContrib.codingPreferences.databases}</li>}
+                  {selectedContrib.codingPreferences.tools && <li>Tools: {selectedContrib.codingPreferences.tools}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.codeStyle && (
+            {selectedContrib.codeStyle && (
               <div className="mb-2">
                 <strong>Code Style:</strong>
                 <ul>
-                  {selectedContributor.codeStyle.formatting && <li>Formatting: {selectedContributor.codeStyle.formatting}</li>}
-                  {selectedContributor.codeStyle.linting && <li>Linting: {selectedContributor.codeStyle.linting}</li>}
-                  {selectedContributor.codeStyle.testing && <li>Testing: {selectedContributor.codeStyle.testing}</li>}
-                  {selectedContributor.codeStyle.documentation && <li>Documentation: {selectedContributor.codeStyle.documentation}</li>}
+                  {selectedContrib.codeStyle.formatting && <li>Formatting: {selectedContrib.codeStyle.formatting}</li>}
+                  {selectedContrib.codeStyle.linting && <li>Linting: {selectedContrib.codeStyle.linting}</li>}
+                  {selectedContrib.codeStyle.testing && <li>Testing: {selectedContrib.codeStyle.testing}</li>}
+                  {selectedContrib.codeStyle.documentation && <li>Documentation: {selectedContrib.codeStyle.documentation}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.workflow && (
+            {selectedContrib.workflow && (
               <div className="mb-2">
                 <strong>Development Workflow:</strong>
                 <ul>
-                  {selectedContributor.workflow.branching && <li>Branching: {selectedContributor.workflow.branching}</li>}
-                  {selectedContributor.workflow.commits && <li>Commits: {selectedContributor.workflow.commits}</li>}
-                  {selectedContributor.workflow.prProcess && <li>PR Process: {selectedContributor.workflow.prProcess}</li>}
-                  {selectedContributor.workflow.codeReview && <li>Code Review: {selectedContributor.workflow.codeReview}</li>}
+                  {selectedContrib.workflow.branching && <li>Branching: {selectedContrib.workflow.branching}</li>}
+                  {selectedContrib.workflow.commits && <li>Commits: {selectedContrib.workflow.commits}</li>}
+                  {selectedContrib.workflow.prProcess && <li>PR Process: {selectedContrib.workflow.prProcess}</li>}
+                  {selectedContrib.workflow.codeReview && <li>Code Review: {selectedContrib.workflow.codeReview}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.communication && (
+            {selectedContrib.communication && (
               <div className="mb-2">
                 <strong>Communication Style:</strong>
                 <ul>
-                  {selectedContributor.communication.codeReviews && <li>Code Reviews: {selectedContributor.communication.codeReviews}</li>}
-                  {selectedContributor.communication.documentation && <li>Documentation: {selectedContributor.communication.documentation}</li>}
-                  {selectedContributor.communication.meetings && <li>Meetings: {selectedContributor.communication.meetings}</li>}
-                  {selectedContributor.communication.mentoring && <li>Mentoring: {selectedContributor.communication.mentoring}</li>}
+                  {selectedContrib.communication.codeReviews && <li>Code Reviews: {selectedContrib.communication.codeReviews}</li>}
+                  {selectedContrib.communication.documentation && <li>Documentation: {selectedContrib.communication.documentation}</li>}
+                  {selectedContrib.communication.meetings && <li>Meetings: {selectedContrib.communication.meetings}</li>}
+                  {selectedContrib.communication.mentoring && <li>Mentoring: {selectedContrib.communication.mentoring}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.expertise && selectedContributor.expertise.expertiseAreas && (
+            {selectedContrib.expertise && selectedContrib.expertise.expertiseAreas && (
               <div className="mb-2">
                 <strong>Expertise Areas:</strong>
                 <ul>
-                  {selectedContributor.expertise.expertiseAreas.map(area => <li key={area}>{area}</li>)}
+                  {selectedContrib.expertise.expertiseAreas.map(area => <li key={area}>{area}</li>)}
                 </ul>
               </div>
             )}
-            {selectedContributor.funFacts && selectedContributor.funFacts.funFacts && (
+            {selectedContrib.funFacts && selectedContrib.funFacts.funFacts && (
               <div className="mb-2">
                 <strong>Fun Facts:</strong>
                 <ul>
-                  {selectedContributor.funFacts.funFacts.map(fact => <li key={fact}>{fact}</li>)}
+                  {selectedContrib.funFacts.funFacts.map(fact => <li key={fact}>{fact}</li>)}
                 </ul>
               </div>
             )}
-            {selectedContributor.contactPreferences && (
+            {selectedContrib.contactPreferences && (
               <div className="mb-2">
                 <strong>Contact Preferences:</strong>
                 <ul>
-                  {selectedContributor.contactPreferences.urgentIssues && <li>Urgent Issues: {selectedContributor.contactPreferences.urgentIssues}</li>}
-                  {selectedContributor.contactPreferences.codeQuestions && <li>Code Questions: {selectedContributor.contactPreferences.codeQuestions}</li>}
-                  {selectedContributor.contactPreferences.generalDiscussion && <li>General Discussion: {selectedContributor.contactPreferences.generalDiscussion}</li>}
-                  {selectedContributor.contactPreferences.afterHours && <li>After Hours: {selectedContributor.contactPreferences.afterHours}</li>}
+                  {selectedContrib.contactPreferences.urgentIssues && <li>Urgent Issues: {selectedContrib.contactPreferences.urgentIssues}</li>}
+                  {selectedContrib.contactPreferences.codeQuestions && <li>Code Questions: {selectedContrib.contactPreferences.codeQuestions}</li>}
+                  {selectedContrib.contactPreferences.generalDiscussion && <li>General Discussion: {selectedContrib.contactPreferences.generalDiscussion}</li>}
+                  {selectedContrib.contactPreferences.afterHours && <li>After Hours: {selectedContrib.contactPreferences.afterHours}</li>}
                 </ul>
               </div>
             )}
-            {selectedContributor.lastUpdated && (
-              <div className="text-gray-400 text-sm mt-2">Last Updated: {selectedContributor.lastUpdated}</div>
+            {selectedContrib.lastUpdated && (
+              <div className="text-gray-400 text-sm mt-2">Last Updated: {selectedContrib.lastUpdated}</div>
             )}
           </div>
         ) : (

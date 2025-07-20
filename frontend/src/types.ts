@@ -175,6 +175,7 @@ export interface Persona {
     redFlags?: string[];
     greenFlags?: string[];
   };
+  markdown?: string; // Optional raw markdown for UI editing
 }
 
 /**

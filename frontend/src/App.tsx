@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import AvatarIconRoute from './components/AvatarIconRoute'
 import KanbanBoard from './components/KanbanBoard'
 import RoadmapView from './components/RoadmapView'
 import BacklogView from './components/BacklogView'
@@ -39,12 +40,15 @@ import { StatusProvider } from './context/StatusContext'
  * @returns The main application component with navigation and content areas
  */
 function App() {
+  // All hooks must be called unconditionally
   const [activeTab, setActiveTab] = useState<string>('kanban')
   const [ticketMode, setTicketMode] = useState<'create' | 'edit' | 'view'>('create')
   const [ticketId, setTicketId] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
   const [scrollProgress, setScrollProgress] = useState<number>(0)
   const contentRef = useRef<HTMLDivElement>(null)
+
+
 
   // Parse URL and set initial state
   useEffect(() => {
@@ -126,6 +130,10 @@ function App() {
     { id: 'export', label: 'Demo', icon: '🎨' }
   ]
 
+  // Simple root-level route switch for /icon (after all hooks)
+  if (typeof window !== 'undefined' && window.location.pathname === '/icon') {
+    return <AvatarIconRoute />;
+  }
   return (
     <TicketProvider>
       <ArtifactsProvider>

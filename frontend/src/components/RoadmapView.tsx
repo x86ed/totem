@@ -63,7 +63,7 @@ const RoadmapView: React.FC = () => {
     return contributors.map((contributor) => ({
       id: contributor,
       label: {
-        icon: "https://avatars.githubusercontent.com/u/583231?v=4", // default Octocat icon
+        icon: `http://localhost:8080/api/icon?value=${encodeURIComponent(contributor)}`, // default Octocat icon
         title: contributor,
         subtitle: contributor,
       },
