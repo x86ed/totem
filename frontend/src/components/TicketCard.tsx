@@ -1,6 +1,7 @@
 import React from 'react'
 import { Ticket } from '../types'
 import Avatar from "boring-avatars";
+import { TotemIcon } from './TotemIcon'
 /**
  * Props interface for the TicketCard component
  * @interface TicketCardProps
@@ -106,6 +107,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
       onDragStart={handleDragStart ? () => handleDragStart(ticket.id) : undefined}
       onDragEnd={handleDragEnd}
     >
+      <TotemIcon seed={ticket.id} size={1.75} showControls={false} />     
       {/* Priority icon and text in upper right */}
       <div
         style={{

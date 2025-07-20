@@ -7,6 +7,8 @@ import { PriorityContext } from '../context/PriorityContext'
 import { ComplexityContext } from '../context/ComplexityContext'
 import { usePersonas } from '../context/PersonaContext'
 import { useContributors } from '../context/ContributorContext'
+import Avatar from 'boring-avatars'
+import { TotemIcon } from './TotemIcon'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -737,6 +739,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                   >
                     <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
                     <div className="space-y-6">
+                      <TotemIcon seed={ticketId} size={4} showControls={false} highRes/>
                       <div>
                         <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
                           Status
@@ -797,22 +800,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                           )}
                         </select>
                       </div>
-                      <div>
-                        <label htmlFor="effort_days" className="block text-sm font-medium text-gray-300 mb-2">
-                          Effort (Days)
-                        </label>
-                        <input
-                          id="effort_days"
-                          type="number"
-                          name="effort_days"
-                          value={formData.effort_days}
-                          onChange={handleChange}
-                          min="0"
-                          step="0.5"
-                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          placeholder="e.g., 2.5"
-                        />
-                      </div>
                     </div>
                   </div>
 
@@ -833,8 +820,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     <div className="space-y-6">
                       <div>
                         <label htmlFor="persona" className="block text-sm font-medium text-gray-300 mb-2">
-                          Persona
                         </label>
+                                    <Avatar
+                                      size={20}
+                                      name={formData.persona}
+                                      variant="pixel"
+                                      colors={["#A5B4FC", "#6366F1", "#818CF8", "#3730A3", "#C7D2FE"]}
+                                      square
+                                    />
                         <select
                           id="persona"
                           name="persona"
@@ -856,8 +849,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                       </div>
                       <div>
                         <label htmlFor="contributor" className="block text-sm font-medium text-gray-300 mb-2">
-                          Contributor
                         </label>
+                        <Avatar
+                          size={20}
+                          name={formData.contributor}
+                          variant="pixel"
+                          colors={["#FFDD00", "#FFAB00", "#FF6F00", "#D50000", "#6200EA"]}
+                          square
+                        />
                         <select
                           id="contributor"
                           name="contributor"
@@ -926,11 +925,12 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                             color: 'white'
                           }}
                         >
-                          {tickets
-                            .filter(ticket => ticket.id !== currentTicketId)
+                          {(tickets && tickets.length > 0
+                            ? tickets.filter(ticket => !currentTicketId || ticket.id !== currentTicketId)
+                            : [])
                             .map(ticket => (
                               <option key={ticket.id} value={ticket.id}>
-                                {ticket.id}
+                                {ticket.id} - {ticket.title}
                               </option>
                             ))
                           }
@@ -970,11 +970,12 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                             color: 'white'
                           }}
                         >
-                          {tickets
-                            .filter(ticket => ticket.id !== currentTicketId)
+                          {(tickets && tickets.length > 0
+                            ? tickets.filter(ticket => !currentTicketId || ticket.id !== currentTicketId)
+                            : [])
                             .map(ticket => (
                               <option key={ticket.id} value={ticket.id}>
-                                {ticket.id}
+                                {ticket.id} - {ticket.title}
                               </option>
                             ))
                           }

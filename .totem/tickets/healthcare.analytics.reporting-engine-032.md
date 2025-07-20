@@ -1,13 +1,14 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-032
-status: open
+status: done
 priority: medium
 complexity: s
 persona: Product-Proteus
-blocked_by: [healthcare.backend.api-gateway-029]
-scheduling:
-  start_time: -1
-  end_time: -1
+contributor: Radical Edward
+blocked_by:
+  - healthcare.backend.api-gateway-029
+start_time: -1
+end_time: -1
 ```
 
 # Data Visualization Library Upgrade

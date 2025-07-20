@@ -1,6 +1,6 @@
 ```yaml
 id: healthcare.analytics.reporting-engine-015
-status: in-progress
+status: done
 priority: low
 complexity: l
 persona: Hacker-Harold
@@ -11,14 +11,14 @@ start_time: -1
 end_time: -1
 ```
 
-# Analytics and Reporting Engine
+# Analytics and Reporting Engine v
 
 Advanced analytics dashboard with custom report generation, data visualization, and automated insights for healthcare metrics.
 
 ## Acceptance Criteria
 
 - [ ] one
-- [x] two
+- [ ] two
 - [ ] three
 
 ## Implementation Notes

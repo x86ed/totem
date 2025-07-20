@@ -30,11 +30,11 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>(filters.status || '');
-  const status = useContext(StatusContext);
+  const status = useContext(StatusContext) || { statuses: [] };
   const [priorityFilter, setPriorityFilter] = useState<string>(filters.priority || '');
-  const priority = useContext(PriorityContext);
+  const priority = useContext(PriorityContext) || { priorities: [] };
   const [complexityFilter, setComplexityFilter] = useState<string>(filters.complexity || '');
-  const complexities = useContext(ComplexityContext);
+  const complexities = useContext(ComplexityContext) || { complexities: [] };
   const [personaFilter, setPersonaFilter] = useState<string>(filters.persona || '');
   const { personas } = usePersonas();
   const [contributorFilter, setContributorFilter] = useState<string>(filters.contributor || '');
@@ -92,7 +92,7 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
     setFilters({});
   };
 
-  const hasActiveFilters = statusFilter || priorityFilter || complexityFilter || personaFilter || contributorFilter;
+  const hasActiveFilters = Boolean(statusFilter || priorityFilter || complexityFilter || personaFilter || contributorFilter);
 
 
   // No client-side sorting or filtering; tickets are already filtered/sorted from server
@@ -201,14 +201,53 @@ function BacklogView({ onNavigateToTicket }: BacklogViewProps) {
     )
   }
 
-  if (tickets.length === 0) {
-    return (
-      <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200">
+if (tickets.length === 0) {
+  return (
+    <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-green-700 px-6 py-4 text-white">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Backlog</h2>
+          <div className="bg-green-600 rounded px-3 py-1 text-sm font-medium">
+            {pagination?.totalFiltered ?? 0} total
+          </div>
+        </div>
+      </div>
+
+      {/* Collapsible Filter & Pagination Bar */}
+      <CollapsibleFilterBar
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        status={status}
+        priorityFilter={priorityFilter}
+        setPriorityFilter={setPriorityFilter}
+        priority={priority}
+        complexityFilter={complexityFilter}
+        setComplexityFilter={setComplexityFilter}
+        complexities={complexities}
+        personaFilter={personaFilter}
+        setPersonaFilter={setPersonaFilter}
+        personas={personas}
+        contributorFilter={contributorFilter}
+        setContributorFilter={setContributorFilter}
+        contributors={contributors}
+        hasActiveFilters={hasActiveFilters}
+        clearAllFilters={clearAllFilters}
+        page={page}
+        setPage={setPage}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        totalFiltered={pagination?.totalFiltered ?? 0}
+      />
+
+      {/* Empty State */}
+      <div className="text-center py-16 bg-gray-50 rounded-lg border border-gray-200 m-8">
         <div className="text-gray-500 text-xl font-medium">No tickets found</div>
         <div className="text-gray-400 text-sm mt-2">Create your first ticket to get started</div>
       </div>
-    )
-  }
+    </div>
+  )
+}
 
   return (
     <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">

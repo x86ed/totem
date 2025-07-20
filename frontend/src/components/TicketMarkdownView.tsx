@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import {MilkdownEditor} from './MilkdownEditor'
+import {TotemIcon} from './TotemIcon'
 
 interface Ticket {
   id: string
@@ -95,6 +96,7 @@ const TicketMarkdownView: React.FC<TicketMarkdownViewProps> = ({
         }}
       >
         <h3 className="text-lg font-semibold text-white mb-6">Ticket Details</h3>
+        <TotemIcon seed={ticket.id} size={2} showControls={false} highRes/>
         <SyntaxHighlighter
           style={tomorrow as { [key: string]: React.CSSProperties }}
           language="yaml"
@@ -117,6 +119,12 @@ contributor: ${ticket.contributor}` : ''}${ticket.model ? `
 model: ${ticket.model}` : ''}${ticket.effort_days ? `
 effort_days: ${ticket.effort_days}` : ''}`}
         </SyntaxHighlighter>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '20px'
+        }}>
+        </div>
       </div>
       {/* Title */}
       <div style={{maxWidth: '70%'}}>
