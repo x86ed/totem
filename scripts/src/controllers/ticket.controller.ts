@@ -815,26 +815,18 @@ private parseTicketMarkdown(filePath: string): TicketDto | null {
         };
       }
       let baseId = (ticketData as any).id;
-      if (!baseId) {
-        baseId = this.generateDefaultId(ticketData.title);
-      } else {
-        baseId = baseId.replace(/-\d{3}$/, '');
-      }
-      const nextNumber = this.getNextTicketNumber(ticketsDir, baseId);
-      const paddedNumber = nextNumber.toString().padStart(3, '0');
-      const fullId = `${baseId}-${paddedNumber}`;
-      const filename = `${fullId}.md`;
+      const filename = `${baseId}.md`;
       const filePath = join(ticketsDir, filename);
       if (existsSync(filePath)) {
         throw new HttpException({
           message: 'Ticket file already exists',
           error: `File ${filename} already exists`,
-          suggestedId: fullId
+          suggestedId: baseId
         }, HttpStatus.CONFLICT);
       }
       const finalTicketData = {
         ...ticketData,
-        id: fullId,
+        id: baseId,
         status: ticketData.status ? String(ticketData.status) : 'open',
         priority: ticketData.priority ? String(ticketData.priority) : 'medium',
         complexity: ticketData.complexity ? String(ticketData.complexity) : 'medium',

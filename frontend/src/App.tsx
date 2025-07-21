@@ -13,6 +13,10 @@ import { PersonaProvider } from './context/PersonaContext'
 import { ContributorProvider } from './context/ContributorContext'
 import { TabConfig } from './types'
 import './App.css'
+import { PrefixProvider } from './context/PrefixContext'
+import { LayerProvider } from './context/LayerContext'
+import { ComponentProvider } from './context/ComponentContext'
+import { FeatureProvider } from './context/FeatureContext'
 import { ComplexityProvider } from './context/ComplexityContext'
 import { PriorityProvider } from './context/PriorityContext'
 import { StatusProvider } from './context/StatusContext'
@@ -135,91 +139,98 @@ function App() {
     return <AvatarIconRoute />;
   }
   return (
-    <TicketProvider>
-      <ArtifactsProvider>
-        <PersonaProvider>
-          <ContributorProvider>
-          <ComplexityProvider>
-          <PriorityProvider>
-          <StatusProvider>
-          <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
-            {/* Sidenav */}
-            <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-              <div className="sidenav-items">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      handleTabChange(tab.id)
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className={`sidenav-item ${activeTab === tab.id ? 'active' : ''}`}
-                    title={tab.label}
-                  >
-                    <span className="sidenav-icon">{tab.icon}</span>
-                    <span className="sidenav-label">{tab.label}</span>
-                    {tab.id === 'ticket' && ticketMode !== 'create' && (
-                      <span className="sidenav-badge">
-                        {ticketMode}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </nav>
+    <PrefixProvider>
+      <LayerProvider>
+        <ComponentProvider>
+          <FeatureProvider>
+            <TicketProvider>
+              <ArtifactsProvider>
+                <PersonaProvider>
+                  <ContributorProvider>
+                    <ComplexityProvider>
+                      <PriorityProvider>
+                        <StatusProvider>
+                          <div className="min-h-screen flex" style={{ background: '#f0f4f1' }}>
+                            {/* Sidenav */}
+                            <nav className={`sidenav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+                              <div className="sidenav-items">
+                                {tabs.map((tab) => (
+                                  <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                      handleTabChange(tab.id)
+                                      setIsMobileMenuOpen(false)
+                                    }}
+                                    className={`sidenav-item ${activeTab === tab.id ? 'active' : ''}`}
+                                    title={tab.label}
+                                  >
+                                    <span className="sidenav-icon">{tab.icon}</span>
+                                    <span className="sidenav-label">{tab.label}</span>
+                                    {tab.id === 'ticket' && ticketMode !== 'create' && (
+                                      <span className="sidenav-badge">
+                                        {ticketMode}
+                                      </span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </nav>
 
-            {/* Overlay for mobile menu */}
-            {isMobileMenuOpen && (
-              <div 
-                className="mobile-overlay"
-                onClick={() => setIsMobileMenuOpen(false)}
-              />
-            )}
+                            {/* Overlay for mobile menu */}
+                            {isMobileMenuOpen && (
+                              <div 
+                                className="mobile-overlay"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              />
+                            )}
 
-            {/* Main content */}
-            <div className="main-content">
-              <header className="top-header">
-                <button
-                  className="mobile-menu-toggle md:hidden"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                >
-                  ☰
-                </button>
-                <h1 className="header-title">totem</h1>
-                
-                {/* Scroll Progress Bar */}
-                <div className="scroll-progress">
-                  <div 
-                    className="scroll-progress-bar" 
-                    style={{ width: `${scrollProgress}%` }}
-                  />
-                </div>
-              </header>
+                            {/* Main content */}
+                            <div className="main-content">
+                              <header className="top-header">
+                                <button
+                                  className="mobile-menu-toggle md:hidden"
+                                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                >
+                                  ☰
+                                </button>
+                                <h1 className="header-title">totem</h1>
+                                {/* Scroll Progress Bar */}
+                                <div className="scroll-progress">
+                                  <div 
+                                    className="scroll-progress-bar" 
+                                    style={{ width: `${scrollProgress}%` }}
+                                  />
+                                </div>
+                              </header>
 
-              <main className="content-area" ref={contentRef}>
-                {activeTab === 'kanban' && <KanbanBoard />}
-                {activeTab === 'roadmap' && <RoadmapView />}
-                {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
-                {activeTab === 'ticket' && (
-                  <CreateTicket 
-                    mode={ticketMode}
-                    ticketId={ticketId}
-                    onNavigate={navigateToTicket}
-                  />
-                )}
-                {activeTab === 'export' && <DemoView />}
-                {activeTab === 'project' && <ProjectView />}
-                {activeTab === 'artifacts' && <ArtifactsView />}
-              </main>
-            </div>
-          </div>
-          </StatusProvider>
-          </PriorityProvider>
-          </ComplexityProvider>
-          </ContributorProvider>
-        </PersonaProvider>
-      </ArtifactsProvider>
-    </TicketProvider>
+                              <main className="content-area" ref={contentRef}>
+                                {activeTab === 'kanban' && <KanbanBoard />}
+                                {activeTab === 'roadmap' && <RoadmapView />}
+                                {activeTab === 'backlog' && <BacklogView onNavigateToTicket={navigateToTicket} />}
+                                {activeTab === 'ticket' && (
+                                  <CreateTicket 
+                                    mode={ticketMode}
+                                    ticketId={ticketId}
+                                    onNavigate={navigateToTicket}
+                                  />
+                                )}
+                                {activeTab === 'export' && <DemoView />}
+                                {activeTab === 'project' && <ProjectView />}
+                                {activeTab === 'artifacts' && <ArtifactsView />}
+                              </main>
+                            </div>
+                          </div>
+                        </StatusProvider>
+                      </PriorityProvider>
+                    </ComplexityProvider>
+                  </ContributorProvider>
+                </PersonaProvider>
+              </ArtifactsProvider>
+            </TicketProvider>
+          </FeatureProvider>
+        </ComponentProvider>
+      </LayerProvider>
+    </PrefixProvider>
   )
 }
 

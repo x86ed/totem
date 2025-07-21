@@ -294,26 +294,25 @@ export function TicketProvider({ children }: TicketProviderProps) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
-      
-      // Generate a new ticket with default values
-      const newTicket: Ticket = {
-        id: ticket.id || `TKT-${Date.now()}`,
-        title: ticket.title || '',
-        description: ticket.description || '',
-        status: ticket.status || 'open',
-        priority: ticket.priority || 'medium',
-        complexity: ticket.complexity || 'medium',
-        persona: ticket.persona || undefined,
-        contributor: ticket.contributor || undefined,
-        assignee: ticket.assignee || undefined,
-        acceptance_criteria: ticket.acceptance_criteria || undefined,
-        milestone: ticket.milestone || undefined,
-        created: ticket.created || new Date().toISOString(),
-        blocks: ticket.blocks || [],
-        blocked_by: ticket.blocked_by || []
+
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket` : `/api/ticket`;
+      const ticketString = JSON.stringify(ticket);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: ticketString
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to create ticket: ${response.status}`);
       }
-      
-      dispatch({ type: 'ADD_TICKET', payload: newTicket })
+
+      // Get the created ticket from backend response
+      const data = await response.json();
+      const createdTicket = data.ticket || ticket;
+      dispatch({ type: 'ADD_TICKET', payload: createdTicket })
       dispatch({ type: 'SET_LOADING', payload: false })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to create ticket' })

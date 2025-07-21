@@ -1,4 +1,8 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect, useContext} from 'react'
+import React, { useState, FormEvent, ChangeEvent, useEffect, useContext } from 'react'
+import usePrefix from '../context/usePrefix'
+import { LayerContext } from '../context/LayerContext'
+import { ComponentContext } from '../context/ComponentContext'
+import { FeatureContext } from '../context/FeatureContext'
 import { useTickets } from '../context/TicketContext'
 import TicketMarkdownView from './TicketMarkdownView'
 import { MilkdownEditor } from './MilkdownEditor'
@@ -34,6 +38,9 @@ interface ApiTicket {
   resources?: string[]
   start_time?: number;
   end_time?: number;
+  layer?: string;
+  component?: string;
+  feature?: string;
 }
 
 /**
@@ -81,6 +88,12 @@ interface FormData {
   start_time?: number;
   /** Scheduling: end time as timestamp (ms since epoch, or -1 for unset) */
   end_time?: number;
+  /** Layer for ticket ID context */
+  layer?: string;
+  /** Component for ticket ID context */
+  component?: string;
+  /** Feature for ticket ID context */
+  feature?: string;
 }
 
 /**
@@ -132,6 +145,45 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   ticketId = null,
   onNavigate
 }) => {
+  // Context hooks for prefix, layer, component, feature
+  const { prefix } = usePrefix();
+  const layerCtx = useContext(LayerContext);
+  const componentCtx = useContext(ComponentContext);
+  const featureCtx = useContext(FeatureContext);
+  const [selectedLayer, setSelectedLayer] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState('');
+  const [selectedFeature, setSelectedFeature] = useState('');
+  // Keep formData in sync with dropdowns for context-driven fields
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      layer: selectedLayer,
+      component: selectedComponent,
+      feature: selectedFeature
+    }));
+  }, [selectedLayer, selectedComponent, selectedFeature]);
+  // For global ticket number
+  const { tickets } = useTickets();
+  // Compute the next global ticket number (2-digit, not context-dependent)
+  const getNextTicketNumber = () => {
+    console.log('[DEBUG] getNextTicketNumber called with tickets:', tickets);
+    if (!tickets || tickets.length === 0) return '01';
+    const numbers = tickets
+      .map(t => {
+        const match = t.id && t.id.match(/-(\d{2,})$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter(n => n !== null) as number[];
+    const max = numbers.length > 0 ? Math.max(...numbers) : 0;
+    console.log(String(max + 1).padStart(3, '0'))
+    return String(max + 1).padStart(3, '0');
+  };
+  const nextNumber = getNextTicketNumber();
+  // Build the ticket ID preview
+  const ticketIdPreview =
+    prefix && selectedLayer && selectedComponent && selectedFeature
+      ? `${prefix}.${selectedLayer}.${selectedComponent}-${selectedFeature}-${nextNumber}`
+      : '...';
   // Form data state
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -149,11 +201,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     tags: '',
     notes: '',
     risks: '',
-    resources: ''
-  })
+    resources: '',
+    layer: '',
+    component: '',
+    feature: ''
+  });
 
-  // Get tickets and actions from context for blocks/blocked_by dropdowns and CRUD
-  const { tickets, updateTicket, addTicket } = useTickets()
+  // Get actions from context for blocks/blocked_by dropdowns and CRUD
+  const { updateTicket, addTicket } = useTickets()
   const statusContext = useContext(StatusContext);
   const statuses = statusContext?.statuses || [];
   const statusLoading = statusContext?.loading || false;
@@ -186,6 +241,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
   const [showError, setShowError] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [successMessage, setSuccessMessage] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
 
   // Use relative URL in production, absolute URL in development
@@ -452,6 +508,88 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     <div className="page-container">
       <div className="max-w-7xl mx-auto">
         <div className="content-wrapper">
+          {/* Ticket ID Preview and Dropdowns (editable only in create mode) */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Ticket ID</h3>
+            {mode === 'create' ? (
+              <>
+                <div
+                  className="flex flex-row gap-2 items-end"
+                  style={{ alignItems: 'flex-end', flexWrap: 'nowrap', width: '100%', overflowX: 'auto' }}
+                >
+                    <label className="form-label">Prefix</label>
+                    <input type="text" value={prefix} disabled className="input-green" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#166534' }} />
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>.</span>
+                    <label className="form-label">Layer</label>
+                    <select
+                      value={selectedLayer}
+                      onChange={e => setSelectedLayer(e.target.value)}
+                      className="input-green"
+                      style={{  fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={layerCtx?.loading}
+                    >
+                      <option value="">Select layer</option>
+                      {layerCtx?.layers?.map(l => (
+                        <option key={l.key} value={l.key}>{l.key}</option>
+                      ))}
+                    </select>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>.</span>
+                  <div style={{ flex: '0 0 180px' }}>
+                    <label className="form-label">Component</label>
+                    <select
+                      value={selectedComponent}
+                      onChange={e => setSelectedComponent(e.target.value)}
+                      className="input-green"
+                      style={{ fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={componentCtx?.loading}
+                    >
+                      <option value="">Select component</option>
+                      {componentCtx?.components?.map(c => (
+                        <option key={c.key} value={c.key}>{c.key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>-</span>
+                  <div style={{ flex: '0 0 180px' }}>
+                    <label className="form-label">Feature</label>
+                    <select
+                      value={selectedFeature}
+                      onChange={e => setSelectedFeature(e.target.value)}
+                      className="input-green"
+                      style={{ width: '100%', fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={featureCtx?.loading}
+                    >
+                      <option value="">Select feature</option>
+                      {featureCtx?.features?.map(f => (
+                        <option key={f.key} value={f.key}>{f.key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>-</span>
+                  <div style={{ flex: '0 0 90px' }}>
+                    <label className="form-label">Number</label>
+                    <input type="text" value={nextNumber} disabled className="input-green" style={{ width: '100%', fontFamily: 'monospace', fontWeight: 600, color: '#166534' }} />
+                  </div>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <span className="font-mono text-green-700 text-lg">{ticketIdPreview}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <label className="form-label">Ticket ID</label>
+                  <input
+                    type="text"
+                    value={loadedTicket?.id || currentTicketId || ''}
+                    disabled
+                    className="input-green"
+                    style={{ minWidth: 320, fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', minHeight: '48px' }}>
             {currentTicketId ? (
               <button
@@ -486,16 +624,34 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
               </button>
             ) : null}
           </div>
-          {showSuccess && (
-            <div className="success-message">
-              <span className="success-text">
-                Ticket {isEditing ? 'updated' : 'created'} successfully!
-              </span>
-            </div>
-          )}
-          {showError && (
-            <div className="error-message">
-              <span className="error-text">{errorMessage}</span>
+          {/* Success/Failure message at the top of the screen */}
+          {(showSuccess || showError) && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 2000,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                marginTop: 24,
+                background: showSuccess ? '#22c55e' : '#ef4444',
+                color: 'white',
+                padding: '16px 32px',
+                borderRadius: 8,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                fontWeight: 600,
+                fontSize: 18,
+                pointerEvents: 'auto',
+                minWidth: 320,
+                textAlign: 'center',
+              }}>
+                {showSuccess ? successMessage : errorMessage}
+              </div>
             </div>
           )}
           {isViewing && loadedTicket && loadedTicket.id ? (
@@ -1029,31 +1185,81 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                     : [];
                   // Convert effort_days to number or undefined
                   const effortDaysVal = formData.effort_days === '' ? undefined : Number(formData.effort_days);
+                  // Always use deterministic ticket ID for create and update
+                  const deterministicId =
+                    prefix && selectedLayer && selectedComponent && selectedFeature
+                      ? `${prefix}.${selectedLayer}.${selectedComponent}-${selectedFeature}-${nextNumber}`
+                      : undefined;
                   if (isEditing && currentTicketId) {
                     // Update existing ticket
-                    await updateTicket({
-                      ...formData,
-                      id: currentTicketId,
-                      acceptance_criteria: acceptanceCriteriaArr,
-                      tags: tagsArr,
-                      risks: risksArr,
-                      resources: resourcesArr,
-                      effort_days: effortDaysVal
-                    });
-                    setShowSuccess(true);
-                    setTimeout(() => setShowSuccess(false), 3000);
+                    try {
+                      await updateTicket({
+                        ...formData,
+                        id: deterministicId || currentTicketId,
+                        acceptance_criteria: acceptanceCriteriaArr,
+                        tags: tagsArr,
+                        risks: risksArr,
+                        resources: resourcesArr,
+                        effort_days: effortDaysVal
+                      });
+                      setSuccessMessage('Ticket updated successfully!');
+                      setShowSuccess(true);
+                      setTimeout(() => setShowSuccess(false), 3000);
+                    } catch (err: unknown) {
+                      if (err instanceof Error) {
+                        setErrorMessage(`Failed to create ticket. ${err.message}`);
+                      } else {
+                        setErrorMessage('Failed to create ticket. Unknown error');
+                      }
+                      setShowError(true);
+                      setTimeout(() => setShowError(false), 4000);
+                    }
                   } else {
                     // Create new ticket
-                    await addTicket({
-                      ...formData,
-                      acceptance_criteria: acceptanceCriteriaArr,
-                      tags: tagsArr,
-                      risks: risksArr,
-                      resources: resourcesArr,
-                      effort_days: effortDaysVal
-                    });
-                    setShowSuccess(true);
-                    setTimeout(() => setShowSuccess(false), 3000);
+                    try {
+                      await addTicket({
+                        ...formData,
+                        id: deterministicId,
+                        acceptance_criteria: acceptanceCriteriaArr,
+                        tags: tagsArr,
+                        risks: risksArr,
+                        resources: resourcesArr,
+                        effort_days: effortDaysVal
+                      });
+                      setSuccessMessage('Ticket created successfully!');
+                      setShowSuccess(true);
+                      setTimeout(() => setShowSuccess(false), 3000);
+                      // Reset the form after successful creation
+                      setFormData({
+                        title: '',
+                        description: '',
+                        status: 'open',
+                        priority: 'medium',
+                        complexity: 'medium',
+                        persona: '',
+                        contributor: '',
+                        model: '',
+                        effort_days: '',
+                        blocks: [],
+                        blocked_by: [],
+                        acceptance_criteria: '',
+                        tags: '',
+                        notes: '',
+                        risks: '',
+                        resources: '',
+                        layer: '',
+                        component: '',
+                        feature: ''
+                      });
+                    } catch (err: unknown) {
+                      if (err instanceof Error) {
+                        setErrorMessage(`Failed to create ticket. ${err.message}`);
+                      } else {
+                        setErrorMessage('Failed to create ticket. Unknown error');
+                      }
+                      setShowError(true);
+                      setTimeout(() => setShowError(false), 4000);
+                    }
                   }
                 }}
               >
