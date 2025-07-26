@@ -4,6 +4,24 @@ import { existsSync, writeFileSync, unlinkSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 
 describe('PriorityController', () => {
+  it('should update a priority key and description', () => {
+    // Add a priority to update
+    const dto = new PriorityDto();
+    dto.key = 'oldkey';
+    dto.description = 'Old description';
+    controller.addPriority(dto);
+    // Update key and description
+    const updateDto = new PriorityDto();
+    updateDto.key = 'newkey';
+    updateDto.description = 'New description';
+    controller.updatePriority('oldkey', { ...updateDto, newKey: 'newkey' });
+    // Should be present under new key
+    const updated = controller.getByKey('newkey');
+    expect(updated.key).toBe('newkey');
+    expect(updated.description).toBe('New description');
+    // Old key should not exist
+    expect(() => controller.getByKey('oldkey')).toThrow();
+  });
   const TEST_MD_PATH = resolve(process.cwd(), '.totem/projects/conventions/priority.test.md');
   let controller: PriorityController;
 

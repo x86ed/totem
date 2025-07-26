@@ -36,10 +36,11 @@ export class PriorityController {
    * PUT /api/priority/:key - Update priority description by key
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update priority', description: 'Updates a priority description by key' })
+  @ApiOperation({ summary: 'Update priority', description: 'Updates a priority description by key. Optionally updates the key if newKey is provided.' })
   @ApiResponse({ status: 200, description: 'Priority updated.' })
-  updatePriority(@Param('key') key: string, @Body() body: PriorityDto): PriorityDto {
-    return this.modifyPriority(key, body.description, 'update');
+  updatePriority(@Param('key') key: string, @Body() body: PriorityDto & { newKey?: string }): PriorityDto {
+    const newKey = body.newKey && body.newKey.trim() ? body.newKey.trim() : key;
+    return this.modifyPriority(key, body.description, 'update', newKey);
   }
 
   /**
@@ -99,7 +100,12 @@ export class PriorityController {
    * Helper to modify priorities in markdown
    * Overwrites the entire file on save/update
    */
-  private modifyPriority(key: string, description: string, action: 'add' | 'update' | 'delete'): PriorityDto {
+  private modifyPriority(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): PriorityDto {
     if (!key) throw new HttpException('Priority key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.PRIORITY_MD_PATH)) {
       throw new HttpException('priority.md file not found', HttpStatus.NOT_FOUND);
@@ -114,7 +120,8 @@ export class PriorityController {
       entries.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Priority not found', HttpStatus.NOT_FOUND);
-      entries[idx] = `- **${key}** - ${description}`;
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      entries[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Priority not found', HttpStatus.NOT_FOUND);
       entries.splice(idx, 1);
@@ -124,7 +131,7 @@ export class PriorityController {
     const updated = `${header}${entries.join('\n')}`;
     writeFileSync(this.PRIORITY_MD_PATH, updated, 'utf-8');
     const dto = new PriorityDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }

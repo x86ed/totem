@@ -4,14 +4,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     setupFiles: ['./test-setup.ts'],
     include: [
       'scripts/**/*.{test,spec}.{js,ts}',
-      '**/__tests__/**/*.{test,spec}.{js,ts}'
+      '**/__tests__/**/*.{test,spec}.{js,ts}',
+      'frontend/src/context/**/*.{test,spec}.{js,ts,jsx,tsx}'
     ],
     exclude: [
-      'frontend/**/*',
       'node_modules/**/*',
       'dist/**/*',
       'coverage/**/*',
