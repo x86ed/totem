@@ -58,10 +58,14 @@ const ComplexityProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateComplexity = async (key: string, item: ComplexityItem) => {
     setLoading(true);
     try {
+      // If the key is being changed, send newKey in the body
+      const body = item.key !== key
+        ? { ...item, newKey: item.key }
+        : item;
       const res = await fetch(`http://localhost:8080/api/complexity/${encodeURIComponent(key)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
+        body: JSON.stringify(body)
       });
       if (!res.ok) throw new Error('Failed to update complexity');
       await refreshComplexities();

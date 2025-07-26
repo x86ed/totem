@@ -33,13 +33,17 @@ export class StatusController {
   }
 
   /**
-   * PUT /api/status/:key - Update status description by key
+   * PUT /api/status/:key - Update status description or key
+   * Accepts optional newKey in body to change the key
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update status', description: 'Updates a status description by key' })
+  @ApiOperation({ summary: 'Update status', description: 'Updates a status description or key by key' })
   @ApiResponse({ status: 200, description: 'Status updated.' })
-  updateStatus(@Param('key') key: string, @Body() body: StatusDto): StatusDto {
-    return this.modifyStatus(key, body.description, 'update');
+  updateStatus(
+    @Param('key') key: string,
+    @Body() body: StatusDto & { newKey?: string }
+  ): StatusDto {
+    return this.modifyStatus(key, body.description, 'update', body.newKey);
   }
 
   /**
@@ -98,8 +102,14 @@ export class StatusController {
   /**
    * Helper to modify statuses in markdown
    * Overwrites the entire file on save/update
+   * Accepts optional newKey for key changes
    */
-  private modifyStatus(key: string, description: string, action: 'add' | 'update' | 'delete'): StatusDto {
+  private modifyStatus(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): StatusDto {
     if (!key) throw new HttpException('Status key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.STATUS_MD_PATH)) {
       throw new HttpException('status.md file not found', HttpStatus.NOT_FOUND);
@@ -114,7 +124,9 @@ export class StatusController {
       entries.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Status not found', HttpStatus.NOT_FOUND);
-      entries[idx] = `- **${key}** - ${description}`;
+      // If newKey is provided and different, update the key
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      entries[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Status not found', HttpStatus.NOT_FOUND);
       entries.splice(idx, 1);
@@ -124,7 +136,7 @@ export class StatusController {
     const updated = `${header}${entries.join('\n')}`;
     writeFileSync(this.STATUS_MD_PATH, updated, 'utf-8');
     const dto = new StatusDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }

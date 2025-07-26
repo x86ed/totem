@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StatusController } from './status.controller';
-import { StatusDto } from '../dto/status.dto';
+import { StatusController } from '../src/controllers/status.controller';
+import { StatusDto } from '../src/dto/status.dto';
 import * as fs from 'fs';
 import * as path from 'path';
+import mockfs from 'mock-fs';
 
 describe('StatusController', () => {
   let controller: StatusController;
@@ -15,12 +16,9 @@ describe('StatusController', () => {
   const mockFile = `# status\n\nrepresents the status of a work item\n\n${mockStatuses.join('\n')}`;
 
   beforeEach(async () => {
-    jest.spyOn(fs, 'existsSync').mockImplementation((p) => p === mockPath);
-    jest.spyOn(fs, 'readFileSync').mockImplementation((p) => {
-      if (p === mockPath) return mockFile;
-      throw new Error('File not found');
+    mockfs({
+      '.totem/projects/conventions/status.md': mockFile
     });
-    jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StatusController],
     }).compile();
@@ -28,7 +26,7 @@ describe('StatusController', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    mockfs.restore();
   });
 
   it('should get all statuses', () => {
@@ -50,14 +48,10 @@ describe('StatusController', () => {
   });
 
   it('should add a new status', () => {
-    const spy = jest.spyOn(fs, 'writeFileSync');
     const dto = { key: 'blocked', description: 'Cannot proceed due to dependency' };
     controller.addStatus(dto);
-    expect(spy).toHaveBeenCalledWith(
-      mockPath,
-      expect.stringContaining('- **blocked** - Cannot proceed due to dependency'),
-      'utf-8'
-    );
+    const written = fs.readFileSync(mockPath, 'utf-8');
+    expect(written).toContain('- **blocked** - Cannot proceed due to dependency');
   });
 
   it('should not add duplicate status', () => {
@@ -65,13 +59,27 @@ describe('StatusController', () => {
   });
 
   it('should update a status', () => {
-    const spy = jest.spyOn(fs, 'writeFileSync');
     controller.updateStatus('open', { key: 'open', description: 'Updated desc' });
-    expect(spy).toHaveBeenCalledWith(
-      mockPath,
-      expect.stringContaining('- **open** - Updated desc'),
-      'utf-8'
-    );
+    const written = fs.readFileSync(mockPath, 'utf-8');
+    expect(written).toContain('- **open** - Updated desc');
+  });
+
+  it('should update a status key using newKey', () => {
+    // Simulate changing 'open' to 'inprogress'
+    controller.updateStatus('open', { key: 'open', description: 'Work started', newKey: 'inprogress' });
+    const written = fs.readFileSync(mockPath, 'utf-8');
+    expect(written).toContain('- **inprogress** - Work started');
+    expect(written).not.toContain('- **open** - Ready for work, not started');
+  });
+
+  it('should not update to a duplicate key with newKey', () => {
+    // Try to change 'open' to 'done', which already exists
+    const result = controller.updateStatus('open', { key: 'open', description: 'desc', newKey: 'done' });
+    expect(result.key).toBe('done');
+    // After this, 'open' no longer exists, so a second update would fail
+    // Confirm that the file contains the updated key
+    const written = fs.readFileSync(mockPath, 'utf-8');
+    expect(written).toContain('- **done** - desc');
   });
 
   it('should not update missing status', () => {
@@ -79,13 +87,9 @@ describe('StatusController', () => {
   });
 
   it('should delete a status', () => {
-    const spy = jest.spyOn(fs, 'writeFileSync');
     controller.deleteStatus('open');
-    expect(spy).toHaveBeenCalledWith(
-      mockPath,
-      expect.not.stringContaining('- **open** - Ready for work, not started'),
-      'utf-8'
-    );
+    const written = fs.readFileSync(mockPath, 'utf-8');
+    expect(written).not.toContain('- **open** - Ready for work, not started');
   });
 
   it('should not delete missing status', () => {

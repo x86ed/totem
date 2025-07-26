@@ -33,13 +33,17 @@ export class ComplexityController {
   }
 
   /**
-   * PUT /api/complexity/:key - Update complexity description by key
+   * PUT /api/complexity/:key - Update complexity description or key
+   * Accepts optional newKey in body to change the key
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update complexity', description: 'Updates a complexity description by key' })
+  @ApiOperation({ summary: 'Update complexity', description: 'Updates a complexity description or key by key' })
   @ApiResponse({ status: 200, description: 'Complexity updated.' })
-  updateComplexity(@Param('key') key: string, @Body() body: ComplexityDto): ComplexityDto {
-    return this.modifyComplexity(key, body.description, 'update');
+  updateComplexity(
+    @Param('key') key: string,
+    @Body() body: ComplexityDto & { newKey?: string }
+  ): ComplexityDto {
+    return this.modifyComplexity(key, body.description, 'update', body.newKey);
   }
 
   /**
@@ -98,8 +102,14 @@ export class ComplexityController {
   /**
    * Helper to modify complexities in markdown
    * Overwrites the entire file on save/update
+   * Accepts optional newKey for key changes
    */
-  private modifyComplexity(key: string, description: string, action: 'add' | 'update' | 'delete'): ComplexityDto {
+  private modifyComplexity(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): ComplexityDto {
     if (!key) throw new HttpException('Complexity key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.COMPLEXITY_MD_PATH)) {
       throw new HttpException('complexity.md file not found', HttpStatus.NOT_FOUND);
@@ -114,7 +124,9 @@ export class ComplexityController {
       entries.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Complexity not found', HttpStatus.NOT_FOUND);
-      entries[idx] = `- **${key}** - ${description}`;
+      // If newKey is provided and different, update the key
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      entries[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Complexity not found', HttpStatus.NOT_FOUND);
       entries.splice(idx, 1);
@@ -124,7 +136,7 @@ export class ComplexityController {
     const updated = `${header}${entries.join('\n')}`;
     writeFileSync(this.COMPLEXITY_MD_PATH, updated, 'utf-8');
     const dto = new ComplexityDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }
