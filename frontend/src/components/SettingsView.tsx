@@ -147,7 +147,11 @@ const LayerTypesSection: React.FC = () => {
     if (!layerCtx) return;
     const oldKey = items[idx]?.key;
     if (oldKey) {
-      await layerCtx.updateLayer(oldKey, { key: editKey, description: editDesc });
+      // If the key is changed, pass newKey in the item
+      const item = editKey !== oldKey
+        ? { key: editKey, description: editDesc, newKey: editKey }
+        : { key: editKey, description: editDesc };
+      await layerCtx.updateLayer(oldKey, item);
       setEditIdx(null);
     }
   };

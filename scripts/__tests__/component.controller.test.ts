@@ -13,8 +13,7 @@ describe('ComponentController', () => {
   beforeEach(() => {
     // Reset test markdown file to known good state
     fs.writeFileSync(testMdPath, initialMdContent, 'utf-8');
-    controller = new ComponentController();
-    controller.setFilePath(testMdPath);
+    controller = new ComponentController(testMdPath);
   });
 
   it('should get all components', () => {
@@ -26,9 +25,9 @@ describe('ComponentController', () => {
   });
 
   it('should get a component by key', () => {
-    const result = controller.getByKey('auth');
-    expect(result.key).toBe('auth');
-    expect(result.description).toContain('Authentication');
+    const result = controller.getByKey('Button');
+    expect(result.key).toBe('Button');
+    expect(result.description).toContain('Interactive button');
   });
 
   it('should throw if component not found', () => {
@@ -49,21 +48,41 @@ describe('ComponentController', () => {
 
   it('should not add duplicate component', () => {
     const dto = new ComponentDto();
-    dto.key = 'auth';
+    dto.key = 'Button';
     dto.description = 'Duplicate';
     expect(() => controller.addComponent(dto)).toThrow(HttpException);
   });
 
   it('should update a component', () => {
     const dto = new ComponentDto();
-    dto.key = 'auth';
+    dto.key = 'Button';
     dto.description = 'Updated description';
-    const result = controller.updateComponent('auth', dto);
-    expect(result.key).toBe('auth');
+    const result = controller.updateComponent('Button', dto);
+    expect(result.key).toBe('Button');
     expect(result.description).toBe('Updated description');
     // Should be updated in getAll
-    const updated = controller.getByKey('auth');
+    const updated = controller.getByKey('Button');
     expect(updated.description).toBe('Updated description');
+  });
+
+  it('should update a component key and description', () => {
+    // Add a component to update
+    const dto = new ComponentDto();
+    dto.key = 'oldkey';
+    dto.description = 'Old description';
+    controller.addComponent(dto);
+    // Update key and description
+    const updateDto = new ComponentDto();
+    updateDto.key = 'newkey';
+    updateDto.description = 'New description';
+    const result = controller.updateComponent('oldkey', { ...updateDto, newKey: 'newkey' });
+    expect(result.key).toBe('newkey');
+    expect(result.description).toBe('New description');
+    // Should be present under new key
+    const updated = controller.getByKey('newkey');
+    expect(updated.description).toBe('New description');
+    // Old key should not exist
+    expect(() => controller.getByKey('oldkey')).toThrow(HttpException);
   });
 
   it('should throw when updating non-existent component', () => {

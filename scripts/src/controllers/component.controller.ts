@@ -47,13 +47,14 @@ export class ComponentController {
   }
 
   /**
-   * PUT /api/component/:key - Update component description by key
+   * PUT /api/component/:key - Update component description by key (optionally update key)
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update component', description: 'Updates a component description by key' })
+  @ApiOperation({ summary: 'Update component', description: 'Updates a component description by key. Optionally updates the key if newKey is provided.' })
   @ApiResponse({ status: 200, description: 'Component updated.' })
-  updateComponent(@Param('key') key: string, @Body() body: ComponentDto): ComponentDto {
-    return this.modifyComponent(key, body.description, 'update');
+  updateComponent(@Param('key') key: string, @Body() body: ComponentDto & { newKey?: string }): ComponentDto {
+    const newKey = body.newKey && body.newKey.trim() ? body.newKey.trim() : key;
+    return this.modifyComponent(key, body.description, 'update', newKey);
   }
 
   /**
@@ -115,8 +116,14 @@ export class ComponentController {
 
   /**
    * Helper to modify components in markdown
+   * Now supports key change for 'update' action.
    */
-  private modifyComponent(key: string, description: string, action: 'add' | 'update' | 'delete'): ComponentDto {
+  private modifyComponent(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): ComponentDto {
     if (!key) throw new HttpException('Component key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.ID_MD_PATH)) {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
@@ -138,19 +145,8 @@ export class ComponentController {
       rawLines.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Component not found', HttpStatus.NOT_FOUND);
-      // Only update the description, preserve the original key and formatting
-      // Match: everything up to the last '**', then replace the description after
-      const line = rawLines[idx];
-      const boldMatch = line.match(/^(.*\*\*[^*]+\*\*)(\s*-\s*|\s+)(.*)$/);
-      if (boldMatch && boldMatch.length >= 4) {
-        // boldMatch[1]: everything up to and including the closing '**'
-        // boldMatch[2]: separator (preserve original formatting)
-        // boldMatch[3]: old description
-        rawLines[idx] = boldMatch[1] + boldMatch[2] + description;
-      } else {
-        // If not matched, do not reconstruct the key, just replace the whole line
-        rawLines[idx] = `- **${key}** - ${description}`;
-      }
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      rawLines[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Component not found', HttpStatus.NOT_FOUND);
       rawLines.splice(idx, 1);
@@ -170,7 +166,7 @@ export class ComponentController {
     let updated = before.replace(/\n*$/, '\n') + newSection + after.replace(/^\n*/, '\n');
     writeFileSync(this.ID_MD_PATH, updated, 'utf-8');
     const dto = new ComponentDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }

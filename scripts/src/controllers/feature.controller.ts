@@ -37,10 +37,11 @@ export class FeatureController {
    * PUT /api/feature/:key - Update feature description by key
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update feature', description: 'Updates a feature description by key' })
+  @ApiOperation({ summary: 'Update feature', description: 'Updates a feature description by key. Optionally updates the key if newKey is provided.' })
   @ApiResponse({ status: 200, description: 'Feature updated.' })
-  updateFeature(@Param('key') key: string, @Body() body: FeatureDto): FeatureDto {
-    return this.modifyFeature(key, body.description, 'update');
+  updateFeature(@Param('key') key: string, @Body() body: FeatureDto & { newKey?: string }): FeatureDto {
+    const newKey = body.newKey && body.newKey.trim() ? body.newKey.trim() : key;
+    return this.modifyFeature(key, body.description, 'update', newKey);
   }
 
   /**
@@ -103,7 +104,12 @@ export class FeatureController {
   /**
    * Helper to modify features in markdown
    */
-  private modifyFeature(key: string, description: string, action: 'add' | 'update' | 'delete'): FeatureDto {
+  private modifyFeature(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): FeatureDto {
     if (!key) throw new HttpException('Feature key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.ID_MD_PATH)) {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
@@ -121,7 +127,8 @@ export class FeatureController {
       featureLines.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Feature not found', HttpStatus.NOT_FOUND);
-      featureLines[idx] = `- **${key}** - ${description}`;
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      featureLines[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Feature not found', HttpStatus.NOT_FOUND);
       featureLines.splice(idx, 1);
@@ -131,7 +138,7 @@ export class FeatureController {
     const updated = `${before}${newFeatureSection}${after}`;
     writeFileSync(this.ID_MD_PATH, updated, 'utf-8');
     const dto = new FeatureDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }

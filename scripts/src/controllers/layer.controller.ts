@@ -34,13 +34,14 @@ export class LayerController {
   }
 
   /**
-   * PUT /api/layer/:key - Update layer description by key
+   * PUT /api/layer/:key - Update layer description by key (optionally update key)
    */
   @Put(':key')
-  @ApiOperation({ summary: 'Update layer', description: 'Updates a layer description by key' })
+  @ApiOperation({ summary: 'Update layer', description: 'Updates a layer description by key. Optionally updates the key if newKey is provided.' })
   @ApiResponse({ status: 200, description: 'Layer updated.' })
-  updateLayer(@Param('key') key: string, @Body() body: LayerDto): LayerDto {
-    return this.modifyLayer(key, body.description, 'update');
+  updateLayer(@Param('key') key: string, @Body() body: LayerDto & { newKey?: string }): LayerDto {
+    const newKey = body.newKey && body.newKey.trim() ? body.newKey.trim() : key;
+    return this.modifyLayer(key, body.description, 'update', newKey);
   }
 
   /**
@@ -107,8 +108,14 @@ export class LayerController {
 
   /**
    * Helper to modify layers in markdown
+   * Now supports key change for 'update' action.
    */
-  private modifyLayer(key: string, description: string, action: 'add' | 'update' | 'delete'): LayerDto {
+  private modifyLayer(
+    key: string,
+    description: string,
+    action: 'add' | 'update' | 'delete',
+    newKey?: string
+  ): LayerDto {
     if (!key) throw new HttpException('Layer key required', HttpStatus.BAD_REQUEST);
     if (!existsSync(this.ID_MD_PATH)) {
       throw new HttpException('id.md file not found', HttpStatus.NOT_FOUND);
@@ -126,7 +133,8 @@ export class LayerController {
       layerLines.push(`- **${key}** - ${description}`);
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Layer not found', HttpStatus.NOT_FOUND);
-      layerLines[idx] = `- **${key}** - ${description}`;
+      const finalKey = newKey && newKey !== key ? newKey : key;
+      layerLines[idx] = `- **${finalKey}** - ${description}`;
     } else if (action === 'delete') {
       if (idx === -1) throw new HttpException('Layer not found', HttpStatus.NOT_FOUND);
       layerLines.splice(idx, 1);
@@ -136,7 +144,7 @@ export class LayerController {
     const updated = `${before}${newLayerSection}${after}`;
     writeFileSync(this.ID_MD_PATH, updated, 'utf-8');
     const dto = new LayerDto();
-    dto.key = key;
+    dto.key = newKey && newKey !== key ? newKey : key;
     dto.description = description;
     return dto;
   }

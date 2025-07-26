@@ -60,8 +60,16 @@ beforeEach(() => {
       }
       if (init && init.method === 'PUT') {
         const updated = JSON.parse(init.body as string);
-        const idx = mockLayers.findIndex(l => l.key === decodeURIComponent(url.split('/').pop() || ''));
-        if (idx >= 0) mockLayers[idx] = updated;
+        const oldKey = decodeURIComponent(url.split('/').pop() || '');
+        const idx = mockLayers.findIndex(l => l.key === oldKey);
+        if (idx >= 0) {
+          // If newKey is present, update the key
+          if (updated.newKey && updated.newKey !== oldKey) {
+            mockLayers[idx] = { key: updated.newKey, description: updated.description };
+          } else {
+            mockLayers[idx] = { key: updated.key, description: updated.description };
+          }
+        }
         return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }) as Promise<Response>;
       }
       if (init && init.method === 'DELETE') {

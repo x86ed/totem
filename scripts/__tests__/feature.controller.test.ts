@@ -5,6 +5,24 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 describe('FeatureController', () => {
+  it('should update a feature key and description', () => {
+    // Add a feature to update
+    const dto = new FeatureDto();
+    dto.key = 'oldkey';
+    dto.description = 'Old description';
+    controller.addFeature(dto);
+    // Update key and description
+    const updateDto = new FeatureDto();
+    updateDto.key = 'newkey';
+    updateDto.description = 'New description';
+    controller.updateFeature('oldkey', { ...updateDto, newKey: 'newkey' });
+    // Should be present under new key
+    const updated = controller.getByKey('newkey');
+    expect(updated.key).toBe('newkey');
+    expect(updated.description).toBe('New description');
+    // Old key should not exist
+    expect(() => controller.getByKey('oldkey')).toThrow(HttpException);
+  });
   const TEST_MD_PATH = path.resolve(__dirname, '../../.totem/projects/conventions/id.test.md');
   let controller: FeatureController;
 

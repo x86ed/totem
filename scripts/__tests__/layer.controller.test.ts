@@ -59,6 +59,15 @@ describe('LayerController', () => {
     expect(layer.description).toBe('Updated UI description');
   });
 
+  it('should update a layer key and description', () => {
+    controller.updateLayer('Frontend', { key: 'Frontend', description: 'Changed key and desc', newKey: 'UI' });
+    const layer = controller.getByKey('UI');
+    expect(layer.key).toBe('UI');
+    expect(layer.description).toBe('Changed key and desc');
+    // Old key should not exist
+    expect(() => controller.getByKey('Frontend')).toThrow();
+  });
+
   it('should delete a layer', () => {
     controller.deleteLayer('Docs');
     const layers = controller.getAll();

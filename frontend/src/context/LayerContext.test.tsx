@@ -84,6 +84,38 @@ describe('LayerContext', () => {
     expect(contextValue?.layers?.[0].description).toBe('Updated');
   });
 
+  it('updateLayer with key change sends newKey', async () => {
+    (global.fetch as Mock)
+      .mockResolvedValueOnce({ ok: true, json: async () => mockLayers }) // initial fetch
+      .mockResolvedValueOnce({ ok: true }) // PUT
+      .mockResolvedValueOnce({ ok: true, json: async () => [{ key: 'UI', description: 'Changed' }, mockLayers[1]] }); // refresh
+    let contextValue: LayerContextType | undefined;
+    render(
+      <LayerProvider>
+        <LayerContext.Consumer>
+          {value => {
+            contextValue = value;
+            return null;
+          }}
+        </LayerContext.Consumer>
+      </LayerProvider>
+    );
+    await waitFor(() => expect(contextValue?.loading).toBe(false));
+    await act(async () => {
+      await contextValue?.updateLayer('Frontend', { key: 'UI', description: 'Changed' });
+    });
+    // Should send newKey in body
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/layer/Frontend',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ key: 'UI', description: 'Changed', newKey: 'UI' })
+      })
+    );
+    expect(contextValue?.layers?.[0].key).toBe('UI');
+    expect(contextValue?.layers?.[0].description).toBe('Changed');
+  });
+
   it('deleteLayer calls DELETE and refreshes', async () => {
     (global.fetch as Mock)
       .mockResolvedValueOnce({ ok: true, json: async () => mockLayers }) // initial fetch
