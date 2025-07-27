@@ -148,6 +148,9 @@ function KanbanBoard() {
                     handleDragEnd={handleDragEnd}
                     handleMoveTicket={handleMoveTicket}
                     getColumnIcon={getColumnIcon}
+                    onClick={() => {
+                      window.location.hash = `ticket/view/${ticket.id}`;
+                    }}
                   />
                 ))}
                 {columnTickets.length === 0 && (

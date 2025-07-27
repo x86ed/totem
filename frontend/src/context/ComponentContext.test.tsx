@@ -40,10 +40,14 @@ describe('ComponentContext', () => {
   });
 
   it('addComponent calls API and refreshes', async () => {
-    // POST returns ok, then GET returns new list
+    // Initial GET returns both components, POST returns ok, second GET returns new list
     global.fetch = vi
       .fn()
+      // Initial GET (provider mount)
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => mockComponents }))
+      // POST
       .mockImplementationOnce(() => Promise.resolve({ ok: true }))
+      // Second GET (after add)
       .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => [...mockComponents, { key: 'new', description: 'desc' }] }));
     let contextValue: import('./ComponentContext').ComponentContextType | undefined;
     render(
@@ -65,10 +69,14 @@ describe('ComponentContext', () => {
   });
 
   it('updateComponent calls API and refreshes', async () => {
-    // PUT returns ok, then GET returns updated list
+    // Initial GET returns both components, PUT returns ok, second GET returns updated list
     global.fetch = vi
       .fn()
+      // Initial GET (provider mount)
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => mockComponents }))
+      // PUT
       .mockImplementationOnce(() => Promise.resolve({ ok: true }))
+      // Second GET (after update)
       .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => [{ key: 'auth', description: 'updated' }, mockComponents[1]] }));
     let contextValue: import('./ComponentContext').ComponentContextType | undefined;
     render(
@@ -90,10 +98,14 @@ describe('ComponentContext', () => {
   });
 
   it('deleteComponent calls API and refreshes', async () => {
-    // DELETE returns ok, then GET returns filtered list
+    // Initial GET returns both components, DELETE returns ok, second GET returns filtered list
     global.fetch = vi
       .fn()
+      // Initial GET (provider mount)
+      .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => mockComponents }))
+      // DELETE
       .mockImplementationOnce(() => Promise.resolve({ ok: true }))
+      // Second GET (after delete)
       .mockImplementationOnce(() => Promise.resolve({ ok: true, json: async () => [mockComponents[1]] }));
     let contextValue: import('./ComponentContext').ComponentContextType | undefined;
     render(
@@ -110,6 +122,10 @@ describe('ComponentContext', () => {
       await contextValue!.deleteComponent('auth');
     });
     await waitFor(() => {
+      // Debug output to help diagnose test failure
+      // eslint-disable-next-line no-console
+      console.log('components after delete:', contextValue!.components);
+      expect(Array.isArray(contextValue!.components)).toBe(true);
       expect(contextValue!.components.length).toBe(1);
       expect(contextValue!.components[0].key).toBe('user');
     });

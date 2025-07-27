@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 describe('FeatureController', () => {
+  // ...existing code...
+
   it('should update a feature key and description', () => {
     // Add a feature to update
     const dto = new FeatureDto();

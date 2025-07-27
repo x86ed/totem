@@ -1,21 +1,44 @@
 import { TotemService } from '../src/services/totem.service';
 import fs from 'fs';
+import mock from 'mock-fs';
 import { exec } from 'child_process';
+import { promisify } from 'util';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 vi.mock('fs');
 vi.mock('child_process');
 
+// Patch util.promisify to return a function compatible with exec's callback signature
+vi.mock('util', () => ({
+  promisify: (fn: any) => (...args: any[]) => {
+    // If last arg is a callback, call it with (null, 'mocked output')
+    if (typeof args[args.length - 1] === 'function') {
+      args[args.length - 1](null, 'mocked output');
+    }
+    return Promise.resolve('mocked output');
+  },
+}));
+
+// Patch exec to be compatible with util.promisify
+const execMock = vi.fn((cmd, cb) => cb(null, 'mocked output'));
+vi.mocked(exec).mockImplementation(execMock);
+
 describe('TotemService', () => {
   let service: TotemService;
   
   beforeEach(() => {
+    mock({
+      '.totem': {},
+      'totem.config.json': '{"version":"1.0.0"}',
+      'package.json': '{"name":"totem","version":"1.0.0"}',
+    });
     service = new TotemService();
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    mock.restore();
   });
 
   describe('isTotemInitialized', () => {

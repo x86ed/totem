@@ -90,4 +90,27 @@ describe('KanbanBoard', () => {
     // After moving, the ticket should appear in the new column
     // (This test assumes the TicketProvider updates state correctly)
   });
+
+  it('navigates to ticket view page when a ticket card is clicked', () => {
+    // Mock window.location.hash setter using Object.defineProperty
+    const originalHash = window.location.hash;
+    const setHashMock = vi.fn();
+    Object.defineProperty(window.location, 'hash', {
+      configurable: true,
+      set: setHashMock,
+    });
+    renderWithProviders(<KanbanBoard />);
+    const ticketCard = screen.getByText('Test Ticket 1').closest('.ticket-green');
+    expect(ticketCard).toBeTruthy();
+    if (ticketCard) {
+      fireEvent.click(ticketCard);
+      expect(setHashMock).toHaveBeenCalledWith('#ticket/view/1');
+    }
+    // Restore original hash property
+    Object.defineProperty(window.location, 'hash', {
+      configurable: true,
+      value: originalHash,
+      writable: true,
+    });
+  });
 });

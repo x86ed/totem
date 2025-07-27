@@ -1,26 +1,23 @@
 import { PrefixController } from '../src/controllers/prefix.controller';
 import { PrefixDto } from '../src/dto/prefix.dto';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import mock from 'mock-fs';
 import { resolve } from 'path';
 import { HttpException } from '@nestjs/common';
 
 describe('PrefixController', () => {
   const idTestMdPath = resolve(__dirname, 'testdata/id.test.md');
-  let originalContent: string;
+  const minimalMd = '# id-conventions.md\n\n## Prefix\nTEST\n\n## Layer\nLayerContent\n\n## Component\nComponentContent';
 
   beforeEach(() => {
-    if (existsSync(idTestMdPath)) {
-      originalContent = readFileSync(idTestMdPath, 'utf-8');
-    } else {
-      originalContent = '# id-conventions.md\n\n## Prefix\nTEST\n\n## Layer\nLayerContent';
-      writeFileSync(idTestMdPath, originalContent, 'utf-8');
-    }
+    mock({
+      [idTestMdPath]: minimalMd,
+      [resolve(__dirname, 'testdata')]: {},
+    });
   });
 
   afterEach(() => {
-    if (originalContent) {
-      writeFileSync(idTestMdPath, originalContent, 'utf-8');
-    }
+    mock.restore();
   });
 
   it('should get the prefix from id.test.md', () => {
@@ -44,11 +41,13 @@ describe('PrefixController', () => {
     const fileContent = readFileSync(idTestMdPath, 'utf-8');
     const prefixSection = fileContent.match(/## Prefix\s*\n([\s\S]*?)(?=^## |^#|$)/m);
     expect(prefixSection).toBeTruthy();
-    const lines = prefixSection[1].split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    expect(lines.length).toBe(1);
-    expect(lines[0]).toBe(newPrefix.toUpperCase());
-    // Confirm blank lines above and below
-    expect(prefixSection[1]).toMatch(/^\n?ABC123\n?$/i);
+    if (prefixSection) {
+      const lines = prefixSection[1].split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toBe(newPrefix.toUpperCase());
+      // Confirm blank lines above and below
+      expect(prefixSection[1]).toMatch(/^\n?ABC123\n?$/i);
+    }
     // Confirm other sections are untouched
     expect(fileContent).toContain('## Layer');
     expect(fileContent).toContain('## Component');
@@ -60,9 +59,15 @@ describe('PrefixController', () => {
     const newPrefix = 'xyz789';
     const result = controller.setPrefixPost(new PrefixDto(newPrefix));
     expect(result.prefix).toBe(newPrefix.toUpperCase());
-    // Confirm file was updated
+    // Confirm file was updated in the Prefix section
     const fileContent = readFileSync(idTestMdPath, 'utf-8');
-    expect(fileContent).toContain(newPrefix.toUpperCase());
+    const prefixSection = fileContent.match(/## Prefix\s*\n([\s\S]*?)(?=^## |^#|$)/m);
+    expect(prefixSection).toBeTruthy();
+    if (prefixSection) {
+      const lines = prefixSection[1].split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toBe(newPrefix.toUpperCase());
+    }
   });
 
   it('should not allow invalid prefix', () => {

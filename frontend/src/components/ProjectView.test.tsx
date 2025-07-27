@@ -1,13 +1,23 @@
-
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ProjectView from './ProjectView';
 import { PersonaProvider } from '../context/PersonaContext';
 
+
+
 describe('ProjectView', () => {
   // Helper to wrap with PersonaProvider
   const renderWithProviders = (ui: React.ReactElement) =>
     render(<PersonaProvider>{ui}</PersonaProvider>);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+  });
 
   it('renders Project Overview heading', () => {
     renderWithProviders(<ProjectView />);

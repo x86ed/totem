@@ -14,6 +14,7 @@ interface TicketCardProps {
   handleDragEnd?: () => void;
   handleMoveTicket?: (ticketId: string, newStatus: string) => void;
   getColumnIcon?: (colId: string) => string;
+  onClick?: () => void;
 }
 
 /**
@@ -57,6 +58,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
   handleDragEnd,
   handleMoveTicket,
   getColumnIcon,
+  onClick,
 }) => {
   /**
    * Gets the appropriate CSS class for a ticket priority
@@ -99,15 +101,70 @@ const TicketCard: React.FC<TicketCardProps> = ({
       className="relative group ticket-green"
       style={{
         background: getPriorityBg(ticket.priority),
+        border: `0.5em solid ${getPriorityBg(ticket.priority)}`,
         position: 'relative',
         minHeight: 120,
         overflow: 'hidden',
+        cursor: onClick ? 'pointer' : undefined,
       }}
       draggable={!!handleDragStart}
       onDragStart={handleDragStart ? () => handleDragStart(ticket.id) : undefined}
       onDragEnd={handleDragEnd}
+      onClick={onClick}
     >
-      <TotemIcon seed={ticket.id} size={1.75} showControls={false} />     
+      {/* Ticket title at the top */}
+      <h4 className="ticket-title line-clamp-2" style={{ margin: '45px 0 4px 0', fontSize: '.92em', fontWeight: 700 }}>
+        {ticket.title}
+      </h4>
+
+      {/* Ticket ID directly below title */}
+      <div className="ticket-id" style={{ fontWeight: 600, opacity: 0.5, fontSize: 12, marginBottom: 4 }}>
+        {ticket.id}
+      </div>
+
+      {/* Top row: TotemIcon left, ticket-meta right */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: 4,
+          borderRadius: 12,
+          background: 'rgba(255,255,255,0.7)',
+          padding: '8px 12px',
+        }}
+      >
+        <TotemIcon seed={ticket.id} size={3} showControls={false} />
+        <div className="ticket-meta" style={{ display: 'flex', alignItems: 'center', gap: 12 , fontSize: '.75em'}}>
+          {/* Assignee/Contributor */}
+          {ticket.contributor && (
+            <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Avatar
+                size={20}
+                name={ticket.contributor}
+                variant="pixel"
+                colors={["#FFDD00", "#FFAB00", "#FF6F00", "#D50000", "#6200EA"]}
+                square
+              />
+              {ticket.contributor}
+            </span>
+          )}
+          {/* Persona */}
+          {ticket.persona && (
+            <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1d4ed8', fontWeight: 500 }}>
+              <Avatar
+                size={20}
+                name={ticket.persona}
+                variant="pixel"
+                colors={["#A5B4FC", "#6366F1", "#818CF8", "#3730A3", "#C7D2FE"]}
+                square
+              />
+              {ticket.persona}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Priority icon and text in upper right */}
       <div
         style={{
@@ -125,12 +182,27 @@ const TicketCard: React.FC<TicketCardProps> = ({
         }}
       >
         <span style={{ fontSize: 18 }}>{getPriorityIcon(ticket.priority)}</span>
-        <span style={{ letterSpacing: 1 }}>{ticket.priority.toUpperCase()}</span>
+        <span
+          style={{ letterSpacing: 1 }}
+          className={
+            ticket.priority === 'high'
+              ? 'priority-high-green'
+              : ticket.priority === 'medium'
+              ? 'priority-medium-green'
+              : 'priority-low-green'
+          }
+        >
+          {ticket.priority.toUpperCase()}
+        </span>
       </div>
 
-      {/* Move ticket buttons at the bottom of the card */}
+      <p className="ticket-description line-clamp-3" style={{ fontSize: 14, marginBottom: 12 }}>
+        {ticket.description}
+      </p>
+
+      {/* Move ticket buttons at the very bottom of the card */}
       {columns && handleMoveTicket && getColumnIcon && currentColumnId && (
-        <div className="flex space-x-1 mt-4 justify-end">
+        <div className="flex space-x-1 mt-4 justify-end nav-buttons">
           {columns.map((targetColumn) => (
             targetColumn.id === ticket.status ? null : (
               <button
@@ -150,47 +222,6 @@ const TicketCard: React.FC<TicketCardProps> = ({
           ))}
         </div>
       )}
-
-      <div className="ticket-id" style={{ fontWeight: 600, opacity: 0.5, fontSize: 12 }}>
-        {ticket.id}
-      </div>
-
-      <h4 className="ticket-title line-clamp-2" style={{ margin: '8px 0 4px 0', fontSize: 18, fontWeight: 700 }}>
-        {ticket.title}
-      </h4>
-
-      <p className="ticket-description line-clamp-3" style={{ fontSize: 14, marginBottom: 12 }}>
-        {ticket.description}
-      </p>
-
-      <div className="ticket-meta" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Assignee/Contributor */}
-        {ticket.contributor && (
-          <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {ticket.contributor}
-            <Avatar
-              size={20}
-              name={ticket.contributor}
-              variant="pixel"
-              colors={["#FFDD00", "#FFAB00", "#FF6F00", "#D50000", "#6200EA"]}
-              square
-            />
-          </span>
-        )}
-        {/* Persona */}
-        {ticket.persona && (
-          <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1d4ed8', fontWeight: 500 }}>
-            <Avatar
-              size={20}
-              name={ticket.persona}
-              variant="pixel"
-              colors={["#A5B4FC", "#6366F1", "#818CF8", "#3730A3", "#C7D2FE"]}
-              square
-            />
-            {ticket.persona}
-          </span>
-        )}
-      </div>
     </div>
   )
 }

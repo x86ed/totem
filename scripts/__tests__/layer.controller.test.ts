@@ -2,21 +2,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { LayerController } from '../src/controllers/layer.controller';
 import { LayerDto } from '../src/dto/layer.dto';
 import { writeFileSync } from 'fs';
+import mock from 'mock-fs';
 import { resolve } from 'path';
 
 const TEST_MD_PATH = resolve(process.cwd(), '.totem/projects/conventions/id.test.md');
-const LAYER_SECTION = `## Layer\n- **Frontend** - User interface components, web applications, dashboards\n- **Backend** - Server-side logic, APIs, databases, microservices\n- **GraphQL** - GraphQL schema, resolvers, API gateway\n- **Mobile** - iOS/Android applications, React Native components\n- **Tests** - Unit tests, integration tests, end-to-end testing\n- **Docs** - Documentation, specifications, user guides\n## Component`;
+const LAYER_SECTION = `## Layer\n- **Frontend** - User interface components, web applications, dashboards\n- **Backend** - Server-side logic, APIs, databases, microservices\n- **GraphQL** - GraphQL schema, resolvers, API gateway\n- **Mobile** - iOS/Android applications, React Native components\n- **Tests** - Unit tests, integration tests, end-to-end testing\n- **Docs** - Documentation, specifications, user guides\n\n## Component`;
 
 function setupTestMd() {
-  // Write a minimal markdown file with Prefix and Layer sections
+  // Use mock-fs to create the markdown file in memory
   const PREFIX_SECTION = '## Prefix\nDEMO\n';
-  // Add a blank line before ## Component for parser tolerance
-  const tolerantLayerSection = LAYER_SECTION.replace('## Component', '\n## Component');
-  writeFileSync(
-    TEST_MD_PATH,
-    `# id-conventions.md\n\n${PREFIX_SECTION}\n${tolerantLayerSection}\n`,
-    'utf-8'
-  );
+  mock({
+    [TEST_MD_PATH]: `# id-conventions.md\n\n${PREFIX_SECTION}\n${LAYER_SECTION}\n`,
+    [require('path').dirname(TEST_MD_PATH)]: {},
+  });
 }
 
 class TestLayerController extends LayerController {
@@ -29,6 +27,10 @@ describe('LayerController', () => {
   beforeEach(() => {
     setupTestMd();
     controller = new TestLayerController();
+  });
+
+  afterEach(() => {
+    mock.restore();
   });
 
   it('should get all layers', () => {

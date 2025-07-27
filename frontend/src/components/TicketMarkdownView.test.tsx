@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import TicketMarkdownView from './TicketMarkdownView'
+import { TicketProvider } from '../context/TicketContext'
 
 describe('TicketMarkdownView', () => {
   const mockTicket = {
@@ -28,12 +29,20 @@ describe('TicketMarkdownView', () => {
   }
 
   it('renders ticket title as h1', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('API Gateway Implementation')
   })
 
   it('renders YAML frontmatter with ticket metadata', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     // Check that the YAML frontmatter code block exists
     const codeBlocks = screen.getAllByRole('code')
     expect(codeBlocks.length).toBeGreaterThan(0)
@@ -46,24 +55,40 @@ describe('TicketMarkdownView', () => {
   })
 
   it('renders acceptance criteria with checkboxes', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     expect(screen.getByText('Acceptance Criteria')).toBeInTheDocument()
     expect(screen.getByText(/Kong or AWS API Gateway setup/)).toBeInTheDocument()
   })
 
   it('renders implementation notes in code block', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     expect(screen.getByText('Implementation Notes')).toBeInTheDocument()
   })
 
   it('renders risks and resources sections', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     expect(screen.getByText(/Single point of failure/)).toBeInTheDocument()
     expect(screen.getByText('Resources')).toBeInTheDocument()
   })
 
   it('renders tags', () => {
-    render(<TicketMarkdownView ticket={mockTicket} />)
+    render(
+      <TicketProvider>
+        <TicketMarkdownView ticket={mockTicket} />
+      </TicketProvider>
+    )
     expect(screen.getByText('Tags:')).toBeInTheDocument()
     expect(screen.getAllByText(/authentication/)).toHaveLength(2) // once in description, once in tags
   })

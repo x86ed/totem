@@ -38,30 +38,45 @@ import App from './App'
 import { TicketProvider } from './context/TicketContext'
 const mockTicketProvider = vi.mocked(TicketProvider)
 
+
+import createJSDOM from 'global-jsdom';
 describe('App', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    // Suppress act() and other React warnings in test output
-    vi.spyOn(console, 'error').mockImplementation((msg, ...args) => {
-      if (
-        typeof msg === 'string' &&
-        (
-          msg.includes('Warning: An update to') && msg.includes('was not wrapped in act') ||
-          msg.includes('Warning:') ||
-          msg.includes('not wrapped in act')
-        )
-      ) {
-        return
-      }
-      // Fallback to original console.error if needed
-      // eslint-disable-next-line no-console
-      return console.error.call(console, msg, ...args)
-    })
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
-  })
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Suppress act() and other React warnings in test output
+  vi.spyOn(console, 'error').mockImplementation((msg, ...args) => {
+    if (
+      typeof msg === 'string' &&
+      (
+        msg.includes('Warning: An update to') && msg.includes('was not wrapped in act') ||
+        msg.includes('Warning:') ||
+        msg.includes('not wrapped in act')
+      )
+    ) {
+      return;
+    }
+    // Fallback to original console.error if needed
+    // ...existing code...
+    return console.error.call(console, msg, ...args);
+  });
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  // Use global-jsdom to robustly mock window and document
+  if (typeof window === 'undefined') {
+    global.__jsdomCleanup = createJSDOM();
+  }
+  vi.useFakeTimers();
+})
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.restoreAllMocks();
+    vi.runAllTimers();
+    vi.useRealTimers();
+    // Clean up jsdom window/document after each test
+    if (global.__jsdomCleanup) {
+      global.__jsdomCleanup();
+      delete global.__jsdomCleanup;
+    }
   })
 
   describe('Component Rendering', () => {
