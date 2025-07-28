@@ -103,14 +103,20 @@ describe('SettingsView', () => {
   it('can add a new layer', async () => {
     render(<SettingsView />);
     await waitFor(() => expect(screen.getByText('Layer Types')).toBeInTheDocument());
-    fireEvent.change(screen.getByPlaceholderText('Add key...'), { target: { value: 'GraphQL' } });
-    const descInputs = screen.getAllByPlaceholderText('Description...');
-    fireEvent.change(descInputs[0], { target: { value: 'GraphQL schema, resolvers' } });
-    const addButtons = screen.getAllByText('Add');
-    fireEvent.click(addButtons[0]);
+    // Find the Layer Types section
+    const layerSection = screen.getByText('Layer Types').closest('.settings-section');
+    // Find inputs and button scoped to Layer Types section
+    const keyInput = layerSection?.querySelector('input[placeholder="Add key..."]') as HTMLInputElement;
+    const descInput = layerSection?.querySelector('input[placeholder="Description..."]') as HTMLInputElement;
+    const addButton = Array.from(layerSection?.querySelectorAll('button') || []).find(btn => btn.textContent === 'Add');
+    // Fill and submit
+    fireEvent.change(keyInput, { target: { value: 'Docs' } });
+    fireEvent.change(descInput, { target: { value: 'Documentation and guides' } });
+    if (addButton) fireEvent.click(addButton);
     await waitFor(() => {
-      expect(screen.getByText('GraphQL')).toBeInTheDocument();
-      expect(screen.getByText('GraphQL schema, resolvers')).toBeInTheDocument();
+      // Assert new layer appears in Layer Types section
+      expect(layerSection?.textContent).toContain('Docs');
+      expect(layerSection?.textContent).toContain('Documentation and guides');
     });
   });
 
@@ -124,8 +130,8 @@ describe('SettingsView', () => {
     const saveButtons = screen.getAllByText('Save');
     fireEvent.click(saveButtons[0]);
     await waitFor(() => {
-      expect(screen.getByText('FE')).toBeInTheDocument();
-      expect(screen.getByText('UI')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('FE')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('UI')).toBeInTheDocument();
       expect(screen.queryByText('Frontend')).not.toBeInTheDocument();
     });
   });
@@ -145,7 +151,7 @@ describe('SettingsView', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve({ ok: true, json: () => Promise.resolve([]) }), 100)));
     render(<SettingsView />);
-    expect(screen.getByText(/Loading.../)).toBeInTheDocument();
+    expect(screen.getAllByText(/Loading.../).length).toBeGreaterThan(0);
     await waitFor(() => expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument());
   });
   it('renders Project Prefix input and loads value from API', async () => {

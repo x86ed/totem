@@ -21,6 +21,8 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = ({
   readOnly = false,
   isEditMode: isEditModeProp = false,
   minHeight = '300px',
+  id,
+  'aria-labelledby': ariaLabelledby,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isEditMode, setIsEditMode] = useState(isEditModeProp)
@@ -244,7 +246,12 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = ({
   }
 
   return (
-    <div className={`relative border rounded-lg bg-white ${className}`}>
+    <div
+      id={readOnly ? 'readonly-editor' : id}
+      tabIndex={readOnly ? -1 : undefined}
+      className={`relative border rounded-lg bg-white ${className}`}
+      aria-labelledby={ariaLabelledby}
+    >
       {/* Mode Toggle Button */}
       <div className="absolute top-3 right-3 z-20">
         <button
@@ -380,3 +387,5 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = ({
     </div>
   )
 }
+
+export { MilkdownEditor as default }

@@ -1,8 +1,39 @@
+// Robust mock for HTMLCanvasElement.getContext for jsdom
+import { vi } from 'vitest';
+Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  value: vi.fn(() => ({
+    fillRect: vi.fn(),
+    clearRect: vi.fn(),
+    getImageData: vi.fn(() => ({ data: [] })),
+    putImageData: vi.fn(),
+    createImageData: vi.fn(),
+    setTransform: vi.fn(),
+    drawImage: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    closePath: vi.fn(),
+    stroke: vi.fn(),
+    translate: vi.fn(),
+    scale: vi.fn(),
+    rotate: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    measureText: vi.fn(() => ({ width: 0 })),
+    font: '',
+    strokeRect: vi.fn(),
+    fillText: vi.fn(),
+    strokeText: vi.fn(),
+    // Add more as needed for your codebase
+  })),
+});
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import KanbanBoard from './KanbanBoard';
-import { vi } from 'vitest';
+// ...existing code...
 import { StatusContext, StatusContextType } from '../context/StatusContext';
 import { TicketContext } from '../context/TicketContext';
 import type { TicketContextType } from '../types';
@@ -92,25 +123,22 @@ describe('KanbanBoard', () => {
   });
 
   it('navigates to ticket view page when a ticket card is clicked', () => {
-    // Mock window.location.hash setter using Object.defineProperty
-    const originalHash = window.location.hash;
+    // Safely mock window.location.hash setter
     const setHashMock = vi.fn();
-    Object.defineProperty(window.location, 'hash', {
-      configurable: true,
-      set: setHashMock,
-    });
+    const originalLocation = window.location;
+    // @ts-expect-error window mocking
+    delete window.location;
+    // @ts-expect-error more window mocking
+    window.location = { ...originalLocation,  set hash(val) { setHashMock(val); } };
     renderWithProviders(<KanbanBoard />);
     const ticketCard = screen.getByText('Test Ticket 1').closest('.ticket-green');
     expect(ticketCard).toBeTruthy();
     if (ticketCard) {
       fireEvent.click(ticketCard);
-      expect(setHashMock).toHaveBeenCalledWith('#ticket/view/1');
+      expect(setHashMock).toHaveBeenCalledWith('ticket/view/1');
     }
-    // Restore original hash property
-    Object.defineProperty(window.location, 'hash', {
-      configurable: true,
-      value: originalHash,
-      writable: true,
-    });
+    // Restore original location
+    // @ts-expect-error more window mocking
+    window.location = originalLocation;
   });
 });

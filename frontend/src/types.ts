@@ -67,6 +67,7 @@ export interface AcceptanceCriterion {
   complete: boolean;
 }
 
+export type { TicketSort } from './context/TicketContext';
 /**
  * Represents a project milestone or release target
  * 

@@ -3,6 +3,10 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import createJSDOM from 'global-jsdom';
+import App from './App'
+import { TicketProvider } from './context/TicketContext'
+const mockTicketProvider = vi.mocked(TicketProvider)
 
 // Mock all component imports
 vi.mock('./components/KanbanBoard', () => ({
@@ -30,16 +34,6 @@ vi.mock('./context/TicketContext', () => ({
 
 // Mock CSS import
 vi.mock('./App.css', () => ({}))
-
-// Import App after mocks are set up
-import App from './App'
-
-// Get reference to the mocked TicketProvider
-import { TicketProvider } from './context/TicketContext'
-const mockTicketProvider = vi.mocked(TicketProvider)
-
-
-import createJSDOM from 'global-jsdom';
 describe('App', () => {
 
 beforeEach(() => {
