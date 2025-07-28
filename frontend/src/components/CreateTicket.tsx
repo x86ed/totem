@@ -514,8 +514,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
             {mode === 'create' ? (
               <>
                 <div
-                  className="flex flex-row gap-2 items-end"
-                  style={{ alignItems: 'flex-end', flexWrap: 'nowrap', width: '100%', overflowX: 'auto' }}
+                  className="flex flex-row gap-2 items-center"
+                  style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', width: '100%', overflowX: 'auto' }}
                 >
                     <label className="form-label">Prefix</label>
                     <input type="text" value={prefix} disabled className="input-green" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#166534' }} />
@@ -578,7 +578,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
             ) : (
               <div className="flex flex-wrap gap-4 items-end">
                 <div>
-                  <label className="form-label">Ticket ID</label>
                   <input
                     type="text"
                     value={loadedTicket?.id || currentTicketId || ''}

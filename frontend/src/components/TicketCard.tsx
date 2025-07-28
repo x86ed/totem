@@ -138,28 +138,59 @@ const TicketCard: React.FC<TicketCardProps> = ({
         <div className="ticket-meta" style={{ display: 'flex', alignItems: 'center', gap: 12 , fontSize: '.75em'}}>
           {/* Assignee/Contributor */}
           {ticket.contributor && (
-            <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              className="px-2 py-1 text-xs"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                background: '#f3f4f6',
+                borderRadius: 8,
+                minWidth: 60,
+                fontWeight: 500,
+                flexGrow: 1,
+                height: '100%',
+              }}
+            >
               <Avatar
-                size={20}
+                size={30}
                 name={ticket.contributor}
                 variant="pixel"
                 colors={["#FFDD00", "#FFAB00", "#FF6F00", "#D50000", "#6200EA"]}
                 square
               />
-              {ticket.contributor}
+              <span style={{ marginTop: 2 }}>{ticket.contributor}</span>
             </span>
           )}
           {/* Persona */}
           {ticket.persona && (
-            <span className="px-2 py-1 text-xs" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1d4ed8', fontWeight: 500 }}>
+            <span
+              className="px-2 py-1 text-xs"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                background: '#e0e7ff',
+                borderRadius: 8,
+                minWidth: 60,
+                color: '#1d4ed8',
+                fontWeight: 500,
+                flexGrow: 1,
+                height: '100%',
+              }}
+            >
               <Avatar
-                size={20}
+                size={30}
                 name={ticket.persona}
                 variant="pixel"
                 colors={["#A5B4FC", "#6366F1", "#818CF8", "#3730A3", "#C7D2FE"]}
                 square
               />
-              {ticket.persona}
+              <span style={{ marginTop: 2 }}>{ticket.persona}</span>
             </span>
           )}
         </div>
