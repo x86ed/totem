@@ -1,105 +1,125 @@
-import React from 'react'
-import { useTickets } from '../context/TicketContext'
-import { Ticket } from '../types'
-import TicketCard from './TicketCard'
+import React from 'react';
+import { useTickets } from '../context/TicketContext';
+import { useContext } from 'react';
+import { StatusContext } from '../context/StatusContext';
+import { Ticket } from '../types';
+import TicketCard from './TicketCard';
 
-/**
- * Column interface representing a kanban board status column
- * @interface Column
- */
 interface Column {
-  /** The status ID that matches a ticket's status property */
-  id: Ticket['status']
-  /** Display title for the column */
-  title: string
-  /** Color hex code for the column */
-  color: string
+  id: string;
+  title: string;
+  color: string;
 }
 
-/**
- * KanbanBoard Component
- * 
- * A flexible Kanban board implementation for the project management system.
- * Displays tickets organized by status in columns, with drag-and-drop functionality
- * for moving tickets between statuses.
- * 
- * Features:
- * - Status columns (Open, Planning, In Progress, Completed)
- * - Visual ticket cards with detailed information
- * - Hover controls to move tickets between statuses
- * - Ticket count per column
- * - Empty state indicators
- * - Color-coded columns
- * 
- * @component
- * @returns {JSX.Element} The KanbanBoard component with columns and tickets
- * 
- * @example
- * ```tsx
- * import KanbanBoard from './components/KanbanBoard'
- * 
- * function App() {
- *   return (
- *     <div>
- *       <KanbanBoard />
- *     </div>
- *   )
- * }
- * ```
- */
-const KanbanBoard: React.FC = () => {
-  const { tickets, updateTicket } = useTickets()
-
-  const columns: Column[] = [
-    { id: 'open', title: 'Open', color: '#8b4513' },
-    { id: 'todo', title: 'Planning', color: '#7b9a3f' },
-    { id: 'in-progress', title: 'In Progress', color: '#5a6e5a' },
-    { id: 'done', title: 'Completed', color: '#4a7c59' }
-  ]
-
-  /**
-   * Filters tickets by their status
-   * @param {Ticket['status']} status - The status to filter by
-   * @returns {Ticket[]} Array of tickets with the matching status
-   */
-  const getTicketsByStatus = (status: Ticket['status']): Ticket[] => {
-    return tickets.filter(ticket => ticket.status === status)
+function KanbanBoard() {
+  const { tickets, updateTicket, loadAllTickets, loading } = useTickets();
+  const statusCtx = useContext(StatusContext);
+  // Dynamically generate default columns from StatusContext if available, otherwise fallback
+  let defaultColumns: Column[] = [];
+  if (Array.isArray(statusCtx?.statuses) && statusCtx.statuses.length > 0) {
+    defaultColumns = statusCtx.statuses.map((s, idx) => ({
+      id: s.key,
+      title: s.description || s.key,
+      color: [
+        '#8b4513', // brown
+        '#7b9a3f', // olive
+        '#5a6e5a', // green
+        '#4a7c59', // teal
+        '#c8d5c8', // light green
+        '#e6f0e6', // pale
+        '#4a5d4a', // dark
+        '#fafbfa', // off white
+      ][idx % 8]
+    }));
+  } else {
+    defaultColumns = [
+      { id: 'open', title: 'Open', color: '#8b4513' },
+      { id: 'todo', title: 'Planning', color: '#7b9a3f' },
+      { id: 'in-progress', title: 'In Progress', color: '#5a6e5a' },
+      { id: 'done', title: 'Completed', color: '#4a7c59' }
+    ];
   }
+  const columns: Column[] = defaultColumns;
 
-  /**
-   * Moves a ticket to a different status column
-   * @param {string} ticketId - The ID of the ticket to move
-   * @param {Ticket['status']} newStatus - The destination status
-   */
-  const handleMoveTicket = async (ticketId: string, newStatus: Ticket['status']): Promise<void> => {
-    const ticketToUpdate = tickets.find(ticket => ticket.id === ticketId)
+  // Load all tickets on mount
+  React.useEffect(() => {
+    loadAllTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+  // Drag state
+  const [draggedTicketId, setDraggedTicketId] = React.useState<string | null>(null);
+
+  const getTicketsByStatus = (status: string): Ticket[] => {
+    return tickets.filter(ticket => ticket.status === status);
+  };
+
+  // Drag handlers
+  const handleDragStart = (ticketId: string) => {
+    setDraggedTicketId(ticketId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTicketId(null);
+  };
+
+  const handleDrop = async (columnId: string) => {
+    if (draggedTicketId) {
+      await handleMoveTicket(draggedTicketId, columnId);
+      setDraggedTicketId(null);
+    }
+  };
+
+  const handleMoveTicket = async (ticketId: string, newStatus: string): Promise<void> => {
+    const ticketToUpdate = tickets.find(ticket => ticket.id === ticketId);
     if (ticketToUpdate) {
-      await updateTicket({ ...ticketToUpdate, status: newStatus })
+      await updateTicket({ ...ticketToUpdate, status: newStatus });
     }
+  };
+
+  const getColumnIcon = (colId: string): string => {
+    switch (colId) {
+      case 'open': return '📝';
+      case 'todo': return '🎯';
+      case 'in-progress': return '🔄';
+      case 'done': return '✅';
+      case 'blocked': return '⛔';
+      case 'review': return '🔍';
+      case 'closed': return '🚫';
+      default: return '📌';
+    }
+  };
+
+
+  if (!columns || columns.length === 0) {
+    return (
+      <div className="page-container">
+        <div className="text-center py-12 text-gray-500">No status columns available. Please configure statuses in project settings.</div>
+      </div>
+    );
   }
 
-  /**
-   * Gets the appropriate icon for a column based on its status ID
-   * @param {Ticket['status']} colId - The column status ID
-   * @returns {string} Emoji icon representing the column status
-   */
-  const getColumnIcon = (colId: Ticket['status']): string => {
-    switch (colId) {
-      case 'open': return '📝'
-      case 'todo': return '🎯'
-      case 'in-progress': return '🔄'
-      case 'done': return '✅'
-      default: return '📌'
-    }
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="text-center py-12 text-gray-500">Loading tickets…</div>
+      </div>
+    );
   }
 
   return (
     <div className="page-container">
       <div className="grid-responsive">
         {columns.map((column) => {
-          const columnTickets = getTicketsByStatus(column.id)
+          const columnTickets = getTicketsByStatus(column.id);
           return (
-            <div key={column.id} className="column-green">
+            <div
+              key={column.id}
+              className="column-green"
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => handleDrop(column.id)}
+            >
               <div className="column-header">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg" style={{ color: '#2d3e2e' }}>
@@ -117,38 +137,22 @@ const KanbanBoard: React.FC = () => {
                   </span>
                 </div>
               </div>
-
               <div className="space-y-3">
                 {columnTickets.map((ticket) => (
-                  <div key={ticket.id} className="relative group">
-                    <TicketCard ticket={ticket} />
-                    
-                    {/* Move buttons */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex space-x-1">
-                        {columns.map((targetColumn) => {
-                          if (targetColumn.id === ticket.status) return null
-                          
-                          return (
-                            <button
-                              key={targetColumn.id}
-                              onClick={() => handleMoveTicket(ticket.id, targetColumn.id)}
-                              className="bg-white border rounded p-1 text-xs hover:bg-gray-50 shadow-sm"
-                              style={{ 
-                                borderColor: '#c8d5c8',
-                                background: '#fafbfa'
-                              }}
-                              title={`Move to ${targetColumn.title}`}
-                            >
-                              {getColumnIcon(targetColumn.id)}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                  <TicketCard
+                    key={ticket.id}
+                    ticket={ticket}
+                    columns={columns}
+                    currentColumnId={column.id}
+                    handleDragStart={handleDragStart}
+                    handleDragEnd={handleDragEnd}
+                    handleMoveTicket={handleMoveTicket}
+                    getColumnIcon={getColumnIcon}
+                    onClick={() => {
+                      window.location.hash = `ticket/view/${ticket.id}`;
+                    }}
+                  />
                 ))}
-                
                 {columnTickets.length === 0 && (
                   <div className="text-center py-8" style={{ color: '#5a6e5a' }}>
                     <span className="icon-spacing">📂</span>
@@ -157,15 +161,11 @@ const KanbanBoard: React.FC = () => {
                 )}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
-/**
- * Default export of the KanbanBoard component
- * @default KanbanBoard
- */
-export default KanbanBoard
+export default KanbanBoard;

@@ -15,11 +15,11 @@ export interface Ticket {
   /** Detailed description of what needs to be done or the issue to be resolved */
   description: string;
   /** Current workflow status of the ticket */
-  status: 'open' | 'in-progress' | 'closed' | 'blocked' | 'review' | 'todo' | 'done';
+  status: string;
   /** Priority level indicating urgency and importance */
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: string;
   /** Complexity level of the ticket */
-  complexity: 'low' | 'medium' | 'high';
+  complexity: string;
   /** Target persona for this ticket */
   persona?: string;
   /** Contributor assigned to the ticket */
@@ -51,6 +51,12 @@ export interface Ticket {
   effort_days?: number;
   /** Creation date of the ticket */
   created?: string;
+
+  /** Scheduling: start time as timestamp (ms since epoch, or -1 for unset) */
+  start_time?: number;
+
+  /** Scheduling: end time as timestamp (ms since epoch, or -1 for unset) */
+  end_time?: number;
 }
 
 /**
@@ -61,6 +67,7 @@ export interface AcceptanceCriterion {
   complete: boolean;
 }
 
+export type { TicketSort } from './context/TicketContext';
 /**
  * Represents a project milestone or release target
  * 
@@ -92,6 +99,10 @@ export interface Milestone {
  * 
  * @interface TicketContextType
  */
+
+import type React from 'react';
+import type { TicketPagination, TicketFilters, TicketSort } from './context/TicketContext';
+
 export interface TicketContextType {
   /** Array of all tickets in the system */
   tickets: Ticket[];
@@ -101,8 +112,13 @@ export interface TicketContextType {
   loading: boolean;
   /** Error message if any operations failed */
   error: string | null;
-  /** Function to refresh tickets from the API */
-  refreshTickets: () => Promise<void>;
+  /** Function to refresh tickets from the API (with optional params for pagination/filter/sort) */
+  refreshTickets: (params?: {
+    offset?: number;
+    limit?: number;
+    filters?: TicketFilters;
+    sort?: TicketSort;
+  }) => Promise<void>;
   /** Function to add a new ticket */
   addTicket: (ticket: Partial<Ticket>) => Promise<void>;
   /** Function to create a new ticket */
@@ -113,6 +129,67 @@ export interface TicketContextType {
   deleteTicket: (ticketId: string) => Promise<void>;
   /** Function to move a ticket between statuses */
   moveTicket?: (ticketId: string, newStatus: string) => Promise<void>;
+
+  /** Pagination info for the current ticket list */
+  pagination: TicketPagination;
+  setPagination: React.Dispatch<React.SetStateAction<TicketPagination>>;
+  /** Current filters for the ticket list */
+  filters: TicketFilters;
+  setFilters: React.Dispatch<React.SetStateAction<TicketFilters>>;
+  /** Current sort for the ticket list */
+  sort: TicketSort;
+  setSort: React.Dispatch<React.SetStateAction<TicketSort>>;
+
+  /** Loads all tickets from the API in batches and sets them in state */
+  loadAllTickets: (filtersOverride?: TicketFilters, sortOverride?: TicketSort) => Promise<void>;
+}
+
+
+/**
+ * Represents a section of domain context for a persona
+ */
+export interface PersonaContextSection {
+  name: string;
+  items: string[];
+}
+
+/**
+ * Represents a persona in the system (see backend PersonaDto)
+ */
+export interface Persona {
+  name: string;
+  primaryFocus: string;
+  decisionFramework?: {
+    priorities?: string[];
+    defaultAssumptions?: string[];
+  };
+  codePatterns?: {
+    alwaysImplement?: string[];
+    avoid?: string[];
+  };
+  requirementsPatterns?: {
+    alwaysInclude?: string[];
+    avoid?: string[];
+  };
+  domainContexts?: PersonaContextSection[];
+  reviewChecklist?: {
+    redFlags?: string[];
+    greenFlags?: string[];
+  };
+  markdown?: string; // Optional raw markdown for UI editing
+}
+
+/**
+ * Context interface for persona management state and operations
+ */
+export interface PersonaContextType {
+  personas: Persona[];
+  loading: boolean;
+  error: string | null;
+  refreshPersonas: () => Promise<void>;
+  createPersona: (persona: Partial<Persona>) => Promise<void>;
+  updatePersona: (name: string, persona: Persona) => Promise<void>;
+  deletePersona: (name: string) => Promise<void>;
 }
 
 /**

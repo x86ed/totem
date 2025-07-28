@@ -1,10 +1,14 @@
 # id-conventions.md
 
-Format: `{layer}.{component}-{feature}-{number}`
+Format: `{prefix}.{layer}.{component}-{feature}-{number}`
 Examples:
 
-- security.auth-sso-001
-- frontend.payment-flow-042
+- DEMO.security.auth-sso-001
+- DEMO.frontend.payment-flow-042
+
+## Prefix
+
+DEMO
 
 ## Layer
 
@@ -14,6 +18,7 @@ Examples:
 - **Mobile** - iOS/Android applications, React Native components
 - **Tests** - Unit tests, integration tests, end-to-end testing
 - **Docs** - Documentation, specifications, user guides
+- **CICD** - Pipelines and deployment
 
 ## Component
 
@@ -32,11 +37,26 @@ Examples:
 
 ## Feature
 
-[info can be found here]
-
+- **signup** - User registration and account creation
+- **profile** - User profile management and settings
+- **dashboard** - Main overview and summary interfaces
+- **search** - Search functionality and filtering
+- **upload** - File upload and media management
+- **export** - Data export and reporting features
+- **import** - Data import and migration tools
+- **settings** - Configuration and preferences
+- **notifications** - Alert and messaging systems
+- **integration** - Third-party service connections
+- **monitoring** - System health and performance tracking
+- **backup** - Data backup and recovery features
+- **security** - Security controls and access management
+- **workflow** - Process automation and orchestration
+- **analytics** - Data analysis and insights
+- **api** - API endpoints and services
+- **validation** - Data validation and verification
+- **cache** - Caching mechanisms and optimization
+- **migration** - Data or system migrations
+- **Release** - a new release of code
 ## Number
 
 a zero padded 3 digit number. Will expand to four digits if numbers get significantly high.
-___
-
-[info can be found here]: .totem/conventions/feature.md

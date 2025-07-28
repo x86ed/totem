@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class StatusResponseDto {
+export class StatusDto {
+  @ApiProperty({ description: 'Status key (e.g. open, done)', example: 'open' })
+  key: string = '';
+
+  @ApiProperty({ description: 'Status description', example: 'Ready for work, not started' })
+  description: string = '';
+}
+
+export class StatsResponseDto {
   @ApiProperty({
     description: 'Current status of the Totem server',
     example: 'running',

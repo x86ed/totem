@@ -1,0 +1,11 @@
+{
+  "extends": "./frontend/tsconfig.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "frontend/src"
+  ]
+}

@@ -1,5 +1,18 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react'
+import React, { useState, FormEvent, ChangeEvent, useEffect, useContext } from 'react'
+import usePrefix from '../context/usePrefix'
+import { LayerContext } from '../context/LayerContext'
+import { ComponentContext } from '../context/ComponentContext'
+import { FeatureContext } from '../context/FeatureContext'
 import { useTickets } from '../context/TicketContext'
+import TicketMarkdownView from './TicketMarkdownView'
+import { MilkdownEditor } from './MilkdownEditor'
+import { StatusContext } from '../context/StatusContext'
+import { PriorityContext } from '../context/PriorityContext'
+import { ComplexityContext } from '../context/ComplexityContext'
+import { usePersonas } from '../context/PersonaContext'
+import { useContributors } from '../context/ContributorContext'
+import Avatar from 'boring-avatars'
+import { TotemIcon } from './TotemIcon'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -9,9 +22,9 @@ interface ApiTicket {
   id?: string
   title: string
   description: string
-  status?: 'open' | 'in_progress' | 'closed' | 'blocked'
-  priority?: 'low' | 'medium' | 'high' | 'critical'
-  complexity?: 'low' | 'medium' | 'high'
+  status?: string
+  priority?: string
+  complexity?: string
   persona?: string
   contributor?: string
   model?: string
@@ -23,6 +36,11 @@ interface ApiTicket {
   notes?: string
   risks?: string[]
   resources?: string[]
+  start_time?: number;
+  end_time?: number;
+  layer?: string;
+  component?: string;
+  feature?: string;
 }
 
 /**
@@ -35,23 +53,27 @@ interface FormData {
   /** Optional description providing details about the ticket */
   description: string
   /** Status of the ticket */
-  status: 'open' | 'in_progress' | 'closed' | 'blocked'
+  status: string
   /** Priority level of the ticket */
-  priority: 'low' | 'medium' | 'high' | 'critical'
+  priority: string
   /** Complexity level of the ticket */
-  complexity: 'low' | 'medium' | 'high'
+  complexity: string
   /** Target persona for this ticket */
   persona: string
   /** Contributor assigned to this ticket */
   contributor: string
+  /** Assignee of the ticket */
+  assignee?: string
+  /** Collaborators (comma separated string) */
+  collaborators?: string
   /** AI model associated with this ticket */
   model: string
   /** Estimated effort in days */
   effort_days: number | ''
   /** List of ticket IDs that this ticket blocks */
-  blocks: string
+  blocks: string[]
   /** List of ticket IDs that block this ticket */
-  blocked_by: string
+  blocked_by: string[]
   /** Acceptance criteria */
   acceptance_criteria: string
   /** Tags associated with the ticket */
@@ -62,6 +84,16 @@ interface FormData {
   risks: string
   /** Resources and links related to the ticket */
   resources: string
+  /** Scheduling: start time as timestamp (ms since epoch, or -1 for unset) */
+  start_time?: number;
+  /** Scheduling: end time as timestamp (ms since epoch, or -1 for unset) */
+  end_time?: number;
+  /** Layer for ticket ID context */
+  layer?: string;
+  /** Component for ticket ID context */
+  component?: string;
+  /** Feature for ticket ID context */
+  feature?: string;
 }
 
 /**
@@ -108,25 +140,51 @@ interface CreateTicketProps {
  * <CreateTicket mode="view" ticketId="ticket-123" />
  * ```
  */
-const CreateTicket: React.FC<CreateTicketProps> = ({ 
-  mode = 'create', 
-  ticketId = null, 
-  onNavigate 
+const CreateTicket: React.FC<CreateTicketProps> = ({
+  mode = 'create',
+  ticketId = null,
+  onNavigate
 }) => {
-  // Note: useTickets() hook is called to ensure TicketProvider context is available
-  useTickets()
-  
-  const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
-  const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
-  const [currentTicketId, setCurrentTicketId] = useState<string | null>(ticketId)
-
-  // Update state when props change
+  // Context hooks for prefix, layer, component, feature
+  const { prefix } = usePrefix();
+  const layerCtx = useContext(LayerContext);
+  const componentCtx = useContext(ComponentContext);
+  const featureCtx = useContext(FeatureContext);
+  const [selectedLayer, setSelectedLayer] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState('');
+  const [selectedFeature, setSelectedFeature] = useState('');
+  // Keep formData in sync with dropdowns for context-driven fields
   useEffect(() => {
-    setIsEditing(mode === 'edit')
-    setIsViewing(mode === 'view')
-    setCurrentTicketId(ticketId)
-  }, [mode, ticketId])
-
+    setFormData(prev => ({
+      ...prev,
+      layer: selectedLayer,
+      component: selectedComponent,
+      feature: selectedFeature
+    }));
+  }, [selectedLayer, selectedComponent, selectedFeature]);
+  // For global ticket number
+  const { tickets } = useTickets();
+  // Compute the next global ticket number (2-digit, not context-dependent)
+  const getNextTicketNumber = () => {
+    console.log('[DEBUG] getNextTicketNumber called with tickets:', tickets);
+    if (!tickets || tickets.length === 0) return '01';
+    const numbers = tickets
+      .map(t => {
+        const match = t.id && t.id.match(/-(\d{2,})$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter(n => n !== null) as number[];
+    const max = numbers.length > 0 ? Math.max(...numbers) : 0;
+    console.log(String(max + 1).padStart(3, '0'))
+    return String(max + 1).padStart(3, '0');
+  };
+  const nextNumber = getNextTicketNumber();
+  // Build the ticket ID preview
+  const ticketIdPreview =
+    prefix && selectedLayer && selectedComponent && selectedFeature
+      ? `${prefix}.${selectedLayer}.${selectedComponent}-${selectedFeature}-${nextNumber}`
+      : '...';
+  // Form data state
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -137,18 +195,53 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     contributor: '',
     model: '',
     effort_days: '',
-    blocks: '',
-    blocked_by: '',
+    blocks: [],
+    blocked_by: [],
     acceptance_criteria: '',
     tags: '',
     notes: '',
     risks: '',
-    resources: ''
-  })
+    resources: '',
+    layer: '',
+    component: '',
+    feature: ''
+  });
+
+  // Get actions from context for blocks/blocked_by dropdowns and CRUD
+  const { updateTicket, addTicket } = useTickets()
+  const statusContext = useContext(StatusContext);
+  const statuses = statusContext?.statuses || [];
+  const statusLoading = statusContext?.loading || false;
+
+  const priorityContext = useContext(PriorityContext);
+  const priorities = priorityContext?.priorities || [];
+  const priorityLoading = priorityContext?.loading || false;
+
+  const complexityContext = useContext(ComplexityContext);
+  const complexities = complexityContext?.complexities || [];
+  const complexityLoading = complexityContext?.loading || false;
+
+  // Persona context
+  const { personas, loading: personaLoading } = usePersonas();
+  // Contributor context
+  const { contributors, loading: contributorLoading } = useContributors();
+  
+  const [isEditing, setIsEditing] = useState<boolean>(mode === 'edit')
+  const [isViewing, setIsViewing] = useState<boolean>(mode === 'view')
+  const [currentTicketId, setCurrentTicketId] = useState<string | null>(ticketId)
+  const [loadedTicket, setLoadedTicket] = useState<ApiTicket | null>(null)
+
+  // Update state when props change
+  useEffect(() => {
+    setIsEditing(mode === 'edit')
+    setIsViewing(mode === 'view')
+    setCurrentTicketId(ticketId)
+  }, [mode, ticketId])
   
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
   const [showError, setShowError] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [successMessage, setSuccessMessage] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
 
   // Use relative URL in production, absolute URL in development
@@ -161,6 +254,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     if ((isEditing || isViewing) && currentTicketId) {
       loadTicketData(currentTicketId)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTicketId, isEditing, isViewing])
 
   /**
@@ -178,6 +272,9 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       const data = await response.json()
       const ticket: ApiTicket = data.ticket
       
+      // Store the loaded ticket for markdown view
+      setLoadedTicket(ticket)
+      
       // Map API ticket data to form data
       setFormData({
         title: ticket.title || '',
@@ -189,8 +286,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
         contributor: ticket.contributor || '',
         model: ticket.model || '',
         effort_days: ticket.effort_days || '',
-        blocks: ticket.blocks?.join(', ') || '',
-        blocked_by: ticket.blocked_by?.join(', ') || '',
+        blocks: ticket.blocks || [],
+        blocked_by: ticket.blocked_by || [],
         acceptance_criteria: ticket.acceptance_criteria?.map(ac => ac.criteria).join('\n') || '',
         tags: ticket.tags?.join(', ') || '',
         notes: ticket.notes || '',
@@ -199,105 +296,153 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       })
     } catch (error) {
       console.error('Error loading ticket:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to load ticket')
+      setErrorMessage(`Failed to load ticket: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setShowError(true)
-      setTimeout(() => setShowError(false), 5000)
     } finally {
       setLoading(false)
-    }
-  }
-
-  /**
-   * Convert form data to API format
-   * @param {FormData} data - The form data to convert
-   * @returns {ApiTicket} The API-formatted ticket data
-   */
-  const convertFormDataToApiFormat = (data: FormData): ApiTicket => {
-    return {
-      ...(isEditing && currentTicketId ? { id: currentTicketId } : {}),
-      title: data.title,
-      description: data.description,
-      status: data.status,
-      priority: data.priority,
-      complexity: data.complexity,
-      persona: data.persona || undefined,
-      contributor: data.contributor || undefined,
-      model: data.model || undefined,
-      effort_days: data.effort_days ? Number(data.effort_days) : undefined,
-      blocks: data.blocks ? data.blocks.split(',').map(s => s.trim()).filter(Boolean) : [],
-      blocked_by: data.blocked_by ? data.blocked_by.split(',').map(s => s.trim()).filter(Boolean) : [],
-      acceptance_criteria: data.acceptance_criteria ? 
-        data.acceptance_criteria.split('\n').map(criteria => ({ criteria: criteria.trim(), complete: false })).filter(ac => ac.criteria) : [],
-      tags: data.tags ? data.tags.split(',').map(s => s.trim()).filter(Boolean) : [],
-      notes: data.notes || undefined,
-      risks: data.risks ? data.risks.split('\n').map(s => s.trim()).filter(Boolean) : [],
-      resources: data.resources ? data.resources.split('\n').map(s => s.trim()).filter(Boolean) : []
     }
   }
 
   /**
    * Handles form submission for creating or updating a ticket
-   * @param {FormEvent<HTMLFormElement>} e - The form submit event
    */
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
     setLoading(true)
-    
+    setShowSuccess(false)
+    setShowError(false)
+
     try {
-      const apiData = convertFormDataToApiFormat(formData)
-      
-      const url = isEditing ? `${API_BASE_URL}/${currentTicketId}` : API_BASE_URL
-      const method = isEditing ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiData)
-      })
+      // Prepare the API ticket data from form data
+      const ticketData: Partial<ApiTicket> = {
+        title: formData.title,
+        description: formData.description,
+        status: formData.status,
+        priority: formData.priority,
+        complexity: formData.complexity,
+        persona: formData.persona,
+        contributor: formData.contributor,
+        model: formData.model,
+        effort_days: formData.effort_days === '' ? undefined : Number(formData.effort_days),
+        blocks: formData.blocks,
+        blocked_by: formData.blocked_by,
+        acceptance_criteria: formData.acceptance_criteria 
+          ? formData.acceptance_criteria.split('\n').filter(s => s.trim()).map(criteria => ({ criteria: criteria.trim(), complete: false }))
+          : [],
+        tags: formData.tags ? formData.tags.split(',').map(s => s.trim()).filter(s => s) : [],
+        notes: formData.notes,
+        risks: formData.risks ? formData.risks.split('\n').filter(s => s.trim()) : [],
+        resources: formData.resources ? formData.resources.split('\n').filter(s => s.trim()) : []
+      }
+
+      let response: Response
+      if (isEditing && currentTicketId) {
+        // Update existing ticket
+        response = await fetch(`${API_BASE_URL}/${currentTicketId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(ticketData),
+        })
+      } else {
+        // Create new ticket
+        response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(ticketData),
+        })
+      }
 
       if (!response.ok) {
-        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} ticket: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
       
-      // Show success message
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
       
-      // If creating a new ticket, reset form and optionally navigate to view mode
-      if (!isEditing) {
-        resetForm()
-        if (result.ticket?.id && onNavigate) {
-          setTimeout(() => {
-            onNavigate('view', result.ticket.id)
-          }, 1000)
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setShowSuccess(false), 3000)
+
+      // For new tickets, update the current ticket ID and switch to edit mode
+      if (!isEditing && result.ticket?.id) {
+        setCurrentTicketId(result.ticket.id)
+        setIsEditing(true)
+        setLoadedTicket(result.ticket)
+        
+        // Update URL if possible
+        if (onNavigate) {
+          onNavigate('edit', result.ticket.id)
         }
       }
-      
+
     } catch (error) {
-      console.error('Error submitting ticket:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to submit ticket')
+      console.error('Error submitting form:', error)
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
       setShowError(true)
-      setTimeout(() => setShowError(false), 5000)
     } finally {
       setLoading(false)
     }
   }
 
   /**
-   * Handles changes to form input fields
-   * Updates the corresponding field in the form data state
-   * 
-   * @param {ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>} e - The input change event
+   * Handles changes to form inputs
    */
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
+    setFormData(prev => {
+      let updated = {
+        ...prev,
+        [name]: name === 'effort_days' ? (value === '' ? '' : value) : value
+      };
+      if (
+        name === 'status' &&
+        value === 'in-progress' &&
+        (prev.start_time === undefined || prev.start_time === null || prev.start_time < 0)
+      ) {
+        updated.start_time = Date.now();
+      }
+      if (
+        name === 'status' &&
+        value === 'done' &&
+        (prev.end_time === undefined || prev.end_time === null || prev.end_time < 0)
+      ) {
+        updated.end_time = Date.now();
+      }
+      return updated;
+    });
+  }
+
+  /**
+   * Handles changes to multi-select dropdowns for blocks and blocked_by
+   */
+  const handleMultiSelectChange = (fieldName: 'blocks' | 'blocked_by') => (e: ChangeEvent<HTMLSelectElement>): void => {
+    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value)
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'effort_days' ? (value === '' ? '' : value) : value
+      [fieldName]: selectedOptions
+    }))
+  }
+
+  /**
+   * Handles changes to Milkdown editor fields
+   */
+  const handleEditorChange = (fieldName: string) => (value: string): void => {
+    if (fieldName === 'description') {
+      // Debug: log description changes
+      console.log('[DEBUG] handleEditorChange(description):', value)
+    }
+    if (fieldName === 'notes') {
+      // Debug: log notes changes
+      console.log('[DEBUG] handleEditorChange(notes):', value)
+    }
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value
     }))
   }
 
@@ -311,13 +456,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
       description: '',
       status: 'open',
       priority: 'medium',
-      complexity: 'medium',
+      complexity: 'l',
       persona: '',
       contributor: '',
       model: '',
       effort_days: '',
-      blocks: '',
-      blocked_by: '',
+      blocks: [],
+      blocked_by: [],
       acceptance_criteria: '',
       tags: '',
       notes: '',
@@ -327,50 +472,12 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
   }
 
   /**
-   * Navigate to edit a specific ticket
-   * @param {string} id - The ticket ID to edit
-   */
-  const editTicket = (id: string): void => {
-    if (onNavigate) {
-      onNavigate('edit', id)
-    }
-  }
-
-  /**
-   * Navigate to view a specific ticket
-   * @param {string} id - The ticket ID to view
-   */
-  const viewTicket = (id: string): void => {
-    if (onNavigate) {
-      onNavigate('view', id)
-    }
-  }
-
-  /**
    * Navigate back to create mode
    */
   const goToCreateMode = (): void => {
     if (onNavigate) {
       onNavigate('create')
     }
-  }
-
-  /**
-   * Get the current mode display name
-   */
-  const getModeDisplayName = (): string => {
-    if (isViewing) return 'View'
-    if (isEditing) return 'Edit'
-    return 'Create'
-  }
-
-  /**
-   * Get the current mode icon
-   */
-  const getModeIcon = (): string => {
-    if (isViewing) return '👁️'
-    if (isEditing) return '✏️'
-    return '➕'
   }
 
   if (loading) {
@@ -390,464 +497,798 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
     )
   }
 
+  /**
+   * Navigate back to the previous page
+   */
+  const goBack = (): void => {
+    window.history.back()
+  }
+
   return (
     <div className="page-container">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="content-wrapper">
-          <h2 className="section-title">
-            <span className="icon-spacing">{getModeIcon()}</span>
-            {getModeDisplayName()} Ticket
-            {currentTicketId && (
-              <span className="text-sm font-normal text-gray-600 ml-2">
-                {currentTicketId}
-              </span>
+          {/* Ticket ID Preview and Dropdowns (editable only in create mode) */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Ticket ID</h3>
+            {mode === 'create' ? (
+              <>
+                <div
+                  className="flex flex-row gap-2 items-center"
+                  style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', width: '100%', overflowX: 'auto' }}
+                >
+                    <label className="form-label">Prefix</label>
+                    <input type="text" value={prefix} disabled className="input-green" style={{ fontFamily: 'monospace', fontWeight: 600, color: '#166534' }} />
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>.</span>
+                    <label className="form-label">Layer</label>
+                    <select
+                      value={selectedLayer}
+                      onChange={e => setSelectedLayer(e.target.value)}
+                      className="input-green"
+                      style={{  fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={layerCtx?.loading}
+                    >
+                      <option value="">Select layer</option>
+                      {layerCtx?.layers?.map(l => (
+                        <option key={l.key} value={l.key}>{l.key}</option>
+                      ))}
+                    </select>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>.</span>
+                  <div style={{ flex: '0 0 180px' }}>
+                    <label className="form-label">Component</label>
+                    <select
+                      value={selectedComponent}
+                      onChange={e => setSelectedComponent(e.target.value)}
+                      className="input-green"
+                      style={{ fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={componentCtx?.loading}
+                    >
+                      <option value="">Select component</option>
+                      {componentCtx?.components?.map(c => (
+                        <option key={c.key} value={c.key}>{c.key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>-</span>
+                  <div style={{ flex: '0 0 180px' }}>
+                    <label className="form-label">Feature</label>
+                    <select
+                      value={selectedFeature}
+                      onChange={e => setSelectedFeature(e.target.value)}
+                      className="input-green"
+                      style={{ width: '100%', fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                      disabled={featureCtx?.loading}
+                    >
+                      <option value="">Select feature</option>
+                      {featureCtx?.features?.map(f => (
+                        <option key={f.key} value={f.key}>{f.key}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 18, color: '#166534', flex: '0 0 16px' }}>-</span>
+                  <div style={{ flex: '0 0 90px' }}>
+                    <label className="form-label">Number</label>
+                    <input type="text" value={nextNumber} disabled className="input-green" style={{ width: '100%', fontFamily: 'monospace', fontWeight: 600, color: '#166534' }} />
+                  </div>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <span className="font-mono text-green-700 text-lg">{ticketIdPreview}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-wrap gap-4 items-end">
+                <div>
+                  <input
+                    type="text"
+                    value={loadedTicket?.id || currentTicketId || ''}
+                    disabled
+                    className="input-green"
+                    style={{ minWidth: 320, fontFamily: 'monospace', fontWeight: 600, color: '#166534' }}
+                  />
+                </div>
+              </div>
             )}
-          </h2>
-
-          {/* Mode switcher for existing tickets */}
-          {currentTicketId && (
-            <div className="mode-switcher">
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', minHeight: '48px' }}>
+            {currentTicketId ? (
               <button
-                onClick={() => onNavigate?.('view', currentTicketId)}
-                className={isViewing ? 'active' : ''}
+                onClick={goBack}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#7b9a3f',
+                  color: 'white',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6a8533';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#7b9a3f';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title="Go back to previous page"
               >
-                👁️ View
+                &#8592;
               </button>
-              <button
-                onClick={() => onNavigate?.('edit', currentTicketId)}
-                className={isEditing ? 'active' : ''}
+            ) : null}
+          </div>
+          {/* Success/Failure message at the top of the screen */}
+          {(showSuccess || showError) && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 2000,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                marginTop: 24,
+                background: showSuccess ? '#22c55e' : '#ef4444',
+                color: 'white',
+                padding: '16px 32px',
+                borderRadius: 8,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                fontWeight: 600,
+                fontSize: 18,
+                pointerEvents: 'auto',
+                minWidth: 320,
+                textAlign: 'center',
+              }}>
+                {showSuccess ? successMessage : errorMessage}
+              </div>
+            </div>
+          )}
+          {isViewing && loadedTicket && loadedTicket.id ? (
+            <>
+              <TicketMarkdownView 
+                ticket={{
+                  ...loadedTicket,
+                  id: loadedTicket.id,
+                  status: loadedTicket.status || 'open',
+                  priority: loadedTicket.priority || 'medium',
+                  complexity: loadedTicket.complexity || 'medium'
+                }}
+                isEditable={false}
+              />
+              {/* Buttons for view mode */}
+              <div 
+                style={{
+                  position: 'fixed',
+                  bottom: '20px',
+                  left: '260px',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: '10px',
+                  zIndex: 1000,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
               >
-                ✏️ Edit
-              </button>
-              <button
-                onClick={() => onNavigate?.('create')}
-                className={!isEditing && !isViewing ? 'active' : ''}
-              >
-                ➕ Create New
-              </button>
-            </div>
-          )}
-
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-4 bg-gray-100 rounded-lg">
-              <h4 className="font-semibold text-gray-700">Debug Info:</h4>
-              <p className="text-sm text-gray-600">Mode: {getModeDisplayName()}</p>
-              <p className="text-sm text-gray-600">Ticket ID: {currentTicketId || 'None'}</p>
-              <p className="text-sm text-gray-600">API URL: {API_BASE_URL}</p>
-              <div className="mt-2">
-                <p className="text-sm text-gray-600">Test modes:</p>
                 <button 
-                  onClick={() => editTicket('healthcare.analytics.reporting-engine-015')}
-                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                >
-                  Edit Sample Ticket
-                </button>
-                <button 
-                  onClick={() => viewTicket('healthcare.analytics.reporting-engine-015')}
-                  className="text-xs bg-green-500 text-white px-2 py-1 rounded mr-2"
-                >
-                  View Sample Ticket
-                </button>
-                <button 
-                  onClick={goToCreateMode}
-                  className="text-xs bg-purple-500 text-white px-2 py-1 rounded"
-                >
-                  Create Mode
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showSuccess && (
-            <div className="success-message">
-              <span className="success-icon">✅</span>
-              <span className="success-text">
-                Ticket {isEditing ? 'updated' : 'created'} successfully!
-              </span>
-            </div>
-          )}
-
-          {showError && (
-            <div className="error-message">
-              <span className="error-icon">❌</span>
-              <span className="error-text">{errorMessage}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className={`space-y-6 ${isViewing ? 'view-mode' : ''}`}>
-            {/* Basic Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label htmlFor="title" className="form-label">
-                    <span className="icon-spacing">📝</span>
-                    Title *
-                  </label>
-                  <input
-                    id="title"
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Enter ticket title"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label htmlFor="description" className="form-label">
-                    <span className="icon-spacing">📄</span>
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={4}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Describe the ticket requirements..."
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="status" className="form-label">
-                    <span className="icon-spacing">📊</span>
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    disabled={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                  >
-                    <option value="open">🟢 Open</option>
-                    <option value="in_progress">🟡 In Progress</option>
-                    <option value="closed">🔴 Closed</option>
-                    <option value="blocked">🚫 Blocked</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="priority" className="form-label">
-                    <span className="icon-spacing">⚡</span>
-                    Priority
-                  </label>
-                  <select
-                    id="priority"
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    disabled={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                  >
-                    <option value="low">🟢 Low</option>
-                    <option value="medium">⚡ Medium</option>
-                    <option value="high">🔥 High</option>
-                    <option value="critical">🚨 Critical</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="complexity" className="form-label">
-                    <span className="icon-spacing">🎯</span>
-                    Complexity
-                  </label>
-                  <select
-                    id="complexity"
-                    name="complexity"
-                    value={formData.complexity}
-                    onChange={handleChange}
-                    disabled={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                  >
-                    <option value="low">🟢 Low</option>
-                    <option value="medium">⚡ Medium</option>
-                    <option value="high">🔥 High</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="effort_days" className="form-label">
-                    <span className="icon-spacing">⏱️</span>
-                    Effort (Days)
-                  </label>
-                  <input
-                    id="effort_days"
-                    type="number"
-                    name="effort_days"
-                    value={formData.effort_days}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.5"
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="e.g., 2.5"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Assignment & Collaboration */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment & Collaboration</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="persona" className="form-label">
-                    <span className="icon-spacing">👤</span>
-                    Persona
-                  </label>
-                  <input
-                    id="persona"
-                    type="text"
-                    name="persona"
-                    value={formData.persona}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Target persona"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="contributor" className="form-label">
-                    <span className="icon-spacing">🤝</span>
-                    Contributor
-                  </label>
-                  <input
-                    id="contributor"
-                    type="text"
-                    name="contributor"
-                    value={formData.contributor}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Assigned contributor"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="model" className="form-label">
-                    <span className="icon-spacing">🤖</span>
-                    AI Model
-                  </label>
-                  <input
-                    id="model"
-                    type="text"
-                    name="model"
-                    value={formData.model}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Associated AI model"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Dependencies */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Dependencies</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="blocks" className="form-label">
-                    <span className="icon-spacing">🚫</span>
-                    Blocks (Ticket IDs)
-                  </label>
-                  <input
-                    id="blocks"
-                    type="text"
-                    name="blocks"
-                    value={formData.blocks}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="ticket-id-1, ticket-id-2"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Comma-separated list of ticket IDs that this ticket blocks</p>
-                </div>
-
-                <div>
-                  <label htmlFor="blocked_by" className="form-label">
-                    <span className="icon-spacing">⛔</span>
-                    Blocked By (Ticket IDs)
-                  </label>
-                  <input
-                    id="blocked_by"
-                    type="text"
-                    name="blocked_by"
-                    value={formData.blocked_by}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="ticket-id-1, ticket-id-2"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Comma-separated list of ticket IDs that block this ticket</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Content & Metadata */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Content & Metadata</h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="acceptance_criteria" className="form-label">
-                    <span className="icon-spacing">✅</span>
-                    Acceptance Criteria
-                  </label>
-                  <textarea
-                    id="acceptance_criteria"
-                    name="acceptance_criteria"
-                    value={formData.acceptance_criteria}
-                    onChange={handleChange}
-                    rows={4}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="One criteria per line..."
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Enter each acceptance criterion on a new line</p>
-                </div>
-
-                <div>
-                  <label htmlFor="tags" className="form-label">
-                    <span className="icon-spacing">🏷️</span>
-                    Tags
-                  </label>
-                  <input
-                    id="tags"
-                    type="text"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="authentication, security, backend"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Comma-separated list of tags</p>
-                </div>
-
-                <div>
-                  <label htmlFor="notes" className="form-label">
-                    <span className="icon-spacing">📝</span>
-                    Notes
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows={3}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="Additional notes..."
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="risks" className="form-label">
-                    <span className="icon-spacing">⚠️</span>
-                    Risks
-                  </label>
-                  <textarea
-                    id="risks"
-                    name="risks"
-                    value={formData.risks}
-                    onChange={handleChange}
-                    rows={3}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="One risk per line..."
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Enter each risk on a new line</p>
-                </div>
-
-                <div>
-                  <label htmlFor="resources" className="form-label">
-                    <span className="icon-spacing">🔗</span>
-                    Resources
-                  </label>
-                  <textarea
-                    id="resources"
-                    name="resources"
-                    value={formData.resources}
-                    onChange={handleChange}
-                    rows={3}
-                    readOnly={isViewing}
-                    className={`input-green ${isViewing ? 'bg-gray-50' : ''}`}
-                    placeholder="One resource/link per line..."
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Enter each resource URL or description on a new line</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="button-group">
-              {!isViewing && (
-                <button 
-                  type="submit" 
+                  type="button"
+                  onClick={() => currentTicketId && onNavigate?.('edit', currentTicketId)}
                   className="btn-primary-green"
-                  disabled={loading}
                 >
-                  <span className="icon-spacing">💾</span>
-                  {loading ? 'Saving...' : (isEditing ? 'Update Ticket' : 'Create Ticket')}
+                  Edit Ticket
                 </button>
-              )}
-              
-              {!isViewing && (
-                <button 
-                  type="button" 
-                  onClick={resetForm}
-                  className="btn-secondary-green"
-                  disabled={loading}
-                >
-                  <span className="icon-spacing">🔄</span>
-                  Reset Form
-                </button>
-              )}
-              
-              {(isEditing || isViewing) && (
                 <button 
                   type="button"
                   onClick={goToCreateMode}
                   className="btn-secondary-green"
                 >
-                  <span className="icon-spacing">➕</span>
+                  Create New
+                </button>
+              </div>
+            </>
+          ) : (
+            !isViewing ? (
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                {/* Main form content */}
+                <div style={{ flex: '1' }} >
+                  <form onSubmit={handleSubmit} className={`space-y-6`}>
+                    {/* Basic Information */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                      <div className="grid grid-cols-1 gap-6" >
+                        <div >
+                          <label htmlFor="title" className="form-label">
+                            Title *
+                          </label>
+                          <input
+                            id="title"
+                            type="text"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                            className={`input-green`}
+                            placeholder="Enter ticket title"
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label id="description-label" className="form-label">
+                            Description
+                          </label>
+                            <MilkdownEditor
+                              id="description"
+                              key={currentTicketId || 'new'}
+                              value={formData.description}
+                              onChange={value => {
+                                console.log('[DEBUG] MilkdownEditor onChange (description):', value)
+                                handleEditorChange('description')(value)
+                              }}
+                              placeholder="a description..."
+                              minHeight="100px" 
+                              className={'milk-desc'}
+                              aria-labelledby="description-label"
+                            />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Content & Metadata */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Content & Metadata</h3>
+                      <div className="space-y-6">
+                        <div>
+                          <label htmlFor="acceptance_criteria" className="form-label">
+                            Acceptance Criteria
+                          </label>
+                          <textarea
+                            id="acceptance_criteria"
+                            name="acceptance_criteria"
+                            value={formData.acceptance_criteria}
+                            onChange={handleChange}
+                            rows={4}
+                            className={`input-green`}
+                            placeholder="One criteria per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each acceptance criterion on a new line</p>
+                        </div>
+                        <div>
+                          <label htmlFor="tags" className="form-label">
+                            Tags
+                          </label>
+                          <input
+                            id="tags"
+                            type="text"
+                            name="tags"
+                            value={formData.tags}
+                            onChange={handleChange}
+                            className={`input-green`}
+                            placeholder="authentication, security, backend"
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Comma-separated list of tags</p>
+                        </div>
+                        <div>
+                          <label id="notes-label" className="form-label">
+                            Notes
+                          </label>
+                          <MilkdownEditor
+                            id="notes"
+                            key={currentTicketId || 'new'}
+                            value={formData.notes ?? ''}
+                            onChange={value => {
+                              console.log('[DEBUG] MilkdownEditor onChange (notes):', value)
+                              handleEditorChange('notes')(value)
+                            }}
+                            placeholder="Additional notes..."
+                            minHeight="100px"
+                            className={''}
+                            aria-labelledby="notes-label"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="risks" className="form-label">
+                            Risks
+                          </label>
+                          <textarea
+                            id="risks"
+                            name="risks"
+                            value={formData.risks}
+                            onChange={handleChange}
+                            rows={3}
+                            className={`input-green`}
+                            placeholder="One risk per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each risk on a new line</p>
+                        </div>
+                        <div>
+                          <label htmlFor="resources" className="form-label">
+                            Resources
+                          </label>
+                          <textarea
+                            id="resources"
+                            name="resources"
+                            value={formData.resources}
+                            onChange={handleChange}
+                            rows={3}
+                            className={`input-green`}
+                            placeholder="One resource/link per line..."
+                            style={{
+                              width: '100%',
+                              display: 'block',
+                              boxSizing: 'border-box',
+                              margin: 0,
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Enter each resource URL or description on a new line</p>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                {/* Sidebar with Status & Priority and Dependencies */}
+                <div 
+                  style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '20px',
+                    position: 'sticky',
+                    top: '20px',
+                    height: 'fit-content',
+                    zIndex: 20
+                  }}
+                >
+                  {/* Status & Priority Block */}
+                  <div 
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#1f2937',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+                      height: 'fit-content'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
+                    <div className="space-y-6">
+                      <TotemIcon seed={ticketId} size={4} showControls={false} highRes/>
+                      <div>
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
+                          Status
+                        </label>
+                        <select
+                          id="status"
+                          name="status"
+                          value={formData.status}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {statusLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            statuses.map((s: { key: string; description: string }) => (
+                              <option key={s.key} value={s.key}>{s.key}</option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="priority" className="block text-sm font-medium text-gray-300 mb-2">
+                          Priority
+                        </label>
+                        <select
+                          id="priority"
+                          name="priority"
+                          value={formData.priority}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {priorityLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            priorities.map((p: { key: string; description: string }) => (
+                              <option key={p.key} value={p.key}>{p.key}</option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="complexity" className="block text-sm font-medium text-gray-300 mb-2">
+                          Complexity
+                        </label>
+                        <select
+                          id="complexity"
+                          name="complexity"
+                          value={formData.complexity}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {complexityLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            complexities.map((c: { key: string; description: string }) => (
+                              <option key={c.key} value={c.key}>{c.key}</option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Assignment & Collaboration Block */}
+                  <div
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#223344',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(34, 51, 68, 0.18)',
+                      height: 'fit-content',
+                      marginTop: '20px'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Assignment & Collaboration</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="persona" className="block text-sm font-medium text-gray-300 mb-2">
+                        </label>
+                                    <Avatar
+                                      size={20}
+                                      name={formData.persona}
+                                      variant="pixel"
+                                      colors={["#A5B4FC", "#6366F1", "#818CF8", "#3730A3", "#C7D2FE"]}
+                                      square
+                                    />
+                        <select
+                          id="persona"
+                          name="persona"
+                          value={formData.persona}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {personaLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            <>
+                              <option value="">Select persona</option>
+                              {personas.map((p) => (
+                                <option key={p.name} value={p.name}>{p.name}</option>
+                              ))}
+                            </>
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="contributor" className="block text-sm font-medium text-gray-300 mb-2">
+                        </label>
+                        <Avatar
+                          size={20}
+                          name={formData.contributor}
+                          variant="pixel"
+                          colors={["#FFDD00", "#FFAB00", "#FF6F00", "#D50000", "#6200EA"]}
+                          square
+                        />
+                        <select
+                          id="contributor"
+                          name="contributor"
+                          value={formData.contributor}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          {contributorLoading ? (
+                            <option>Loading…</option>
+                          ) : (
+                            <>
+                              <option value="">Select contributor</option>
+                              {contributors.map((c) => (
+                                <option key={c.name} value={c.name}>{c.name}</option>
+                              ))}
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Dependencies Block */}
+                  <div 
+                    style={{
+                      width: '320px',
+                      backgroundColor: '#8B4513',
+                      color: 'white',
+                      padding: '24px',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(139, 69, 19, 0.25)',
+                      height: 'fit-content'
+                    }}
+                  >
+                    <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Dependencies</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label htmlFor="blocks" className="block text-sm font-medium text-orange-100">
+                            Blocks (Tickets)
+                          </label>
+                          {formData.blocks.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, blocks: [] }))}
+                              className="text-xs text-red-300 hover:text-red-200 underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <select
+                          id="blocks"
+                          name="blocks"
+                          multiple
+                          value={formData.blocks}
+                          onChange={handleMultiSelectChange('blocks')}
+                          className="dependencies-dropdown"
+                          style={{ 
+                            minHeight: formData.blocks.length > 0 ? '80px' : '40px',
+                            maxHeight: '120px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            backgroundColor: '#A0522D',
+                            border: '1px solid #CD853F',
+                            borderRadius: '6px',
+                            color: 'white'
+                          }}
+                        >
+                          {(tickets && tickets.length > 0
+                            ? tickets.filter(ticket => !currentTicketId || ticket.id !== currentTicketId)
+                            : [])
+                            .map(ticket => (
+                              <option key={ticket.id} value={ticket.id}>
+                                {ticket.id} - {ticket.title}
+                              </option>
+                            ))
+                          }
+                        </select>
+                        <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label htmlFor="blocked_by" className="block text-sm font-medium text-orange-100">
+                            Blocked By (Tickets)
+                          </label>
+                          {formData.blocked_by.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, blocked_by: [] }))}
+                              className="text-xs text-red-300 hover:text-red-200 underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <select
+                          id="blocked_by"
+                          name="blocked_by"
+                          multiple
+                          value={formData.blocked_by}
+                          onChange={handleMultiSelectChange('blocked_by')}
+                          className="dependencies-dropdown"
+                          style={{ 
+                            minHeight: formData.blocked_by.length > 0 ? '80px' : '40px',
+                            maxHeight: '120px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            backgroundColor: '#A0522D',
+                            border: '1px solid #CD853F',
+                            borderRadius: '6px',
+                            color: 'white'
+                          }}
+                        >
+                          {(tickets && tickets.length > 0
+                            ? tickets.filter(ticket => !currentTicketId || ticket.id !== currentTicketId)
+                            : [])
+                            .map(ticket => (
+                              <option key={ticket.id} value={ticket.id}>
+                                {ticket.id} - {ticket.title}
+                              </option>
+                            ))
+                          }
+                        </select>
+                        <p className="text-xs text-orange-200 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          ) : null
+          )}
+
+          {/* Action buttons - only show in form mode */}
+          {!isViewing && (
+            <div 
+              style={{
+                position: 'fixed',
+                bottom: '20px',
+                left: '260px',
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '10px',
+                zIndex: 1000,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                padding: '10px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+              }}
+            >
+              <button
+                type="button"
+                className="btn-primary-green"
+                disabled={loading}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  // Convert acceptance_criteria string to array of objects
+                  const acceptanceCriteriaArr = formData.acceptance_criteria
+                    ? formData.acceptance_criteria.split('\n').filter(s => s.trim()).map(criteria => ({ criteria: criteria.trim(), complete: false }))
+                    : [];
+                  // Convert tags string to array
+                  const tagsArr = formData.tags
+                    ? formData.tags.split(',').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  // Convert risks and resources string to array
+                  const risksArr = formData.risks
+                    ? formData.risks.split('\n').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  const resourcesArr = formData.resources
+                    ? formData.resources.split('\n').map(s => s.trim()).filter(Boolean)
+                    : [];
+                  // Convert effort_days to number or undefined
+                  const effortDaysVal = formData.effort_days === '' ? undefined : Number(formData.effort_days);
+                  // Always use deterministic ticket ID for create and update
+                  const deterministicId =
+                    prefix && selectedLayer && selectedComponent && selectedFeature
+                      ? `${prefix}.${selectedLayer}.${selectedComponent}-${selectedFeature}-${nextNumber}`
+                      : undefined;
+                  if (isEditing && currentTicketId) {
+                    // Update existing ticket
+                    try {
+                      await updateTicket({
+                        ...formData,
+                        id: deterministicId || currentTicketId,
+                        acceptance_criteria: acceptanceCriteriaArr,
+                        tags: tagsArr,
+                        risks: risksArr,
+                        resources: resourcesArr,
+                        effort_days: effortDaysVal
+                      });
+                      setSuccessMessage('Ticket updated successfully!');
+                      setShowSuccess(true);
+                      setTimeout(() => setShowSuccess(false), 3000);
+                    } catch (err: unknown) {
+                      if (err instanceof Error) {
+                        setErrorMessage(`Failed to create ticket. ${err.message}`);
+                      } else {
+                        setErrorMessage('Failed to create ticket. Unknown error');
+                      }
+                      setShowError(true);
+                      setTimeout(() => setShowError(false), 4000);
+                    }
+                  } else {
+                    // Create new ticket
+                    try {
+                      await addTicket({
+                        ...formData,
+                        id: deterministicId,
+                        acceptance_criteria: acceptanceCriteriaArr,
+                        tags: tagsArr,
+                        risks: risksArr,
+                        resources: resourcesArr,
+                        effort_days: effortDaysVal
+                      });
+                      setSuccessMessage('Ticket created successfully!');
+                      setShowSuccess(true);
+                      setTimeout(() => setShowSuccess(false), 3000);
+                      // Reset the form after successful creation
+                      setFormData({
+                        title: '',
+                        description: '',
+                        status: 'open',
+                        priority: 'medium',
+                        complexity: 'medium',
+                        persona: '',
+                        contributor: '',
+                        model: '',
+                        effort_days: '',
+                        blocks: [],
+                        blocked_by: [],
+                        acceptance_criteria: '',
+                        tags: '',
+                        notes: '',
+                        risks: '',
+                        resources: '',
+                        layer: '',
+                        component: '',
+                        feature: ''
+                      });
+                    } catch (err: unknown) {
+                      if (err instanceof Error) {
+                        setErrorMessage(`Failed to create ticket. ${err.message}`);
+                      } else {
+                        setErrorMessage('Failed to create ticket. Unknown error');
+                      }
+                      setShowError(true);
+                      setTimeout(() => setShowError(false), 4000);
+                    }
+                  }
+                }}
+              >
+                {loading ? 'Saving...' : (isEditing ? 'Update Ticket' : 'Create Ticket')}
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={resetForm}
+                className="btn-secondary-green"
+                disabled={loading}
+              >
+                Reset Form
+              </button>
+              
+              {isEditing && (
+                <button 
+                  type="button"
+                  onClick={goToCreateMode}
+                  className="btn-secondary-green"
+                >
                   Create New
                 </button>
               )}
-
-              {isViewing && currentTicketId && (
-                <button 
-                  type="button"
-                  onClick={() => onNavigate?.('edit', currentTicketId)}
-                  className="btn-primary-green"
-                >
-                  <span className="icon-spacing">✏️</span>
-                  Edit Ticket
-                </button>
-              )}
             </div>
-          </form>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-/**
- * Default export of the CreateTicket component
- * @default CreateTicket
- */
 export default CreateTicket

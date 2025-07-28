@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
 import type { Ticket, Milestone, TicketContextType } from '../types'
 
 /**
@@ -35,34 +35,36 @@ type TicketAction =
   | { type: 'ADD_MILESTONE'; payload: Milestone }
   | { type: 'UPDATE_MILESTONE'; payload: Milestone }
 
-// Initial state with empty data - will be populated from API
+// Initial state is empty; all data is loaded from the ticket API
 const initialState: TicketState = {
   tickets: [],
-  milestones: [
-    {
-      id: 'v0.9',
-      title: 'Beta Release',
-      description: 'Initial beta version with core features',
-      dueDate: '2025-06-30',
-      status: 'completed'
-    },
-    {
-      id: 'v1.0',
-      title: 'Production Release',
-      description: 'First stable release with all essential features',
-      dueDate: '2025-07-15',
-      status: 'active'
-    },
-    {
-      id: 'v1.1',
-      title: 'Enhanced Features',
-      description: 'Additional features and improvements',
-      dueDate: '2025-08-01',
-      status: 'planning'
-    }
-  ],
+  milestones: [],
   loading: false,
   error: null
+}
+
+// Pagination and filter types
+
+export { TicketContext };
+export interface TicketPagination {
+  offset: number;
+  limit: number;
+  total: number;
+  totalFiltered: number;
+}
+
+export interface TicketFilters {
+  id?: string;
+  status?: string;
+  priority?: string;
+  complexity?: string;
+  persona?: string;
+  contributor?: string;
+}
+
+export interface TicketSort {
+  field: string;
+  order: 'asc' | 'desc';
 }
 
 /**
@@ -138,66 +140,179 @@ interface TicketProviderProps {
  * @param props.children - Child components that will have access to the ticket context
  * @returns Provider component with ticket context
  */
+
+
 export function TicketProvider({ children }: TicketProviderProps) {
-  const [state, dispatch] = useReducer(ticketReducer, initialState)
+  const [state, dispatch] = useReducer(ticketReducer, initialState);
+  const [pagination, setPagination] = useState<TicketPagination>({ offset: 0, limit: 20, total: 0, totalFiltered: 0 });
+  const [filters, setFilters] = useState<TicketFilters>({});
+  const [sort, setSort] = useState<TicketSort>({ field: 'id', order: 'asc' });
 
   // Load tickets when the provider mounts
   useEffect(() => {
-    refreshTickets()
-  }, [])
+    refreshTickets({ offset: 0, limit: 20, filters: {}, sort: { field: 'id', order: 'asc' } });
+    // eslint-disable-next-line
+  }, []);
 
   /**
-   * Refreshes tickets from the API
+   * Loads all tickets from the API in batches and sets them in state
+   * @param batchSize - Number of tickets to fetch per request (default 100)
+   * @param filtersOverride - Optional filters to use
+   * @param sortOverride - Optional sort to use
    */
-  const refreshTickets = async (): Promise<void> => {
+  const loadAllTickets = async (
+    filtersOverride?: TicketFilters,
+    sortOverride?: TicketSort
+  ): Promise<void> => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true })
-      dispatch({ type: 'SET_ERROR', payload: null })
-      
-      // Use relative URL in production, absolute URL in development
-      const apiUrl = import.meta.env?.DEV ? 'http://localhost:8080/api/ticket' : '/api/ticket'
-      const response = await fetch(apiUrl)
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      const f = filtersOverride ?? filters;
+      const s = sortOverride ?? sort;
+      const limit = 20;
+      let offset = 0;
+      let total = 0;
+      let allTickets: Ticket[] = [];
+
+      // First request to get total
+      const query = new URLSearchParams();
+      query.append('offset', String(offset));
+      query.append('limit', String(limit));
+      if (f.id) query.append('id', f.id);
+      if (f.status) query.append('status', f.status);
+      if (f.priority) query.append('priority', f.priority);
+      if (f.complexity) query.append('complexity', f.complexity);
+      if (f.persona) query.append('persona', f.persona);
+      if (f.contributor) query.append('contributor', f.contributor);
+      if (s.field) query.append('sortBy', s.field);
+      if (s.order) query.append('sortOrder', s.order);
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${query}` : `/api/ticket?${query}`;
+      const response = await fetch(apiUrl);
       if (!response.ok) {
-        throw new Error(`Failed to fetch tickets: ${response.status}`)
+        throw new Error(`Failed to fetch tickets: ${response.status}`);
       }
-      
-      const data = await response.json()
-      const tickets = data.tickets || []
-      
-      dispatch({ type: 'SET_TICKETS', payload: tickets })
+      const data = await response.json();
+      const tickets = data.tickets || [];
+      total = data.pagination?.total ?? tickets.length;
+      allTickets = allTickets.concat(tickets);
+      offset += limit;
+
+      // Fetch remaining pages if needed
+      while (allTickets.length < total) {
+        const pageQuery = new URLSearchParams();
+        pageQuery.append('offset', String(offset));
+        pageQuery.append('limit', String(limit));
+        if (f.id) pageQuery.append('id', f.id);
+        if (f.status) pageQuery.append('status', f.status);
+        if (f.priority) pageQuery.append('priority', f.priority);
+        if (f.complexity) pageQuery.append('complexity', f.complexity);
+        if (f.persona) pageQuery.append('persona', f.persona);
+        if (f.contributor) pageQuery.append('contributor', f.contributor);
+        if (s.field) pageQuery.append('sortBy', s.field);
+        if (s.order) pageQuery.append('sortOrder', s.order);
+        const pageUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${pageQuery}` : `/api/ticket?${pageQuery}`;
+        const pageResponse = await fetch(pageUrl);
+        if (!pageResponse.ok) {
+          throw new Error(`Failed to fetch tickets: ${pageResponse.status}`);
+        }
+        const pageData = await pageResponse.json();
+        const pageTickets = pageData.tickets || [];
+        allTickets = allTickets.concat(pageTickets);
+        offset += limit;
+      }
+
+      dispatch({ type: 'SET_TICKETS', payload: allTickets });
+      setPagination(prev => ({ ...prev, total: allTickets.length, totalFiltered: allTickets.length, offset: 0, limit: allTickets.length }));
+      setFilters(f);
+      setSort(s);
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh tickets' })
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to load all tickets' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }
+  };
+
+  /**
+   * Refreshes tickets from the API with optional pagination, filters, and sort
+   */
+  const refreshTickets = async (params?: {
+    offset?: number;
+    limit?: number;
+    filters?: TicketFilters;
+    sort?: TicketSort;
+  }): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const offset = params?.offset ?? pagination.offset;
+      const limit = params?.limit ?? pagination.limit;
+      const f = params?.filters ?? filters;
+      const s = params?.sort ?? sort;
+
+      // Build query string
+      const query = new URLSearchParams();
+      query.append('offset', String(offset));
+      query.append('limit', String(limit));
+      if (f.id) query.append('id', f.id);
+      if (f.status) query.append('status', f.status);
+      if (f.priority) query.append('priority', f.priority);
+      if (f.complexity) query.append('complexity', f.complexity);
+      if (f.persona) query.append('persona', f.persona);
+      if (f.contributor) query.append('contributor', f.contributor);
+      if (s.field) query.append('sortBy', s.field);
+      if (s.order) query.append('sortOrder', s.order);
+
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket?${query}` : `/api/ticket?${query}`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tickets: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const tickets = data.tickets || [];
+      const pag = data.pagination || { offset, limit, total: tickets.length, totalFiltered: tickets.length };
+
+      dispatch({ type: 'SET_TICKETS', payload: tickets });
+      setPagination(pag);
+      setFilters(f);
+      setSort(s);
+      // Optionally, add a SET_MILESTONES action if you want to manage milestones from API
+      // dispatch({ type: 'SET_MILESTONES', payload: milestones });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to refresh tickets' });
+    }
+  };
 
   /**
    * Creates a new ticket
    * @param ticket - The ticket object to create
    */
   const createTicket = async (ticket: Partial<Ticket>): Promise<void> => {
+    console.log('Creating ticket:', ticket)
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
-      
-      // Generate a new ticket with default values
-      const newTicket: Ticket = {
-        id: ticket.id || `TKT-${Date.now()}`,
-        title: ticket.title || '',
-        description: ticket.description || '',
-        status: ticket.status || 'open',
-        priority: ticket.priority || 'medium',
-        complexity: ticket.complexity || 'medium',
-        persona: ticket.persona || undefined,
-        contributor: ticket.contributor || undefined,
-        assignee: ticket.assignee || undefined,
-        acceptance_criteria: ticket.acceptance_criteria || undefined,
-        milestone: ticket.milestone || undefined,
-        created: ticket.created || new Date().toISOString(),
-        blocks: ticket.blocks || [],
-        blocked_by: ticket.blocked_by || []
+
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket` : `/api/ticket`;
+      const ticketString = JSON.stringify(ticket);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: ticketString
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to create ticket: ${response.status}`);
       }
-      
-      dispatch({ type: 'ADD_TICKET', payload: newTicket })
+
+      // Get the created ticket from backend response
+      const data = await response.json();
+      const createdTicket = data.ticket || ticket;
+      dispatch({ type: 'ADD_TICKET', payload: createdTicket })
       dispatch({ type: 'SET_LOADING', payload: false })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to create ticket' })
@@ -208,12 +323,36 @@ export function TicketProvider({ children }: TicketProviderProps) {
    * Updates an existing ticket
    * @param ticket - The ticket object with updated properties
    */
+  /**
+   * Updates an existing ticket and persists changes to the backend
+   * @param ticket - The ticket object with updated properties
+   */
   const updateTicket = async (ticket: Ticket): Promise<void> => {
+    console.log('[DEBUG] Updating ticket (input):', ticket)
+    console.log('[DEBUG] Description before stringify:', ticket.description)
     try {
       dispatch({ type: 'SET_LOADING', payload: true })
       dispatch({ type: 'SET_ERROR', payload: null })
-      
-      dispatch({ type: 'UPDATE_TICKET', payload: ticket })
+
+      // Use relative URL in production, absolute URL in development
+      const apiUrl = import.meta.env?.DEV ? `http://localhost:8080/api/ticket/${ticket.id}` : `/api/ticket/${ticket.id}`;
+      const ticketString = JSON.stringify(ticket)
+      console.log('[DEBUG] JSON.stringify(ticket):', ticketString)
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: ticketString
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to update ticket: ${response.status}`);
+      }
+
+      // Get the updated ticket from backend response
+      const data = await response.json();
+      const updatedTicket = data.ticket || ticket;
+      dispatch({ type: 'UPDATE_TICKET', payload: updatedTicket })
       dispatch({ type: 'SET_LOADING', payload: false })
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to update ticket' })
@@ -268,6 +407,7 @@ export function TicketProvider({ children }: TicketProviderProps) {
     await createTicket(ticket)
   }
 
+
   const value: TicketContextType = {
     tickets: state.tickets,
     milestones: state.milestones,
@@ -277,14 +417,21 @@ export function TicketProvider({ children }: TicketProviderProps) {
     addTicket,
     createTicket,
     updateTicket,
-    deleteTicket
-  }
+    deleteTicket,
+    pagination,
+    setPagination,
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    loadAllTickets, // Expose the new function
+  };
 
   return (
     <TicketContext.Provider value={value}>
       {children}
     </TicketContext.Provider>
-  )
+  );
 }
 
 /**

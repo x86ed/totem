@@ -38,4 +38,19 @@ export default [
       'no-unused-vars': 'off',
     },
   },
+  {
+    files: ['**/*.test.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        vi: 'readonly',
+      },
+    },
+  },
 ]

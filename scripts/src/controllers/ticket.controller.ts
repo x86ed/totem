@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
-import { CreateTicketDto, UpdateTicketDto, TicketResponseDto, TicketsListResponseDto, ErrorResponseDto } from '../dto/ticket.dto';
+import { CreateTicketDto, UpdateTicketDto, TicketResponseDto, TicketsListResponseDto, ErrorResponseDto, TicketDto } from '../dto/ticket.dto';
 import { readFileSync, existsSync, readdirSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { parse, stringify } from 'yaml';
@@ -61,27 +61,124 @@ interface PaginatedResponse extends TicketsListResponseDto {
   };
 }
 
+interface YAMLHeader {
+  id: string;
+  status: 'open' | 'in_progress' | 'closed' | 'blocked';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  complexity:  'xs'|'s' | 'm' | 'l' | 'xl' | 'xxl';
+  persona: string;
+  contributor: string;
+  blocks: string[];
+  blocked_by: string[];
+  start_time?: number;
+  end_time?: number;
+}
+
 @ApiTags('tickets')
 @Controller('api/ticket')
 export class TicketController {
+  /**
+   * Generates a markdown string from a TicketDto object, matching the layout of the ticket markdown file.
+   */
+  private generateParsedTicketMarkdown(ticket: TicketDto): string {
+    // YAML frontmatter with scheduling
+    const yamlObj: any = {
+      id: ticket.id,
+      status: ticket.status,
+      priority: ticket.priority,
+      complexity: ticket.complexity,
+      ...(ticket.persona && { persona: ticket.persona }),
+      ...(ticket.contributor && { contributor: ticket.contributor }),
+      ...(ticket.blocks && ticket.blocks.length > 0 && { blocks: ticket.blocks }),
+      ...(ticket.blocked_by && ticket.blocked_by.length > 0 && { blocked_by: ticket.blocked_by }),
+      ...(typeof ticket.start_time !== 'undefined' && { start_time: ticket.start_time }),
+      ...(typeof ticket.end_time !== 'undefined' && { end_time: ticket.end_time }),
+    };
+    const yamlBlock = [
+      '```yaml',
+      stringify(yamlObj).trim(),
+      '```',
+      '\n'
+    ].join('\n');
+
+    // Title
+    const titleBlock = `\n# ${ticket.title}\n`;
+
+    // Description
+    const descriptionBlock = ticket.description ? `\n${ticket.description}\n` : '\n';
+
+    // Acceptance Criteria
+    let criteriaBlock = '\n## Acceptance Criteria\n\n';
+    if (ticket.acceptance_criteria && ticket.acceptance_criteria.length > 0) {
+      criteriaBlock += ticket.acceptance_criteria.map(c => {
+        const checkbox = c.complete ? '[x]' : '[ ]';
+        return `- ${checkbox} ${c.criteria}`;
+      }).join('\n');
+      criteriaBlock += '\n';
+    }
+
+    // Implementation Notes
+    let notesBlock = '';
+    if (ticket.notes && ticket.notes.trim()) {
+      notesBlock = '\n## Implementation Notes\n';
+      notesBlock += `\n${ticket.notes}\n`;
+    }
+
+    // Risks
+    let risksBlock = '';
+    if (ticket.risks && ticket.risks.length > 0) {
+      risksBlock = '\n### Risks\n\n';
+      risksBlock += ticket.risks.map(risk => `- ${risk}`).join('\n');
+      risksBlock += '\n';
+    }
+
+    // Separator
+    const separatorBlock = '\n---\n';
+
+    // Resources (reference links)
+    let resourcesBlock = '';
+    if (ticket.resources && ticket.resources.length > 0) {
+      resourcesBlock = '\n' + ticket.resources.join('\n') + '\n';
+    }
+
+    // Compose all blocks
+    return [
+      yamlBlock,
+      titleBlock,
+      descriptionBlock,
+      criteriaBlock,
+      notesBlock,
+      risksBlock,
+      separatorBlock,
+      resourcesBlock
+    ].join('').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
 
   private readonly TICKETS_DIR = process.env.TICKETS_DIR || '.totem/tickets';
 
-  private parseTicketMarkdown(filePath: string): any {
+private parseTicketMarkdown(filePath: string): TicketDto | null {
     try {
       const content = readFileSync(filePath, 'utf-8');
       const yamlMatch = content.match(/^```yaml\n([\s\S]*?)\n```/);
       if (!yamlMatch) {
         throw new Error('No YAML frontmatter found');
       }
-      const yamlData = parse(yamlMatch[1]) as any;
+      const yamlData = parse(yamlMatch[1]) as YAMLHeader & { model?: string };
+
+      // Extract title
       const titleMatch = content.match(/^# (.+)$/m);
       const title = titleMatch ? titleMatch[1] : yamlData.id;
-      const descriptionMatch = content.match(/^# .+\n\n(.+?)(?:\n\n|$)/m);
-      const description = descriptionMatch ? descriptionMatch[1] : '';
+
+      // Extract description - all text between the ticket title (# title name\n) and (## Acceptance Criteria)
+      let description = '';
+      const descRegex = /^# .+\n([\s\S]*?)(?=^## Acceptance Criteria)/m;
+      const descMatch = content.match(descRegex);
+      if (descMatch) {
+        description = descMatch[1].trim();
+      }
       
       // Parse acceptance criteria
-      const criteriaSection = content.match(/## Acceptance Criteria\n([\s\S]*?)(?:\n## |$)/);
+      const criteriaSection = content.match(/## Acceptance Criteria\n\n([\s\S]*?)(?:\n## |$)/);
       const acceptance_criteria: Array<{criteria: string, complete: boolean}> = [];
       if (criteriaSection) {
         const criteriaLines = criteriaSection[1].split('\n').filter(line => line.trim().startsWith('- ['));
@@ -94,6 +191,17 @@ export class TicketController {
         });
       }
 
+      // Parse implementation notes - get all content between ## Implementation Notes and ### Risks
+      let notes = '';
+      const notesSection = content.match(/## Implementation Notes\n\n([\s\S]*?)(?:\n### Risks|\n---|\n\[.*\]:|$)/);
+      if (notesSection) {
+        let noteContent = notesSection[1].trim();
+        // Remove any trailing reference links or markdown artifacts
+        noteContent = noteContent.replace(/\n\[.*\]:.*$/gm, '').trim();
+        // Clean up extra whitespace
+        notes = noteContent.replace(/\n\n+/g, '\n\n').trim();
+      }
+
       // Build tags array
       const tags: string[] = [];
       if (yamlData.persona) tags.push(yamlData.persona);
@@ -101,42 +209,62 @@ export class TicketController {
       if (yamlData.complexity) tags.push(yamlData.complexity);
       if (yamlData.contributor) tags.push(yamlData.contributor);
 
-      // Parse risks
-      const risksMatch = content.match(/\*\*Risks:\*\*\s*(.+)/);
+      // Parse risks from various possible locations
       const risks: string[] = [];
+      
+      // First try to find risks in the standard **Risks:** format
+      const risksMatch = content.match(/\*\*Risks:\*\*\s*(.+)/);
       if (risksMatch) {
         const riskText = risksMatch[1];
-        const riskItems = riskText.split(/,\s*(?=[A-Z])/);
+        // Split by comma followed by capital letter or parenthesis (risk level indicators)
+        const riskItems = riskText.split(/,\s*(?=[A-Z]|\([a-z]+\))/);
         risks.push(...riskItems.map(risk => risk.trim()));
       }
-
-      // Parse implementation notes
-      const notesMatch = content.match(/## Implementation Notes\n```[\s\S]*?\n([\s\S]*?)\n```/);
-      const resources: string[] = [];
-      if (notesMatch) {
-        const notes = notesMatch[1].split('\n').filter(line => line.trim().startsWith('//'));
-        resources.push(...notes.map(note => note.replace(/^\/\/\s*/, '').trim()));
+      
+      // Also try to find a ## Risks section ending with '---'
+      const risksSectionMatch = content.match(/## Risks\n\n([\s\S]*?)(?:\n---|$)/);
+      if (risksSectionMatch) {
+        const riskLines = risksSectionMatch[1].split('\n').filter(line => 
+          line.trim().startsWith('-') || line.trim().startsWith('*')
+        );
+        risks.push(...riskLines.map(line => line.replace(/^[-*]\s*/, '').trim()));
       }
 
-      return {
+      // Parse resources from dedicated sections
+      const resources: string[] = [];
+      
+      // Look for resources section from '---\n' to end of file
+      const resourcesSectionMatch = content.match(/---\n([\s\S]*)$/);
+      if (resourcesSectionMatch) {
+        // Only include embedded links in the format [alias]: ./filepath or [alias]: ://url
+        const resourceLines = resourcesSectionMatch[1].split('\n').filter(line => {
+          const trimmed = line.trim();
+          return /^\[[^\]]+\]:\s*(\.\/[^\s]+|https?:\/\/[^\s]+)/.test(trimmed);
+        });
+        resources.push(...resourceLines.map(line => line.trim()));
+      }
+
+      const ticket: TicketDto = {
         id: yamlData.id,
-        status: yamlData.status || 'open',
-        priority: yamlData.priority || 'medium',
-        complexity: yamlData.complexity || 'medium',
+        status: yamlData.status ? String(yamlData.status) : 'open',
+        priority: yamlData.priority ? String(yamlData.priority) : 'medium',
+        complexity: yamlData.complexity ? String(yamlData.complexity) : 'medium',
         persona: yamlData.persona || null,
         contributor: yamlData.contributor || null,
-        model: yamlData.model || null,
-        effort_days: yamlData.effort_days || null,
         blocks: yamlData.blocks || [],
         blocked_by: yamlData.blocked_by || [],
+        model: yamlData.model ?? null,
+        start_time: typeof yamlData.start_time !== 'undefined' ? yamlData.start_time : -1,
+        end_time: typeof yamlData.end_time !== 'undefined' ? yamlData.end_time : -1,
         title,
         description,
         acceptance_criteria,
         tags,
-        notes: description,
+        notes,
         risks,
         resources
       };
+      return ticket;
     } catch (error) {
       console.error(`Error parsing ticket file ${filePath}:`, error);
       return null;
@@ -194,7 +322,7 @@ export class TicketController {
     return maxNumber + 1;
   }
 
-  private generateTicketMarkdown(data: any): string {
+  private generateTicketMarkdown(data: TicketDto): string {
     const yamlData = {
       id: data.id,
       status: data.status || 'open',
@@ -204,7 +332,6 @@ export class TicketController {
       ...(data.contributor && { contributor: data.contributor }), // Include contributor if present
       ...(data.contributor && { contributor: data.contributor }),
       ...(data.model && { model: data.model }),
-      ...(data.effort_days && { effort_days: data.effort_days }),
       ...(data.blocks && data.blocks.length > 0 && { blocks: data.blocks }),
       ...(data.blocked_by && data.blocked_by.length > 0 && { blocked_by: data.blocked_by })
     };
@@ -214,7 +341,7 @@ export class TicketController {
     markdown += `${data.description}\n\n`;
 
     if (data.acceptance_criteria && data.acceptance_criteria.length > 0) {
-      markdown += '## Acceptance Criteria\n';
+      markdown += '## Acceptance Criteria\n\n';
       data.acceptance_criteria.forEach((criteria: any) => {
         const checkbox = criteria.complete ? '[x]' : '[ ]';
         markdown += `- ${checkbox} ${criteria.criteria}\n`;
@@ -222,14 +349,24 @@ export class TicketController {
       markdown += '\n';
     }
 
-    if (data.resources && data.resources.length > 0) {
-      markdown += '## Implementation Notes\n```javascript\n';
-      data.resources.forEach((resource: string) => {
-        markdown += `// ${resource}\n`;
-      });
-      markdown += '```\n\n';
+    // Add implementation notes section if present
+    if (data.notes && data.notes.trim()) {
+      markdown += '## Implementation Notes\n\n';
+      markdown += `${data.notes}\n\n`;
     }
 
+    // Add resources section if present
+    if (data.resources && data.resources.length > 0) {
+      markdown += '## Resources\n\n';
+      data.resources.forEach((resource: string) => {
+        if (resource.trim()) {
+          markdown += `- ${resource}\n`;
+        }
+      });
+      markdown += '\n';
+    }
+
+    // Add risks section if present
     if (data.risks && data.risks.length > 0) {
       markdown += `**Risks:** ${data.risks.join(', ')}\n\n`;
     }
@@ -369,7 +506,7 @@ export class TicketController {
         tickets = this.applyPagination(tickets, queryParams.offset, queryParams.limit);
 
         return {
-          message: 'Get all tickets',
+          message: 'Get filtered tickets',
           tickets,
           pagination: {
             offset: queryParams.offset,
@@ -678,28 +815,33 @@ export class TicketController {
         };
       }
       let baseId = (ticketData as any).id;
-      if (!baseId) {
-        baseId = this.generateDefaultId(ticketData.title);
-      } else {
-        baseId = baseId.replace(/-\d{3}$/, '');
-      }
-      const nextNumber = this.getNextTicketNumber(ticketsDir, baseId);
-      const paddedNumber = nextNumber.toString().padStart(3, '0');
-      const fullId = `${baseId}-${paddedNumber}`;
-      const filename = `${fullId}.md`;
+      const filename = `${baseId}.md`;
       const filePath = join(ticketsDir, filename);
       if (existsSync(filePath)) {
         throw new HttpException({
           message: 'Ticket file already exists',
           error: `File ${filename} already exists`,
-          suggestedId: fullId
+          suggestedId: baseId
         }, HttpStatus.CONFLICT);
       }
       const finalTicketData = {
         ...ticketData,
-        id: fullId
+        id: baseId,
+        status: ticketData.status ? String(ticketData.status) : 'open',
+        priority: ticketData.priority ? String(ticketData.priority) : 'medium',
+        complexity: ticketData.complexity ? String(ticketData.complexity) : 'medium',
+        persona: ticketData.persona ?? null,
+        contributor: ticketData.contributor ?? null,
+        model: ticketData.model ?? null,
+        blocks: Array.isArray(ticketData.blocks) ? ticketData.blocks : [],
+        blocked_by: Array.isArray(ticketData.blocked_by) ? ticketData.blocked_by : [],
+        acceptance_criteria: Array.isArray(ticketData.acceptance_criteria) ? ticketData.acceptance_criteria : [],
+        tags: Array.isArray(ticketData.tags) ? ticketData.tags : [],
+        notes: typeof ticketData.notes === 'string' ? ticketData.notes : '',
+        risks: Array.isArray(ticketData.risks) ? ticketData.risks : [],
+        resources: Array.isArray(ticketData.resources) ? ticketData.resources : [],
       };
-      const markdownContent = this.generateTicketMarkdown(finalTicketData);
+      const markdownContent = this.generateParsedTicketMarkdown(finalTicketData);
       writeFileSync(filePath, markdownContent, 'utf-8');
       const createdTicket = this.parseTicketMarkdown(filePath);
       return {
@@ -719,7 +861,7 @@ export class TicketController {
     }
   }
 
-  @ApiOperation({ summary: 'Update a ticket', description: 'Update an existing ticket with new data' })
+   @ApiOperation({ summary: 'Update a ticket', description: 'Update an existing ticket with new data' })
   @ApiParam({ name: 'id', description: 'Ticket ID to update', example: 'user-authentication-001' })
   @ApiBody({ type: UpdateTicketDto, description: 'Updated ticket data' })
   @ApiResponse({ status: 200, description: 'Ticket updated successfully', type: TicketResponseDto })
@@ -786,6 +928,7 @@ export class TicketController {
           ticket: ticketData as any,
         };
       }
+      // Use the controller's validateTicketData method
       const validation = this.validateTicketData(ticketData);
       if (!validation.valid) {
         throw new HttpException({
@@ -843,12 +986,26 @@ export class TicketController {
           ticket: null
         }, HttpStatus.NOT_FOUND);
       }
-      const updatedTicketData = {
-        ...ticketData,
-        id: existingTicket.id
-      };
-      const markdownContent = this.generateTicketMarkdown(updatedTicketData);
-      writeFileSync(filePath, markdownContent, 'utf-8');
+      // Parse the original file
+      const oldData = this.parseTicketMarkdown(filePath);
+      if (!oldData) {
+        throw new HttpException({
+          message: `Error updating ticket ${id}`,
+          error: 'Failed to parse original markdown file',
+          ticket: null
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const update = Object.assign({}, oldData, ticketData);
+      // Compose new file content
+      const newContent = this.generateParsedTicketMarkdown ? this.generateParsedTicketMarkdown(update) : '';
+      if (!newContent) {
+        throw new HttpException({
+          message: `Error generating markdown for ticket ${id}`,
+          error: 'Markdown generation failed',
+          ticket: null
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      writeFileSync(filePath, newContent, 'utf-8');
       const updatedTicket = this.parseTicketMarkdown(filePath);
       return {
         message: `Ticket ${id} updated successfully`,

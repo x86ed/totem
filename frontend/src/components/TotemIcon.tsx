@@ -355,7 +355,8 @@ function TotemIcon({
   const config = {
     cols: highRes ? 24 : 12,
     rows: highRes ? 64 : 32,
-    cellSize: size, // Keep cellSize the same for consistent canvas size
+    cellSize: size, // This affects canvas display size only
+    logicalCellSize: 1, // This keeps the design pattern consistent
     sections: 5
   };
 
@@ -446,10 +447,10 @@ function TotemIcon({
         points.forEach((p, i) => {
           if (p === "1") {
             newCells.push({
-              dx: i * config.cellSize,
-              dy: y * config.cellSize,
-              x: i,
-              y: y,
+              dx: i, // Store logical coordinates only
+              dy: y, // Store logical coordinates only
+              x: i, // Logical coordinates (for pattern)
+              y: y, // Logical coordinates (for pattern)
               c: '#000000',
               m: false,
               section: section
@@ -461,8 +462,9 @@ function TotemIcon({
 
     getGroups(newCells, rng);
     return newCells;
-  }, [config.cols, config.rows, config.sections, config.cellSize, randomGenerator, getGroups]);
+  }, [config.cols, config.rows, config.sections, randomGenerator, getGroups]);
 
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTotemIcon = useCallback((cells: Cell[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -512,11 +514,18 @@ function TotemIcon({
 
     cells.forEach(c => {
       ctx.fillStyle = c.c;
-      ctx.fillRect(c.dx, c.dy, config.cellSize, config.cellSize);
-      ctx.fillRect(config.cellSize * config.cols - c.dx - config.cellSize, c.dy, config.cellSize, config.cellSize);
+      // Calculate display coordinates from logical coordinates
+      const displayX = c.dx * config.cellSize;
+      const displayY = c.dy * config.cellSize;
+      
+      ctx.fillRect(displayX, displayY, config.cellSize, config.cellSize);
+      ctx.fillRect(config.cellSize * config.cols - displayX - config.cellSize, displayY, config.cellSize, config.cellSize);
     });
 
-    setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
       const dataURL = canvas.toDataURL('image/png');
       setPngUrl(dataURL);
       if (onPngGenerated) {
@@ -565,11 +574,18 @@ function TotemIcon({
     setCells(newCells);
   }, [randomGenerator, generateCells]);
 
+
   // Draw when cells or palettes change
   useEffect(() => {
     if (cells.length > 0) {
       drawTotemIcon(cells);
     }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, [cells, palettes, drawTotemIcon]);
 
   return (
