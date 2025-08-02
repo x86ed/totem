@@ -1,6 +1,6 @@
 ```yaml
 id: TOTEM.Bug.Project-Settings-087
-status: in-progress
+status: review
 priority: high
 complexity: s
 persona: Refactor-Raleigh
@@ -14,8 +14,8 @@ fix the saving of compoent on the project page
 
 ## Acceptance Criteria
 
-- [ ] fix component create new functionality
-- [ ] fix update functionality
-- [ ] fix description edit functionality
+- [x] fix component create new functionality
+- [x] fix update functionality
+- [x] fix description edit functionality
 
 ---

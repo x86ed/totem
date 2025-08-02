@@ -29,6 +29,7 @@ const ComponentTypesSection: React.FC = () => {
     if (!componentCtx) return;
     const oldKey = items[idx]?.key;
     if (oldKey) {
+      // Pass newKey if key is changed
       await componentCtx.updateComponent(oldKey, { key: editKey, description: editDesc });
       setEditIdx(null);
     }

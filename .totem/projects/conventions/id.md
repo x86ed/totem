@@ -48,7 +48,6 @@ TOTEM
 - **Project** - the project tab
 - **Alert** - warnings errors and notifications
 - **Icon** - icons and stuff
-
 - **UX** - ux updates and work
 
 ## Feature

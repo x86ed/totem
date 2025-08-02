@@ -142,7 +142,13 @@ export class ComponentController {
     });
     if (action === 'add') {
       if (idx !== -1) throw new HttpException('Component already exists', HttpStatus.CONFLICT);
-      rawLines.push(`- **${key}** - ${description}`);
+      // Only add a blank line if the section is not empty and last line is not blank
+      if (rawLines.length > 0 && rawLines[rawLines.length - 1].trim() !== '') {
+        rawLines.push(`- **${key}** - ${description}`);
+      } else {
+        // If section is empty or last line is blank, just add the entry
+        rawLines[rawLines.length - 1] = `- **${key}** - ${description}`;
+      }
     } else if (action === 'update') {
       if (idx === -1) throw new HttpException('Component not found', HttpStatus.NOT_FOUND);
       const finalKey = newKey && newKey !== key ? newKey : key;
