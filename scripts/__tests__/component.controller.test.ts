@@ -1,7 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ComponentController } from '../src/controllers/component.controller';
 import { ComponentDto } from '../src/dto/component.dto';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
