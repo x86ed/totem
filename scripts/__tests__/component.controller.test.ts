@@ -33,7 +33,7 @@ describe('ComponentController', () => {
     expect(() => controller.getByKey('notfound')).toThrow(HttpException);
   });
 
-  it('should add a new component', () => {
+  it('should add a new component and not add extra blank lines', () => {
     const dto = new ComponentDto();
     dto.key = 'newcomp';
     dto.description = 'A new component';
@@ -43,6 +43,24 @@ describe('ComponentController', () => {
     // Should be present in getAll
     const all = controller.getAll();
     expect(all.some(c => c.key.toLowerCase() === 'newcomp')).toBe(true);
+    // Check that there is not an extra blank line above the new entry in the file
+    const fileContent = fs.readFileSync(testMdPath, 'utf-8');
+    const componentSection = fileContent.match(/## Component[\s\S]*?## Feature/);
+    expect(componentSection).toBeTruthy();
+    // The new entry should not be preceded by more than one blank line
+    const lines = componentSection[0].split('\n');
+    let found = false;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('**newcomp**')) {
+        // Count blank lines above
+        let blankCount = 0;
+        for (let j = i - 1; j >= 0 && lines[j].trim() === ''; j--) blankCount++;
+        expect(blankCount).toBeLessThanOrEqual(1);
+        found = true;
+        break;
+      }
+    }
+    expect(found).toBe(true);
   });
 
   it('should not add duplicate component', () => {
@@ -52,7 +70,7 @@ describe('ComponentController', () => {
     expect(() => controller.addComponent(dto)).toThrow(HttpException);
   });
 
-  it('should update a component', () => {
+  it('should update a component description only', () => {
     const dto = new ComponentDto();
     dto.key = 'Button';
     dto.description = 'Updated description';
@@ -62,6 +80,26 @@ describe('ComponentController', () => {
     // Should be updated in getAll
     const updated = controller.getByKey('Button');
     expect(updated.description).toBe('Updated description');
+  });
+
+  it('should update a component key and description (newKey)', () => {
+    // Add a component to update
+    const dto = new ComponentDto();
+    dto.key = 'oldkey';
+    dto.description = 'Old description';
+    controller.addComponent(dto);
+    // Update key and description
+    const updateDto = new ComponentDto();
+    updateDto.key = 'newkey';
+    updateDto.description = 'New description';
+    const result = controller.updateComponent('oldkey', { ...updateDto, newKey: 'newkey' });
+    expect(result.key).toBe('newkey');
+    expect(result.description).toBe('New description');
+    // Should be present under new key
+    const updated = controller.getByKey('newkey');
+    expect(updated.description).toBe('New description');
+    // Old key should not exist
+    expect(() => controller.getByKey('oldkey')).toThrow(HttpException);
   });
 
   it('should update a component key and description', () => {
