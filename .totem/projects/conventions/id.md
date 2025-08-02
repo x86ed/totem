@@ -8,7 +8,7 @@ Examples:
 
 ## Prefix
 
-DEMO
+TOTEM
 
 ## Layer
 
@@ -19,44 +19,63 @@ DEMO
 - **Tests** - Unit tests, integration tests, end-to-end testing
 - **Docs** - Documentation, specifications, user guides
 - **CICD** - Pipelines and deployment
+- **Planning** - Planning portions of the project
+- **Bug** - issues with the code
 
 ## Component
 
-- **auth** - Authentication and authorization systems
-- **user** - User management, profiles, accounts
-- **payment** - Payment processing, billing, transactions
-- **notification** - Email, SMS, push notifications
-- **analytics** - Data tracking, reporting, metrics
-- **search** - Search functionality, indexing, filtering
-- **admin** - Administrative panels, management tools
-- **api** - REST APIs, endpoints, integration
-- **database** - Data models, migrations, queries
-- **security** - Security features, encryption, monitoring
-- **ui** - User interface components, design system
-- **workflow** - Business processes, automation, orchestration
+- **Auth** - Authentication and authorization systems
+- **User** - User management, profiles, accounts
+- **Payment** - Payment processing, billing, transactions
+- **Notification** - Email, SMS, push notifications
+- **Analytics** - Data tracking, reporting, metrics
+- **Search** - Search functionality, indexing, filtering
+- **Admin** - Administrative panels, management tools
+- **API** - REST APIs, endpoints, integration
+- **Database** - Data models, migrations, queries
+- **Security** - Security features, encryption, monitoring
+- **UI** - User interface components, design system
+- **Workflow** - Business processes, automation, orchestration
+- **Task** - a small task
+- **MCP** - Model Context Protocol
+- **CleanUp** - Cleaning up functionality
+- **Docs** - Documentation
+- **Roadmap** - the roadmap view
+- **Kanban** - Kanban view
+- **Backlog** - The Backlog view
+- **Ticket** - the ticket view
+- **Artifacts** - the artifacts tab
+- **Project** - the project tab
+- **Alert** - warnings errors and notifications
+- **Icon** - icons and stuff
+
+- **UX** - ux updates and work
 
 ## Feature
 
-- **signup** - User registration and account creation
-- **profile** - User profile management and settings
-- **dashboard** - Main overview and summary interfaces
-- **search** - Search functionality and filtering
-- **upload** - File upload and media management
-- **export** - Data export and reporting features
-- **import** - Data import and migration tools
-- **settings** - Configuration and preferences
-- **notifications** - Alert and messaging systems
-- **integration** - Third-party service connections
-- **monitoring** - System health and performance tracking
-- **backup** - Data backup and recovery features
-- **security** - Security controls and access management
-- **workflow** - Process automation and orchestration
-- **analytics** - Data analysis and insights
-- **api** - API endpoints and services
-- **validation** - Data validation and verification
-- **cache** - Caching mechanisms and optimization
-- **migration** - Data or system migrations
+- **Signup** - User registration and account creation
+- **Profile** - User profile management and settings
+- **Dashboard** - Main overview and summary interfaces
+- **Search** - Search functionality and filtering
+- **Upload** - File upload and media management
+- **Export** - Data export and reporting features
+- **Import** - Data import and migration tools
+- **Settings** - Configuration and preferences
+- **Notifications** - Alert and messaging systems
+- **Integration** - Third-party service connections
+- **Monitoring** - System health and performance tracking
+- **Backup** - Data backup and recovery features
+- **Security** - Security controls and access management
+- **Workflow** - Process automation and orchestration
+- **Analytics** - Data analysis and insights
+- **API** - API endpoints and services
+- **Validation** - Data validation and verification
+- **Cache** - Caching mechanisms and optimization
+- **Migration** - Data or system migrations
 - **Release** - a new release of code
+- **Artifact** - Artifact for the project
+- **Alert** - errors and alerts
+
 ## Number
 
 a zero padded 3 digit number. Will expand to four digits if numbers get significantly high.

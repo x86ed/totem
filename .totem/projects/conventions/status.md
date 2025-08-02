@@ -2,7 +2,7 @@
 
 represents the status of a work item
 
-- **planned** - Still gathering requiremens, not ready to be built
+- **planned** - Still gathering requirements, not ready to be built
 - **open** - Ready for work, not started
 - **in-progress** - Actively being worked
 - **blocked** - Cannot proceed due to dependency
