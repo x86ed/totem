@@ -1,6 +1,6 @@
 ```yaml
 id: TOTEM.Bug.Project-Settings-087
-status: review
+status: done
 priority: high
 complexity: s
 persona: Refactor-Raleigh
