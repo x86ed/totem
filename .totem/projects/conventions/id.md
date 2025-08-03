@@ -49,6 +49,7 @@ TOTEM
 - **Alert** - warnings errors and notifications
 - **Icon** - icons and stuff
 - **UX** - ux updates and work
+- **Versioning** - Version Control GitHub, SVN, Mercurial etc.
 
 ## Feature
 
