@@ -1,6 +1,6 @@
 ```yaml
 id: TOTEM.CICD.workflow-settings-075
-status: review
+status: done
 priority: medium
 complexity: s
 persona: Architect-Amos
