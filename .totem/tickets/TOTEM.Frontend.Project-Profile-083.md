@@ -1,14 +1,16 @@
 ```yaml
 id: TOTEM.Frontend.Project-Profile-083
-status: open
+status: review
 priority: medium
 complexity: medium
 persona: Product-Proteus
+start_time: -1
+end_time: -1
 ```
 
 # Contributor Page Markdown
 
-Markdown parsing isn't working on the Contributor portion of the project page 
+Markdown parsing isn't working on the Contributor portion of the project page
 
 ## Acceptance Criteria
 

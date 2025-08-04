@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
 
 /**
  * Context for managing contributor data throughout the application
@@ -151,6 +151,21 @@ export function ContributorProvider({ children }: ContributorProviderProps) {
     }
   };
 
+
+  /**
+   * Fetches the raw markdown for a contributor by name
+   */
+  const getContributorMarkdown = useCallback(async (name: string): Promise<string> => {
+    const apiUrl = import.meta.env?.DEV
+      ? `http://localhost:8080/api/contributor/${name}/markdown`
+      : `/api/contributor/${name}/markdown`;
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch markdown: ${response.status}`);
+    }
+    return response.text();
+  }, []);
+
   const value: ContributorContextType = {
     contributors: state.contributors,
     loading: state.loading,
@@ -159,6 +174,7 @@ export function ContributorProvider({ children }: ContributorProviderProps) {
     createContributor,
     updateContributor,
     deleteContributor,
+    getContributorMarkdown,
   };
 
   return (
@@ -190,6 +206,7 @@ export interface ContributorContextType {
   createContributor: (contributor: Partial<Contributor>) => Promise<void>;
   updateContributor: (name: string, contributor: Contributor) => Promise<void>;
   deleteContributor: (name: string) => Promise<void>;
+  getContributorMarkdown: (name: string) => Promise<string>;
 }
 
 /**

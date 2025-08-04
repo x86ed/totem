@@ -1,3 +1,6 @@
+
+  // ...existing code...
+
 import { Controller, Get, Param, Post, Body, Put, Delete, HttpException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ContributorDto, ContributorMarkdownDto } from '../dto/contributor.dto';
@@ -341,6 +344,7 @@ export class ContributorController {
     }
   }
 
+
   private wrapContributorJson(filePath: string): ContributorMarkdownDto | null {
     try {
       const content = readFileSync(filePath, 'utf-8');
@@ -352,5 +356,22 @@ export class ContributorController {
       console.error(`Error parsing contributor file ${filePath}:`, error);
       return null;
     }
+  }
+
+
+  /**
+   * Returns the raw markdown for a contributor by name (filename without .md)
+   */
+  @Get(':name/markdown')
+  @ApiOperation({ summary: 'Get raw markdown for a contributor', description: 'Retrieve the raw markdown content for a contributor by name (filename without .md)' })
+  @ApiParam({ name: 'name', description: 'Contributor name (filename without .md)', example: 'jane-doe' })
+  @ApiResponse({ status: 200, description: 'Raw markdown content', type: String })
+  @ApiResponse({ status: 404, description: 'Contributor not found', type: String })
+  public getContributorMarkdown(@Param('name') name: string): string {
+    const filePath = join(this.contributorsDir, `${name}.md`);
+    if (!existsSync(filePath)) {
+      throw new HttpException('Contributor not found', 404);
+    }
+    return readFileSync(filePath, 'utf-8');
   }
 }

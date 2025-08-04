@@ -1,6 +1,6 @@
 ```yaml
 id: TOTEM.Planning.Docs-Artifact-077
-status: in-progress
+status: done
 priority: medium
 complexity: medium
 persona: Architect-Amos
@@ -15,11 +15,11 @@ This serves to hydrate the artifact section so that there are enough documents t
 
 ## Acceptance Criteria
 
-- [ ] Typescript standards doc
-- [ ] CSS standards doc
-- [ ] React standards doc
-- [ ] Frontend testing standards doc
-- [ ] Node standards doc
-- [ ] Backend testing standards doc
+- [x] Typescript standards doc
+- [x] CSS standards doc
+- [x] React standards doc
+- [x] Frontend testing standards doc
+- [x] Node standards doc
+- [x] Backend testing standards doc
 
 ---
