@@ -1,47 +1,58 @@
+// Extend the Window interface for debug groupMeta and cellPositions tracking (per-seed)
+declare global {
+  interface Window {
+    __groupMetaBySeed?: Record<string, string>;
+    __cellPositionsBySeed?: Record<string, string>;
+  }
+}
+// Generate a palette object based on status string
+export function GenPallete(status: string): Palettes {
+  const s = status.toLowerCase();
+  if (s === 'blocked') {
+    return blockedPalettes;
+  }
+  if (s === 'planned') {
+    return {
+      section0: MutedPalettes.section0,
+      section1: MutedPalettes.section1,
+      section2: MutedPalettes.section2,
+      section3: MutedPalettes.section3,
+      section4: defaultPalettes.section4,
+    };
+  }
+  if (s === 'open') {
+    return {
+      section0: MutedPalettes.section0,
+      section1: MutedPalettes.section1,
+      section2: MutedPalettes.section2,
+      section3: defaultPalettes.section3,
+      section4: defaultPalettes.section4,
+    };
+  }
+  if (s === 'in-progress') {
+    return {
+      section0: MutedPalettes.section0,
+      section1: MutedPalettes.section1,
+      section2: defaultPalettes.section2,
+      section3: defaultPalettes.section3,
+      section4: defaultPalettes.section4,
+    };
+  }
+  if (s === 'review') {
+    return {
+      section0: MutedPalettes.section0,
+      section1: defaultPalettes.section1,
+      section2: defaultPalettes.section2,
+      section3: defaultPalettes.section3,
+      section4: defaultPalettes.section4,
+    };
+  }
+  return defaultPalettes;
+}
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { defaultPalettes, MutedPalettes, blockedPalettes, type Palettes } from './palettes';
 
-interface PaletteSection {
-  colors: string[];
-  background: string;
-  border: string;
-}
 
-interface Palettes {
-  section0: PaletteSection;
-  section1: PaletteSection;
-  section2: PaletteSection;
-  section3: PaletteSection;
-  section4: PaletteSection;
-}
-
-// Shared default palettes used throughout the component
-const defaultPalettes: Palettes = {
-  section0: {
-      colors: ['#FF6B35', '#F7931E', '#FFD23F', '#FF8C42', '#C73E1D'],
-      background: '#FFF3E0',
-      border: '#C73E1D'
-    },
-    section1: {
-      colors: ['#0D7377', '#14A085', '#A4F1D1', '#7FDBDA', '#41B3A3'],
-      background: '#E0F7FA',
-      border: '#0D7377'
-    },
-    section2: {
-      colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#FDCB6E', '#E17055'],
-      background: '#F3E5F5',
-      border: '#6C5CE7'
-    },
-    section3: {
-      colors: ['#00B894', '#00CEC9', '#55A3FF', '#74B9FF', '#81ECEC'],
-      background: '#E8F5E8',
-      border: '#00B894'
-    },
-    section4: {
-      colors: ['#FF7675', '#FD79A8', '#FDCB6E', '#E17055', '#F39C12'],
-      background: '#FFF3E0',
-      border: '#E17055'
-    }
-};
 
 interface PaletteEditorProps {
   onPaletteChange: (palettes: Palettes) => void;
@@ -50,77 +61,47 @@ interface PaletteEditorProps {
 
 function PaletteEditor({ onPaletteChange, initialPalettes = null }: PaletteEditorProps) {
 
-//   const neutralPalettes: Palettes = {
-//     section0: {
-//       colors: ['#8B7355', '#A0916B', '#B5A082', '#6B5B47', '#9B8A70'],
-//       background: '#F5F3F0',
-//       border: '#6B5B47'
-//     },
-//     section1: {
-//       colors: ['#7A7A7A', '#949494', '#ADADAD', '#666666', '#8F8F8F'],
-//       background: '#F0F0F0',
-//       border: '#666666'
-//     },
-//     section2: {
-//       colors: ['#6B5B73', '#8A7A8F', '#A399A8', '#5A4A5E', '#7D6D82'],
-//       background: '#F2F0F3',
-//       border: '#5A4A5E'
-//     },
-//     section3: {
-//       colors: ['#6B7A6B', '#82938A', '#99A899', '#576057', '#7A8A7A'],
-//       background: '#F0F3F0',
-//       border: '#576057'
-//     },
-//     section4: {
-//       colors: ['#8B7A6B', '#A39382', '#B8A899', '#736B5A', '#9B8A7A'],
-//       background: '#F3F2F0',
-//       border: '#736B5A'
-//     }
-//   };
-
   const [palettes, setPalettes] = useState<Palettes>(initialPalettes || defaultPalettes);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const sectionNames = ['Sunset', 'Ocean', 'Dreams', 'Forest', 'Coral'];
 
+
+  // Deep copy utility for palettes
+  const deepCopyPalettes = (src: Palettes): Palettes => {
+    return {
+      section0: { ...src.section0, colors: [...src.section0.colors] },
+      section1: { ...src.section1, colors: [...src.section1.colors] },
+      section2: { ...src.section2, colors: [...src.section2.colors] },
+      section3: { ...src.section3, colors: [...src.section3.colors] },
+      section4: { ...src.section4, colors: [...src.section4.colors] },
+    };
+  };
+
   const updateColor = (sectionKey: keyof Palettes, type: 'colors' | 'background' | 'border', index: number | null, newColor: string) => {
-    const updatedPalettes = { ...palettes };
-    
+    const updatedPalettes = deepCopyPalettes(palettes);
     if (type === 'colors' && index !== null) {
-      updatedPalettes[sectionKey] = {
-        ...updatedPalettes[sectionKey],
-        colors: [...updatedPalettes[sectionKey].colors]
-      };
       updatedPalettes[sectionKey].colors[index] = newColor;
-    } else {
-      updatedPalettes[sectionKey] = {
-        ...updatedPalettes[sectionKey],
-        [type]: newColor
-      };
+    } else if (type === 'background') {
+      updatedPalettes[sectionKey].background = newColor;
+    } else if (type === 'border') {
+      updatedPalettes[sectionKey].border = newColor;
     }
-    
     setPalettes(updatedPalettes);
     onPaletteChange(updatedPalettes);
   };
 
   const addColor = (sectionKey: keyof Palettes) => {
-    const updatedPalettes = { ...palettes };
-    updatedPalettes[sectionKey] = {
-      ...updatedPalettes[sectionKey],
-      colors: [...updatedPalettes[sectionKey].colors, '#FFFFFF']
-    };
+    const updatedPalettes = deepCopyPalettes(palettes);
+    updatedPalettes[sectionKey].colors.push('#FFFFFF');
     setPalettes(updatedPalettes);
     onPaletteChange(updatedPalettes);
   };
 
   const removeColor = (sectionKey: keyof Palettes, index: number) => {
     if (palettes[sectionKey].colors.length <= 1) return;
-    
-    const updatedPalettes = { ...palettes };
-    updatedPalettes[sectionKey] = {
-      ...updatedPalettes[sectionKey],
-      colors: updatedPalettes[sectionKey].colors.filter((_: string, i: number) => i !== index)
-    };
+    const updatedPalettes = deepCopyPalettes(palettes);
+    updatedPalettes[sectionKey].colors.splice(index, 1);
     setPalettes(updatedPalettes);
     onPaletteChange(updatedPalettes);
   };
@@ -287,6 +268,24 @@ interface TotemIconProps {
   highRes?: boolean;
 }
 
+function deepFreeze<T>(obj: T): T {
+  Object.getOwnPropertyNames(obj).forEach(function(name) {
+    const prop = (obj as any)[name];
+    if (typeof prop === 'object' && prop !== null) deepFreeze(prop);
+  });
+  return Object.freeze(obj);
+}
+
+function deepCopyPalettes(src: Palettes): Palettes {
+  return {
+    section0: { ...src.section0, colors: [...src.section0.colors] },
+    section1: { ...src.section1, colors: [...src.section1.colors] },
+    section2: { ...src.section2, colors: [...src.section2.colors] },
+    section3: { ...src.section3, colors: [...src.section3.colors] },
+    section4: { ...src.section4, colors: [...src.section4.colors] },
+  };
+}
+
 function TotemIcon({ 
   seed = null, 
   onPngGenerated = null, 
@@ -319,21 +318,43 @@ function TotemIcon({
     };
   };
 
-  const [currentSeed, setCurrentSeed] = useState<string | null>(seed);
-  const [randomGenerator, setRandomGenerator] = useState<() => number>(() => 
-    seed ? createSeededRandom(simpleHash(seed)) : Math.random
-  );
 
-  // Use provided palettes or default ones
-  const activePalettes = palettes || defaultPalettes;
 
-  // Extract arrays for backward compatibility
+  // Use a lazy initializer so randomSeed is only generated once per mount if seed is not provided
+
+  // Only generate a random seed once per mount if seed is not provided
+  const [randomSeed] = useState<string>(() => {
+    if (seed == null) {
+      return Math.random().toString(36).slice(2);
+    }
+    return '';
+  });
+
+  // Always use the provided seed if present, otherwise use the randomSeed
+  const getRng = useCallback(() => {
+    const useSeed = seed != null ? seed : (randomSeed || 'fallback');
+    return createSeededRandom(simpleHash(useSeed));
+  }, [seed, randomSeed]);
+
+  // Use provided palettes or default ones, always deep copy and freeze to prevent mutation/reference bugs
+  const activePalettes = useMemo(() => deepFreeze(deepCopyPalettes(palettes || defaultPalettes)), [palettes]);
+
+  // Memoize harmonicPalettes so it doesn't break memoization in hooks
+  // Always enforce palette length of 5 for each section for stability
+  const enforcePaletteLength = (arr: string[], len = 5, fill = '#000000') => {
+    if (arr.length === len) return arr.slice();
+    if (arr.length > len) return arr.slice(0, len);
+    return arr.concat(Array(len - arr.length).fill(fill));
+  };
+
+  // Palette colors are only used for color assignment, never for pattern/group generation
+  // Always enforce palette length of 5 for each section for stability
   const harmonicPalettes = useMemo(() => [
-    activePalettes.section0?.colors || defaultPalettes.section0.colors,
-    activePalettes.section1?.colors || defaultPalettes.section1.colors,
-    activePalettes.section2?.colors || defaultPalettes.section2.colors,
-    activePalettes.section3?.colors || defaultPalettes.section3.colors,
-    activePalettes.section4?.colors || defaultPalettes.section4.colors
+    enforcePaletteLength(activePalettes.section0.colors),
+    enforcePaletteLength(activePalettes.section1.colors),
+    enforcePaletteLength(activePalettes.section2.colors),
+    enforcePaletteLength(activePalettes.section3.colors),
+    enforcePaletteLength(activePalettes.section4.colors)
   ], [activePalettes]);
 
   const sectionBackgrounds = useMemo(() => [
@@ -352,13 +373,18 @@ function TotemIcon({
     activePalettes.section4?.border || defaultPalettes.section4.border
   ], [activePalettes]);
 
-  const config = {
-    cols: highRes ? 24 : 12,
-    rows: highRes ? 64 : 32,
+  // Ensure rows is always divisible by sections for a perfect grid
+  const sections = 5;
+  const cols = highRes ? 24 : 12;
+  // Pick a row count divisible by sections (e.g., 30 or 35 for 5 sections)
+  const rows = highRes ? 60 : 30; // 60/5=12, 30/5=6
+  const config = useMemo(() => ({
+    cols,
+    rows,
     cellSize: size, // This affects canvas display size only
     logicalCellSize: 1, // This keeps the design pattern consistent
-    sections: 5
-  };
+    sections
+  }), [cols, rows, size, sections]);
 
   const floodfill = useCallback((c: Cell, cells: Cell[]): Cell[] => {
     let q: Cell[] = [];
@@ -395,43 +421,52 @@ function TotemIcon({
     });
   };
 
-  const getGroups = useCallback((cells: Cell[], rng: () => number): Cell[][] => {
+  // Assign groups deterministically based only on the seed and grid, not the palette
+  // This function does NOT use the palette for group assignment or as a dependency
+  const getGroups = useCallback((cells: Cell[]): { groups: Cell[][], groupMeta: { section: number; groupIndex: number; }[] } => {
     cells.forEach(c => c.m = false);
-
     let groups: Cell[][] = [];
+    let groupMeta: { section: number; groupIndex: number; }[] = [];
+    let groupCounter = [0, 0, 0, 0, 0]; // One counter per section
     cells.forEach(c => {
       if (!c.m) {
         let group = floodfill(c, cells);
         if (group.length > 0) {
           groups.push(group);
-
           let section = group[0].section;
-          let palette = harmonicPalettes[section];
-          let selectedColor = palette[Math.floor(rng() * palette.length)];
-
-          group.forEach(cell => {
-            cell.c = selectedColor;
-          });
+          let groupIndex = groupCounter[section];
+          groupCounter[section]++;
+          groupMeta.push({ section, groupIndex });
         }
       }
     });
+    return { groups, groupMeta };
+  }, [floodfill]);
 
-    return groups;
-  }, [harmonicPalettes, floodfill]);
+  // Pure pattern/cell/group generation: depends ONLY on seed/config
+  interface PatternConfig {
+    cols: number;
+    rows: number;
+    cellSize: number;
+    logicalCellSize: number;
+    sections: number;
+  }
 
-  const generateCells = useCallback((rng: () => number = randomGenerator): Cell[] => {
+  function generatePattern(
+    seed: string | null,
+    config: PatternConfig,
+    rng: () => number,
+    getGroups: (cells: Cell[]) => { groups: Cell[][]; groupMeta: { section: number; groupIndex: number }[] }
+  ) {
     let newCells: Cell[] = [];
     let n = config.cols / 2;
     let sectionHeight = config.rows / config.sections;
-
     for (let section = 0; section < config.sections; section++) {
-      let startY = Math.floor(section * sectionHeight);
-      let endY = Math.floor((section + 1) * sectionHeight);
-
+      let startY = section * sectionHeight;
+      let endY = (section + 1) * sectionHeight;
       for (let y = startY; y < endY; y++) {
         let randomValue = rng();
         let binaryString = '';
-        
         for (let i = 0; i < n; i++) {
           randomValue = randomValue * 2;
           if (randomValue >= 1) {
@@ -441,16 +476,14 @@ function TotemIcon({
             binaryString += '0';
           }
         }
-        
         let points = binaryString.split("");
-
         points.forEach((p, i) => {
           if (p === "1") {
             newCells.push({
-              dx: i, // Store logical coordinates only
-              dy: y, // Store logical coordinates only
-              x: i, // Logical coordinates (for pattern)
-              y: y, // Logical coordinates (for pattern)
+              dx: i,
+              dy: y,
+              x: i,
+              y: y,
               c: '#000000',
               m: false,
               section: section
@@ -459,10 +492,26 @@ function TotemIcon({
         });
       }
     }
+    const { groups, groupMeta } = getGroups(newCells);
+    return { newCells, groups, groupMeta };
+  }
 
-    getGroups(newCells, rng);
+  // Color assignment: assign colors to cells after pattern is generated
+  const generateCells = useCallback((): Cell[] => {
+    // Always use the seed prop for deterministic pattern
+    const rng = getRng();
+    const { newCells, groups, groupMeta } = generatePattern(seed ?? randomSeed, config, rng, getGroups);
+
+    // Assign colors using the current palette, but deterministically by group index
+    groupMeta.forEach(({ section, groupIndex }: { section: number; groupIndex: number }, i: number) => {
+      const colorCount = harmonicPalettes[section].length;
+      const colorIndex = groupIndex % colorCount;
+      groups[i].forEach((cell: Cell) => {
+        cell.c = harmonicPalettes[section][colorIndex];
+      });
+    });
     return newCells;
-  }, [config.cols, config.rows, config.sections, randomGenerator, getGroups]);
+  }, [getRng, config, getGroups, harmonicPalettes]);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTotemIcon = useCallback((cells: Cell[]) => {
@@ -475,7 +524,7 @@ function TotemIcon({
     const width = config.cols * config.cellSize;
     const height = config.rows * config.cellSize;
 
-    let sectionHeightPixels = Math.floor(config.rows / config.sections);
+    let sectionHeightPixels = config.rows / config.sections; // always integer
     let pixelSize = config.cellSize;
 
     for (let i = 0; i < config.sections; i++) {
@@ -512,14 +561,20 @@ function TotemIcon({
     ctx.fillRect(-borderSize, -borderSize, borderSize, height + 2 * borderSize);
     ctx.fillRect(width, -borderSize, borderSize, height + 2 * borderSize);
 
+    // Draw each cell and its mirrored counterpart, pixel-perfect
     cells.forEach(c => {
       ctx.fillStyle = c.c;
-      // Calculate display coordinates from logical coordinates
-      const displayX = c.dx * config.cellSize;
-      const displayY = c.dy * config.cellSize;
-      
-      ctx.fillRect(displayX, displayY, config.cellSize, config.cellSize);
-      ctx.fillRect(config.cellSize * config.cols - displayX - config.cellSize, displayY, config.cellSize, config.cellSize);
+      // Always use Math.round to avoid subpixel rendering
+      const displayX = Math.round(c.dx * config.cellSize);
+      const displayY = Math.round(c.dy * config.cellSize);
+      const cellSize = Math.round(config.cellSize);
+      // Draw left half
+      ctx.fillRect(displayX, displayY, cellSize, cellSize);
+      // Draw mirrored right half
+      const mirrorX = Math.round(config.cellSize * config.cols - displayX - cellSize);
+      if (mirrorX !== displayX) {
+        ctx.fillRect(mirrorX, displayY, cellSize, cellSize);
+      }
     });
 
     if (timeoutRef.current) {
@@ -534,21 +589,8 @@ function TotemIcon({
     }, 10);
   }, [config.cols, config.rows, config.sections, config.cellSize, sectionBackgrounds, sectionBorderColors, onPngGenerated]);
 
-  const handleGenerate = () => {
-    if (!seed) {
-      const newSeed = Date.now().toString();
-      setCurrentSeed(newSeed);
-      const newRng = createSeededRandom(simpleHash(newSeed));
-      setRandomGenerator(() => newRng);
-      const newCells = generateCells(newRng);
-      setCells(newCells);
-      drawTotemIcon(newCells);
-    } else {
-      const newCells = generateCells();
-      setCells(newCells);
-      drawTotemIcon(newCells);
-    }
-  };
+  // No-op for handleGenerate, as randomSeed is now fixed per mount
+  const handleGenerate = () => {};
 
   const handleSave = () => {
     if (pngUrl) {
@@ -559,20 +601,12 @@ function TotemIcon({
     }
   };
 
-  // Initialize
+  // Generate cells when seed, palette, or config changes
   useEffect(() => {
-    if (seed !== currentSeed) {
-      setCurrentSeed(seed);
-      const newRng = seed ? createSeededRandom(simpleHash(seed)) : Math.random;
-      setRandomGenerator(() => newRng);
-    }
-  }, [seed, currentSeed]);
-
-  // Generate cells when generator changes
-  useEffect(() => {
+    // Only update cells if the dependencies change
     const newCells = generateCells();
     setCells(newCells);
-  }, [randomGenerator, generateCells]);
+  }, [generateCells]);
 
 
   // Draw when cells or palettes change
@@ -586,7 +620,7 @@ function TotemIcon({
         timeoutRef.current = null;
       }
     };
-  }, [cells, palettes, drawTotemIcon]);
+  }, [cells, drawTotemIcon]);
 
   return (
     <div className="flex flex-col items-center">
@@ -726,4 +760,6 @@ export default function TotemIconGenerator({ showPaletteEditor = true }: TotemIc
   );
 }
 
-export { TotemIcon, PaletteEditor, type Palettes, type PaletteSection, type TotemIconProps };
+export { TotemIcon, PaletteEditor };
+export type { TotemIconProps };
+// Palettes and PaletteSection types, and palette constants, are exported from palettes.ts

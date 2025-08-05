@@ -5,7 +5,7 @@ import { ComplexityContext } from '../context/ComplexityContext'
 import { usePersonas } from '../context/PersonaContext'
 import { useTickets } from '../context/TicketContext'
 import { Ticket } from '../types'
-import { TotemIcon } from './TotemIcon'
+import { GenPallete, TotemIcon } from './TotemIcon'
 import { StatusContext } from '../context/StatusContext'
 import { PriorityContext } from '../context/PriorityContext'
 import CollapsibleFilterBar from './CollapsibleFilterBar'
@@ -331,7 +331,7 @@ if (tickets.length === 0) {
                   className="text-center align-middle"
                 >
                   <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <TotemIcon seed={ticket.id} size={1.75} showControls={false} />
+                    <TotemIcon seed={ticket.id} size={1.75} showControls={false} palettes={GenPallete(ticket.status)} />
                   </div>
                 </td>
                 <td className="px-2 py-3 whitespace-nowrap">

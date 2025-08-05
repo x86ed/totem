@@ -12,7 +12,7 @@ import { ComplexityContext } from '../context/ComplexityContext'
 import { usePersonas } from '../context/PersonaContext'
 import { useContributors } from '../context/ContributorContext'
 import Avatar from 'boring-avatars'
-import { TotemIcon } from './TotemIcon'
+import { GenPallete, TotemIcon } from './TotemIcon'
 
 /**
  * API Ticket interface matching the backend DTO structure
@@ -894,7 +894,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({
                   >
                     <h3 className="text-lg font-semibold text-white" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Status & Priority</h3>
                     <div className="space-y-6">
-                      <TotemIcon seed={ticketId} size={4} showControls={false} highRes/>
+                      <TotemIcon seed={ticketId} size={4} showControls={false} palettes={GenPallete(formData.status)} highRes/>
                       <div>
                         <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-2">
                           Status
