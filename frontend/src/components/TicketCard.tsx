@@ -1,7 +1,7 @@
 import React from 'react'
 import { Ticket } from '../types'
 import Avatar from "boring-avatars";
-import { TotemIcon } from './TotemIcon'
+import { GenPallete, TotemIcon } from './TotemIcon'
 /**
  * Props interface for the TicketCard component
  * @interface TicketCardProps
@@ -134,7 +134,7 @@ const TicketCard: React.FC<TicketCardProps> = ({
           padding: '8px 12px',
         }}
       >
-        <TotemIcon seed={ticket.id} size={3} showControls={false} />
+        <TotemIcon seed={ticket.id} size={3} showControls={false} palettes={GenPallete(ticket.status)}/>
         <div className="ticket-meta" style={{ display: 'flex', alignItems: 'center', gap: 12 , fontSize: '.75em'}}>
           {/* Assignee/Contributor */}
           {ticket.contributor && (

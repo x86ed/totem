@@ -1,7 +1,55 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { TotemIcon } from './TotemIcon';
+import { TotemIcon, GenPallete } from './TotemIcon';
+import * as TotemIconModule from './TotemIcon';
+describe('GenPallete', () => {
+  const { defaultPalettes, MutedPalettes, blockedPalettes } = TotemIconModule as any;
+
+  it('returns blockedPalettes for "blocked"', () => {
+    expect(GenPallete('blocked')).toEqual(blockedPalettes);
+  });
+
+  it('returns planned palette (muted 0-3, default 4) for "planned"', () => {
+    const result = GenPallete('planned');
+    expect(result.section0).toEqual(MutedPalettes.section0);
+    expect(result.section1).toEqual(MutedPalettes.section1);
+    expect(result.section2).toEqual(MutedPalettes.section2);
+    expect(result.section3).toEqual(MutedPalettes.section3);
+    expect(result.section4).toEqual(defaultPalettes.section4);
+  });
+
+  it('returns open palette (muted 0-2, default 3-4) for "open"', () => {
+    const result = GenPallete('open');
+    expect(result.section0).toEqual(MutedPalettes.section0);
+    expect(result.section1).toEqual(MutedPalettes.section1);
+    expect(result.section2).toEqual(MutedPalettes.section2);
+    expect(result.section3).toEqual(defaultPalettes.section3);
+    expect(result.section4).toEqual(defaultPalettes.section4);
+  });
+
+  it('returns in-progress palette (muted 0-1, default 2-4) for "in-progress"', () => {
+    const result = GenPallete('in-progress');
+    expect(result.section0).toEqual(MutedPalettes.section0);
+    expect(result.section1).toEqual(MutedPalettes.section1);
+    expect(result.section2).toEqual(defaultPalettes.section2);
+    expect(result.section3).toEqual(defaultPalettes.section3);
+    expect(result.section4).toEqual(defaultPalettes.section4);
+  });
+
+  it('returns review palette (muted 0, default 1-4) for "review"', () => {
+    const result = GenPallete('review');
+    expect(result.section0).toEqual(MutedPalettes.section0);
+    expect(result.section1).toEqual(defaultPalettes.section1);
+    expect(result.section2).toEqual(defaultPalettes.section2);
+    expect(result.section3).toEqual(defaultPalettes.section3);
+    expect(result.section4).toEqual(defaultPalettes.section4);
+  });
+
+  it('returns defaultPalettes for unknown status', () => {
+    expect(GenPallete('something-else')).toEqual(defaultPalettes);
+  });
+});
 
 // Mock canvas since it's not available in jsdom
 beforeEach(() => {
@@ -55,18 +103,16 @@ describe('TotemIcon', () => {
 
     it('renders canvas with correct dimensions for standard resolution', () => {
       const { container } = render(<TotemIcon seed="test" size={4} showControls={false} />)
-      
       const canvas = container.querySelector('canvas')
       expect(canvas).toHaveAttribute('width', '48') // 12 cols * 4 size
-      expect(canvas).toHaveAttribute('height', '128') // 32 rows * 4 size
+      expect(canvas).toHaveAttribute('height', '120') // 30 rows * 4 size
     })
 
     it('renders canvas with correct dimensions for high resolution', () => {
       const { container } = render(<TotemIcon seed="test" size={4} highRes={true} showControls={false} />)
-      
       const canvas = container.querySelector('canvas')
       expect(canvas).toHaveAttribute('width', '96') // 24 cols * 4 size
-      expect(canvas).toHaveAttribute('height', '256') // 64 rows * 4 size
+      expect(canvas).toHaveAttribute('height', '240') // 60 rows * 4 size
     })
   })
 
