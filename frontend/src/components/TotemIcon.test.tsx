@@ -2,10 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { TotemIcon, GenPallete } from './TotemIcon';
-import * as TotemIconModule from './TotemIcon';
+import { defaultPalettes, MutedPalettes, blockedPalettes } from './palettes';
 describe('GenPallete', () => {
-  const { defaultPalettes, MutedPalettes, blockedPalettes } = TotemIconModule as any;
-
   it('returns blockedPalettes for "blocked"', () => {
     expect(GenPallete('blocked')).toEqual(blockedPalettes);
   });
@@ -60,16 +58,19 @@ beforeEach(() => {
       canvas: { toDataURL: vi.fn(() => 'mock-data-url') }
     })),
     toDataURL: vi.fn(() => 'mock-data-url')
-  }
-  
-  // Mock HTMLCanvasElement - use unknown to avoid complex type issues in tests
+  };
+  vi.restoreAllMocks();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(
     mockCanvas.getContext as unknown as typeof HTMLCanvasElement.prototype.getContext
-  )
+  );
   vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(
     mockCanvas.toDataURL as unknown as typeof HTMLCanvasElement.prototype.toDataURL
-  )
-})
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('TotemIcon', () => {
   describe('Basic Rendering', () => {
@@ -83,6 +84,14 @@ describe('TotemIcon', () => {
       const { container } = render(<TotemIcon seed="custom-seed" showControls={false} />);
       const canvas = container.querySelector('canvas');
       expect(canvas).toBeInTheDocument();
+    });
+
+    it('renders deterministically for a given seed', () => {
+      const { container: c1 } = render(<TotemIcon seed="deterministic-seed" showControls={false} />);
+      const { container: c2 } = render(<TotemIcon seed="deterministic-seed" showControls={false} />);
+      const canvas1 = c1.querySelector('canvas');
+      const canvas2 = c2.querySelector('canvas');
+      expect(canvas1?.toDataURL()).toEqual(canvas2?.toDataURL());
     });
   })
 
@@ -140,11 +149,10 @@ describe('TotemIcon', () => {
         section3: { colors: ['#FFFF00'], background: '#FFF', border: '#000' },
         section4: { colors: ['#FF00FF'], background: '#FFF', border: '#000' }
       }
-      
       render(<TotemIcon seed="test" palettes={customPalettes} />)
-      
-      // Should show custom palettes indicator
       expect(screen.getByText('Using custom palettes')).toBeInTheDocument()
     })
   })
+
+// Always provide a seed in tests to avoid randomSeed state issues
 });

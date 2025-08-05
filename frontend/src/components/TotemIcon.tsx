@@ -318,10 +318,23 @@ function TotemIcon({
     };
   };
 
-  const [currentSeed, setCurrentSeed] = useState<string | null>(seed);
-  const [randomGenerator, setRandomGenerator] = useState<() => number>(() => 
-    seed ? createSeededRandom(simpleHash(seed)) : Math.random
-  );
+
+
+  // Use a lazy initializer so randomSeed is only generated once per mount if seed is not provided
+
+  // Only generate a random seed once per mount if seed is not provided
+  const [randomSeed] = useState<string>(() => {
+    if (seed == null) {
+      return Math.random().toString(36).slice(2);
+    }
+    return '';
+  });
+
+  // Always use the provided seed if present, otherwise use the randomSeed
+  const getRng = useCallback(() => {
+    const useSeed = seed != null ? seed : (randomSeed || 'fallback');
+    return createSeededRandom(simpleHash(useSeed));
+  }, [seed, randomSeed]);
 
   // Use provided palettes or default ones, always deep copy and freeze to prevent mutation/reference bugs
   const activePalettes = useMemo(() => deepFreeze(deepCopyPalettes(palettes || defaultPalettes)), [palettes]);
@@ -334,22 +347,15 @@ function TotemIcon({
     return arr.concat(Array(len - arr.length).fill(fill));
   };
 
-  // Memoize based on a stable stringified value of palettes, not just object identity
-  const paletteMemoKey = useMemo(() => JSON.stringify([
-    (palettes || defaultPalettes).section0.colors,
-    (palettes || defaultPalettes).section1.colors,
-    (palettes || defaultPalettes).section2.colors,
-    (palettes || defaultPalettes).section3.colors,
-    (palettes || defaultPalettes).section4.colors
-  ]), [palettes]);
-
+  // Palette colors are only used for color assignment, never for pattern/group generation
+  // Always enforce palette length of 5 for each section for stability
   const harmonicPalettes = useMemo(() => [
-    enforcePaletteLength((palettes || defaultPalettes).section0.colors),
-    enforcePaletteLength((palettes || defaultPalettes).section1.colors),
-    enforcePaletteLength((palettes || defaultPalettes).section2.colors),
-    enforcePaletteLength((palettes || defaultPalettes).section3.colors),
-    enforcePaletteLength((palettes || defaultPalettes).section4.colors)
-  ], [paletteMemoKey]);
+    enforcePaletteLength(activePalettes.section0.colors),
+    enforcePaletteLength(activePalettes.section1.colors),
+    enforcePaletteLength(activePalettes.section2.colors),
+    enforcePaletteLength(activePalettes.section3.colors),
+    enforcePaletteLength(activePalettes.section4.colors)
+  ], [activePalettes]);
 
   const sectionBackgrounds = useMemo(() => [
     activePalettes.section0?.background || defaultPalettes.section0.background,
@@ -372,13 +378,13 @@ function TotemIcon({
   const cols = highRes ? 24 : 12;
   // Pick a row count divisible by sections (e.g., 30 or 35 for 5 sections)
   const rows = highRes ? 60 : 30; // 60/5=12, 30/5=6
-  const config = {
+  const config = useMemo(() => ({
     cols,
     rows,
     cellSize: size, // This affects canvas display size only
     logicalCellSize: 1, // This keeps the design pattern consistent
     sections
-  };
+  }), [cols, rows, size, sections]);
 
   const floodfill = useCallback((c: Cell, cells: Cell[]): Cell[] => {
     let q: Cell[] = [];
@@ -437,12 +443,24 @@ function TotemIcon({
     return { groups, groupMeta };
   }, [floodfill]);
 
-  const generateCells = useCallback((rng: () => number = randomGenerator): Cell[] => {
+  // Pure pattern/cell/group generation: depends ONLY on seed/config
+  interface PatternConfig {
+    cols: number;
+    rows: number;
+    cellSize: number;
+    logicalCellSize: number;
+    sections: number;
+  }
+
+  function generatePattern(
+    seed: string | null,
+    config: PatternConfig,
+    rng: () => number,
+    getGroups: (cells: Cell[]) => { groups: Cell[][]; groupMeta: { section: number; groupIndex: number }[] }
+  ) {
     let newCells: Cell[] = [];
     let n = config.cols / 2;
-    // Integer section height
     let sectionHeight = config.rows / config.sections;
-
     for (let section = 0; section < config.sections; section++) {
       let startY = section * sectionHeight;
       let endY = (section + 1) * sectionHeight;
@@ -462,10 +480,10 @@ function TotemIcon({
         points.forEach((p, i) => {
           if (p === "1") {
             newCells.push({
-              dx: i, // Store logical coordinates only
-              dy: y, // Store logical coordinates only
-              x: i, // Logical coordinates (for pattern)
-              y: y, // Logical coordinates (for pattern)
+              dx: i,
+              dy: y,
+              x: i,
+              y: y,
               c: '#000000',
               m: false,
               section: section
@@ -474,47 +492,26 @@ function TotemIcon({
         });
       }
     }
-
-    // Assign group indices (structure) based only on seed/grid
-    // CRITICAL: Palette is never referenced in group assignment or pattern generation.
     const { groups, groupMeta } = getGroups(newCells);
+    return { newCells, groups, groupMeta };
+  }
 
-    // --- RUNTIME ASSERTION: Log groupMeta and cell positions for same seed, different palettes ---
-    if (typeof window !== 'undefined' && seed) {
-      window.__groupMetaBySeed = window.__groupMetaBySeed || {};
-      window.__cellPositionsBySeed = window.__cellPositionsBySeed || {};
-      const key = String(seed);
-      const currGroupMeta = JSON.stringify(groupMeta);
-      const currCellPositions = JSON.stringify(newCells.map(c => ({ dx: c.dx, dy: c.dy, section: c.section })));
-      if (!window.__groupMetaBySeed[key]) {
-        window.__groupMetaBySeed[key] = currGroupMeta;
-        window.__cellPositionsBySeed[key] = currCellPositions;
-      } else {
-        const prevGroupMeta = window.__groupMetaBySeed[key];
-        const prevCellPositions = window.__cellPositionsBySeed[key];
-        if (prevGroupMeta !== currGroupMeta || prevCellPositions !== currCellPositions) {
-          console.error('[TotemIcon] Group structure or cell positions changed with palette swap for seed', key, {
-            prevGroupMeta: JSON.parse(prevGroupMeta),
-            currGroupMeta: JSON.parse(currGroupMeta),
-            prevCellPositions: JSON.parse(prevCellPositions),
-            currCellPositions: JSON.parse(currCellPositions),
-            palette: palettes
-          });
-        }
-      }
-    }
+  // Color assignment: assign colors to cells after pattern is generated
+  const generateCells = useCallback((): Cell[] => {
+    // Always use the seed prop for deterministic pattern
+    const rng = getRng();
+    const { newCells, groups, groupMeta } = generatePattern(seed ?? randomSeed, config, rng, getGroups);
 
-    // Now assign colors using the current palette, but deterministically by group index
-    groupMeta.forEach(({ section, groupIndex }, i) => {
+    // Assign colors using the current palette, but deterministically by group index
+    groupMeta.forEach(({ section, groupIndex }: { section: number; groupIndex: number }, i: number) => {
       const colorCount = harmonicPalettes[section].length;
-      // Assign color index based only on groupIndex and palette length, not palette values
       const colorIndex = groupIndex % colorCount;
-      groups[i].forEach(cell => {
+      groups[i].forEach((cell: Cell) => {
         cell.c = harmonicPalettes[section][colorIndex];
       });
     });
     return newCells;
-  }, [config.cols, config.rows, config.sections, randomGenerator, getGroups, harmonicPalettes, seed, palettes]);
+  }, [getRng, config, getGroups, harmonicPalettes]);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTotemIcon = useCallback((cells: Cell[]) => {
@@ -592,21 +589,8 @@ function TotemIcon({
     }, 10);
   }, [config.cols, config.rows, config.sections, config.cellSize, sectionBackgrounds, sectionBorderColors, onPngGenerated]);
 
-  const handleGenerate = () => {
-    if (!seed) {
-      const newSeed = Date.now().toString();
-      setCurrentSeed(newSeed);
-      const newRng = createSeededRandom(simpleHash(newSeed));
-      setRandomGenerator(() => newRng);
-      const newCells = generateCells(newRng);
-      setCells(newCells);
-      drawTotemIcon(newCells);
-    } else {
-      const newCells = generateCells();
-      setCells(newCells);
-      drawTotemIcon(newCells);
-    }
-  };
+  // No-op for handleGenerate, as randomSeed is now fixed per mount
+  const handleGenerate = () => {};
 
   const handleSave = () => {
     if (pngUrl) {
@@ -617,20 +601,12 @@ function TotemIcon({
     }
   };
 
-  // Initialize
+  // Generate cells when seed, palette, or config changes
   useEffect(() => {
-    if (seed !== currentSeed) {
-      setCurrentSeed(seed);
-      const newRng = seed ? createSeededRandom(simpleHash(seed)) : Math.random;
-      setRandomGenerator(() => newRng);
-    }
-  }, [seed, currentSeed]);
-
-  // Generate cells when generator changes
-  useEffect(() => {
+    // Only update cells if the dependencies change
     const newCells = generateCells();
     setCells(newCells);
-  }, [randomGenerator, generateCells]);
+  }, [generateCells]);
 
 
   // Draw when cells or palettes change
@@ -644,7 +620,7 @@ function TotemIcon({
         timeoutRef.current = null;
       }
     };
-  }, [cells, palettes, drawTotemIcon]);
+  }, [cells, drawTotemIcon]);
 
   return (
     <div className="flex flex-col items-center">

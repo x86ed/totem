@@ -16,6 +16,7 @@ const mockMarkdown = {
   charlie: '# Charlie\n\nCharlie profile',
 };
 
+// Default mock for all tests except the loading/error test
 vi.mock('../context/ContributorContext', async () => {
   const actual = await vi.importActual<any>('../context/ContributorContext');
   return {
@@ -30,6 +31,10 @@ vi.mock('../context/ContributorContext', async () => {
 });
 
 describe('ContributorsDirectoryView', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
   function renderWithProvider() {
     return render(
       <ContributorProvider>
@@ -66,8 +71,8 @@ describe('ContributorsDirectoryView', () => {
       expect(pre?.textContent).toContain('# Alice');
       expect(pre?.textContent).toContain('Alice profile');
     });
-    // Re-query the toggle button by its new label
-    const hideToggle = screen.getByRole('button', { name: /hide raw markdown/i });
+    // Re-query the toggle button by its new label, waiting for it to appear
+    const hideToggle = await screen.findByRole('button', { name: /hide raw markdown/i });
     fireEvent.click(hideToggle);
     await waitFor(() => {
       expect(container.querySelector('pre')).not.toBeInTheDocument();
@@ -75,6 +80,7 @@ describe('ContributorsDirectoryView', () => {
   });
 
   it('shows loading and error states', async () => {
+    // Re-mock the context for this test only
     vi.resetModules();
     vi.doMock('../context/ContributorContext', () => ({
       useContributors: () => ({
@@ -84,9 +90,15 @@ describe('ContributorsDirectoryView', () => {
         getContributorMarkdown: vi.fn(),
       }),
     }));
-    const { unmount } = renderWithProvider();
+    // Re-import the component after mocking
+    const { ContributorProvider } = await import('../context/ContributorContext');
+    const ContributorsDirectoryView = (await import('./ContributorsDirectoryView')).default;
+    const { unmount } = render(
+      <ContributorProvider>
+        <ContributorsDirectoryView />
+      </ContributorProvider>
+    );
     expect(screen.getByText(/Loading/i)).toBeInTheDocument();
     unmount();
-    vi.resetModules();
   });
 });
