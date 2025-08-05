@@ -1,9 +1,11 @@
 ```yaml
 id: DEMO.Planning.Roadmap-Artifact-001
-status: open
+status: planned
 priority: medium
 complexity: medium
 persona: Architect-Amos
+start_time: -1
+end_time: -1
 ```
 
 # Create artifacts for this project

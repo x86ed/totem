@@ -2,13 +2,18 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ProjectView from './ProjectView';
 import { PersonaProvider } from '../context/PersonaContext';
+import { ContributorProvider } from '../context/ContributorContext';
 
 
 
 describe('ProjectView', () => {
   // Helper to wrap with PersonaProvider
   const renderWithProviders = (ui: React.ReactElement) =>
-    render(<PersonaProvider>{ui}</PersonaProvider>);
+    render(
+      <ContributorProvider>
+        <PersonaProvider>{ui}</PersonaProvider>
+      </ContributorProvider>
+    );
 
   beforeEach(() => {
     vi.useFakeTimers();

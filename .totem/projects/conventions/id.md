@@ -75,6 +75,7 @@ TOTEM
 - **Release** - a new release of code
 - **Artifact** - Artifact for the project
 - **Alert** - errors and alerts
+- **Visuals** - visual component
 
 ## Number
 

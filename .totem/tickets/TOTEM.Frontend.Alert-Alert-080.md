@@ -1,8 +1,10 @@
 ```yaml
 id: TOTEM.Frontend.Alert-Alert-080
-status: open
+status: in-progress
 priority: medium
 complexity: medium
+start_time: -1
+end_time: -1
 ```
 
 # Alerts and error messaging
